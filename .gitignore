@@ -1,0 +1,5 @@
+/out
+**/tools/bin
+
+.DS_Store
+

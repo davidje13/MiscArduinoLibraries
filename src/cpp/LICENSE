@@ -1,0 +1,41 @@
+These demo sources are released under the terms of the GNU General Public
+License as published by the Free Software Foundation, either version 3 of
+the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+Background
+==========
+
+These demo sources are based on work from Hobbytronics, in turn based on work
+from Sparkfun. The sources have been significantly re-written to work with the
+alternative SSD1306 library and implement general improvements in structure and
+capability.
+
+
+Original Hobytronics license
+============================
+
+This is a modified version of the Sparkfun example code for their MicroOLED
+Arduino Library
+It has been modified to work on the Hobbytronics OLED 128x64 module.
+
+The same terms of use apply - see below
+
+
+Original Sparkfun license
+=========================
+
+Jim Lindblom @ SparkFun Electronics
+
+This code is beerware; if you see me (or any other SparkFun employee) at the
+local, and you've found our code helpful, please buy us a round!
+
+Distributed as-is; no warranty is given.
