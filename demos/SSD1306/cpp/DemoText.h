@@ -28,7 +28,43 @@
 
 #include <Bitmask18.h>
 #include <Font.h>
+#include <FontVariable.h>
 #include <FontRenderer.h>
+
+template <typename Display, typename Bitmask>
+void demoCharacters(Display &display, Bitmask &bitmask, const Font &f) {
+	bitmask.clear();
+	auto r = MakeFontRenderer(&bitmask, 0, 0, bitmask.width(), 0);
+	for(uint8_t i = f.first_supported_char(); i <= f.last_supported_char(); ++ i) {
+		r.print(f, char(i));
+		if(r.cursor_y() + f.line_height() > bitmask.height()) {
+			delay(500);
+			bitmask.clear();
+			r.move(0, 0, bitmask.width(), 0);
+			r.print(f, char(i));
+		}
+		display.send(bitmask);
+		delay(10);
+	}
+	delay(500);
+}
+
+template <typename Display, typename Bitmask, typename Message>
+void demoMessage(
+	Display &display,
+	Bitmask &bitmask,
+	const Font &f1,
+	const Font &f2,
+	Message message
+) {
+	auto r = MakeFontRenderer(&bitmask, 0, 0, bitmask.width(), 0);
+	bitmask.clear();
+	r.print(f1, message);
+	r.print(f1, '\n');
+	r.print(f2, message);
+	display.send(bitmask);
+	delay(1000);
+}
 
 template <typename Display>
 void demoText(Display &display) {
@@ -42,49 +78,26 @@ void demoText(Display &display) {
 	Font f1(F1DATA, F1IMG, F1MASK);
 	Font f2(F2DATA, F2IMG, F2MASK);
 	Font f3(F3DATA, F3IMG, F3MASK);
+	Font fVar(FONTVARIABLE_DATA, FONTVARIABLE_IMG, FONTVARIABLE_MASK);
+
+	demoCharacters(display, bitmask, f0);
+	demoCharacters(display, bitmask, fVar);
 
 	{
-		bitmask.clear();
-		auto r = MakeFontRenderer(&bitmask, 0, 0, bitmask.width(), 0);
-		int charsPerPage = 128;
-		for(uint8_t i = 0x00; i <= 0xFE; ++ i) {
-			r.print(f0, char(i));
-			display.send(bitmask);
-			delay(10);
-			if(i % charsPerPage == charsPerPage - 1) {
-				delay(500);
-				bitmask.clear();
-				r.move(0, 0, bitmask.width(), 0);
-			}
-		}
-		delay(500);
-	}
-
-	{
-		auto r = MakeFontRenderer(&bitmask, 0, 0, bitmask.width(), 0);
-
-		bitmask.clear();
-		r.move(0, 0, bitmask.width(), 0);
-		r.print(f1, ProgMemString(
+		demoMessage(display, bitmask, f1, fVar, ProgMemString(
 			"The quick brown fox jumps over the lazy dog."
 		));
-		display.send(bitmask);
-		delay(1000);
+
+		demoMessage(display, bitmask, f1, fVar, ProgMemString(
+			"HOW VEXINGLY QUICK (DAFT) ZEBRAS JUMP!"
+		));
+
+		demoMessage(display, bitmask, f1, fVar, ProgMemString(
+			"Bright vixens jump; dozy fowl quack."
+		));
 
 		bitmask.clear();
-		r.move(0, 0, bitmask.width(), 0);
-		r.print(f1, ProgMemString("HOW VEXINGLY QUICK (DAFT) ZEBRAS JUMP!"));
-		display.send(bitmask);
-		delay(1000);
-
-		bitmask.clear();
-		r.move(0, 0, bitmask.width(), 0);
-		r.print(f1, ProgMemString("Bright vixens jump; dozy fowl quack."));
-		display.send(bitmask);
-		delay(1000);
-
-		bitmask.clear();
-		r.move(0, 0, bitmask.width(), 0);
+		auto r = MakeFontRenderer(&bitmask, 0, 0, bitmask.width(), 0);
 		for(uint8_t i = 0x20; i <= 0x40; ++ i) {
 			r.print(f1, char(i));
 		}

@@ -41,7 +41,7 @@ class FontRenderer {
 	int16_t wordw;
 	bool softhyphen;
 
-	void dump(Font &f, uint8_t lim, int8_t yShift) {
+	void dump(const Font &f, uint8_t lim, int8_t yShift) {
 		for(uint8_t i = 0; i < lim; ++ i) {
 			uint16_t cw = (f.render(*tgt, wordbuffer[i], cx, cy + yShift) + f.spacing());
 			cx += cw;
@@ -84,7 +84,17 @@ public:
 		cy = yPos;
 	}
 
-	void end_section(Font &f, int8_t yShift) {
+	[[gnu::pure,nodiscard,gnu::always_inline]]
+	int16_t cursor_x(void) const {
+		return cx;
+	}
+
+	[[gnu::pure,nodiscard,gnu::always_inline]]
+	int16_t cursor_y(void) const {
+		return cy;
+	}
+
+	void end_section(const Font &f, int8_t yShift) {
 		if(wordlen != 0) {
 			dump(f, wordlen, yShift);
 			wordw = 0; // Not required, but be safe
@@ -92,7 +102,7 @@ public:
 		}
 	}
 
-	void print_part(Font &f, uint8_t c, int8_t yShift) {
+	void print_part(const Font &f, uint8_t c, int8_t yShift) {
 		static PROGMEM const char OPTIONAL_RENDER[] = " \r\n\t";
 		static PROGMEM const char WRAP_BEFORE[] = "([{<#";
 		static PROGMEM const char WRAP_AFTER[] = ",:;?!)]}>/\\|%";
@@ -166,13 +176,13 @@ public:
 		}
 	}
 
-	void print(Font &f, char c, int8_t yShift = 0) {
+	void print(const Font &f, char c, int8_t yShift = 0) {
 		print_part(f, c, yShift);
 		end_section(f, yShift);
 	}
 
 	[[gnu::nonnull]]
-	void print(Font &f, const char *message, int8_t yShift = 0) {
+	void print(const Font &f, const char *message, int8_t yShift = 0) {
 		char c;
 		for(const char *p = message; (c = p[0]) != '\0'; p = p + 1) {
 			print_part(f, c, yShift);
@@ -180,7 +190,7 @@ public:
 		end_section(f, yShift);
 	}
 
-	void print(Font &f, ProgMem<char> message, int8_t yShift = 0) {
+	void print(const Font &f, ProgMem<char> message, int8_t yShift = 0) {
 		char c;
 		for(ProgMem<char> p = message; (c = p[0]) != '\0'; p = p + 1) {
 			print_part(f, c, yShift);
@@ -189,7 +199,7 @@ public:
 	}
 
 	template <typename T>
-	void print_number(Font &f, T n, uint8_t minDigits = 1, int8_t yShift = 0) {
+	void print_number(const Font &f, T n, uint8_t minDigits = 1, int8_t yShift = 0) {
 		T r = n;
 		if(r < 0) {
 			print_part(f, '-', yShift);

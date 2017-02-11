@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e;
 
-# Wrapper script for the Bitmap Converter program.
+# Wrapper script for the Character Widths program.
 # Builds the program if required, and formats the output with line-wrapping
 # and indentation.
 
@@ -10,8 +10,8 @@ set -e;
 
 SCRIPTDIR="$(dirname "$0")";
 
-EXEC="$SCRIPTDIR/bin/BitmapConverter";
-EXEC_SRC="$SCRIPTDIR/src/BitmapConverter.cpp";
+EXEC="$SCRIPTDIR/bin/CharacterWidths";
+EXEC_SRC="$SCRIPTDIR/src/CharacterWidths.cpp";
 DATA="$1";
 
 if [[ -z "$DATA" ]]; then
@@ -19,8 +19,8 @@ if [[ -z "$DATA" ]]; then
 
   Usage: $0 <image_path>
 
-Computes a Bitmask18-friendly form of the input image and prints out a C byte
-array defining it.
+Computes the widths of all characters in the input font image and prints out a
+C byte array defining them.
 
 EOF
 	exit 1;

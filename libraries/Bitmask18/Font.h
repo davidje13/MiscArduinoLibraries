@@ -70,7 +70,7 @@ public:
 	{
 		switch(layoutMode) {
 		case 0x00:
-			for(uint16_t i = asciiStart; i <= asciiEnd; ++ i) {
+			for(uint16_t i = 0, e = asciiEnd - asciiStart; i <= e; ++ i) {
 				step += data[i];
 			}
 			break;
@@ -88,6 +88,16 @@ public:
 	[[gnu::pure,nodiscard,gnu::always_inline]]
 	inline bool char_supported(uint8_t c) const {
 		return c >= asciiStart && c <= asciiEnd;
+	}
+
+	[[gnu::pure,nodiscard,gnu::always_inline]]
+	inline uint8_t first_supported_char(void) const {
+		return asciiStart;
+	}
+
+	[[gnu::pure,nodiscard,gnu::always_inline]]
+	inline uint8_t last_supported_char(void) const {
+		return asciiEnd;
 	}
 
 	[[gnu::pure,nodiscard]]

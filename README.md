@@ -20,7 +20,7 @@ constructs within .ino files, but will not mangle library code.
 Compilation is performed using the arduino-builder tool (included with the
 standard Arduino IDE), and has been tested on OS X (it should be possible to
 run on Linux too, but modifications to the compilation script will likely be
-required). Uploading to the connected Arduino (specifically, an ATmega328 chip
+required). Uploading to the connected Arduino (configured for an ATmega328 chip
 with Arduino bootloader, running at 8MHz:
 http://www.hobbytronics.co.uk/atmega328-arduino-8mhz) is performed using the
 avrdude utility tool (also bundled with the Arduino IDE). Note that deployment
@@ -41,7 +41,7 @@ installation to invoke the arduino-builder compiler tool and avrdude binary
 uploader.
 
 Note that it is configured for deploying to an ATmega328 chip running at 8MHz.
-To deploy to an alternative device, change BOARD in compile.sh (the format is
-explained in the file). It may also be necessary to change the UPLOADER_*
+To deploy to an alternative device, change `BOARD` in compile.sh (the format is
+explained in the file). It may also be necessary to change the `UPLOADER_*`
 values further down the script; values for these are harder to find, but check
 boards.txt in your Arduino installation.
