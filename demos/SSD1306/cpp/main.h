@@ -29,9 +29,9 @@
  *    CS -- D* (any available pin; set below)
  */
 
-// To play PONG, attach potentiometers to A0 and A4
-#define PONG_POT_L 4
-#define PONG_POT_R 0
+// To play PONG, attach potentiometers to A0 and A1
+#define PONG_POT_L 0
+#define PONG_POT_R 1
 
 // These can be set to any available pin
 #define OLED_PIN_CS  10
@@ -57,8 +57,6 @@ void setup(void) {
 		(analogRead(1) << 1) ^
 		(analogRead(2) << 2) ^
 		(analogRead(3) << 3) ^
-		(analogRead(4) << 4) ^
-		(analogRead(5) << 5) ^
 		(ADCW << 6) ^ // internal temperature sensor
 		randomMemory
 	);

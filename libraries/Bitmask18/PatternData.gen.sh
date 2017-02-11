@@ -4,9 +4,10 @@ set -e;
 # Generator for the PatternData.h file
 
 SCRIPTDIR="$(dirname "$0")";
+TOOLSDIR="$SCRIPTDIR/../../tools";
+DATADIR="$SCRIPTDIR/data";
 
-CALC="$SCRIPTDIR/tools/calcpatterns.sh";
-DATDIR="$SCRIPTDIR/data";
+CALC="$TOOLSDIR/calcpatterns.sh";
 
 {
 cat <<EOF;
@@ -20,19 +21,19 @@ cat <<EOF;
 #ifdef NO_PATTERNS
 EOF
 
-"$CALC" "$DATDIR/NoPatterns.dat" "$DATDIR"/*.dat;
+"$CALC" "$DATADIR/NoPatterns.dat" "$DATADIR"/*.dat;
 
 cat <<EOF;
 #elifdef REDUCED_PATTERNS
 EOF
 
-"$CALC" "$DATDIR/ReducedPatterns.dat" "$DATDIR"/*.dat;
+"$CALC" "$DATADIR/ReducedPatterns.dat" "$DATADIR"/*.dat;
 
 cat <<EOF;
 #else
 EOF
 
-"$CALC" "$DATDIR/Patterns.dat" "$DATDIR"/*.dat;
+"$CALC" "$DATADIR/Patterns.dat" "$DATADIR"/*.dat;
 
 cat <<EOF;
 #endif

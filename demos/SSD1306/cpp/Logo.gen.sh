@@ -4,9 +4,11 @@ set -e;
 # Generator for the Logo.h file
 
 SCRIPTDIR="$(dirname "$0")";
+TOOLSDIR="$SCRIPTDIR/../../../tools";
+DATADIR="$SCRIPTDIR/../data";
 
-CALC="$SCRIPTDIR/tools/calcbitmap.sh";
-IMG="$SCRIPTDIR/data/logo.png";
+CALC="$TOOLSDIR/calcbitmap.sh";
+IMG="$DATADIR/logo.png";
 
 {
 cat <<EOF;

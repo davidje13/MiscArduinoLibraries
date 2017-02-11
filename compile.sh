@@ -3,8 +3,6 @@ set -e;
 
 SCRIPTDIR="$(dirname "$0")";
 
-ABSDIR="$(cd "$SCRIPTDIR" && pwd)";
-
 # Pro/Pro Mini, ATmega328 8MHz 3.3V (matches 8MHz chip sold by HT)
 BOARD="arduino:avr:pro:cpu=8MHzatmega328";
 COMPORT="/dev/cu.usbserial-A104W1DT";
@@ -17,10 +15,10 @@ COMPORT="/dev/cu.usbserial-A104W1DT";
 # To change optimisation level, replace the 3 -Os occurrences in:
 #  /Applications/Arduino.app/Contents/Java/hardware/arduino/avr/platform.txt
 
-SOURCE="$SCRIPTDIR/src/wrapper/Main.ino";
-LOCAL_SRCDIR="$SCRIPTDIR/src";
-LOCAL_LIBDIR="$SCRIPTDIR/src/libraries";
-OUTPUT="$ABSDIR/out"; # must be absolute (bug in arduino-builder)
+SOURCE="$SCRIPTDIR/wrapper/Main.ino";
+SRCDIR="$SCRIPTDIR/demos/SSD1306";
+LIBDIR="$SCRIPTDIR/libraries";
+OUTPUT="$(cd "$SRCDIR" && pwd)/out"; # must be absolute (bug in arduino-builder)
 
 MODE="upload";
 
@@ -33,7 +31,11 @@ if [[ "$1" == "--check" ]]; then
 fi;
 
 # Invoke all generator scripts
-find "./src" -iname '*.gen.sh' -type f | while read LN; do
+find "$LIBDIR" -iname '*.gen.sh' -type f | while read LN; do
+	"$LN";
+done;
+
+find "$SRCDIR" -iname '*.gen.sh' -type f | while read LN; do
 	"$LN";
 done;
 
@@ -51,7 +53,6 @@ fi;
 BUILDER="arduino-builder";
 BASEDIR="$IDE_PACKAGE/Contents/Java";
 HWDIR="$BASEDIR/hardware";
-LIBDIR="$BASEDIR/libraries";
 
 # Most of these config values come from boards.txt for the chosen $BOARD
 UPLOADER="$HWDIR/tools/avr/bin/avrdude";
@@ -73,9 +74,8 @@ if [[ -x "$BUILDER" ]]; then
 		-hardware "$HWDIR" \
 		-tools "$BASEDIR/tools-builder" \
 		-tools "$HWDIR/tools" \
-		-built-in-libraries "$LIBDIR" \
-		-libraries "$LOCAL_LIBDIR" \
-		-libraries "$LOCAL_SRCDIR" \
+		-libraries "$LIBDIR" \
+		-libraries "$SRCDIR" \
 		-fqbn "$BOARD" \
 		-warnings "all" \
 		-build-path "$OUTPUT" \

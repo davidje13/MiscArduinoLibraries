@@ -1,5 +1,5 @@
 The libraries in this repository have their own (generally permissive) licences.
 Where possible, the libraries are released as Public Domain (specifically, CC0).
 
-The demo sources and resources are GNU GPL 3 licensed (see /src/cpp/LICENSE for
-details).
+The demo sources and resources have their own (less permissive) licenses. Check
+the LICENSE file in each demo directory for details.

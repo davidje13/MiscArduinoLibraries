@@ -11,15 +11,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-Background
-==========
-
-These demo sources are based on work from Hobbytronics, in turn based on work
-from Sparkfun. The sources have been significantly re-written to work with the
-alternative SSD1306 library and implement general improvements in structure and
-capability.
-
-
 Original Hobytronics license
 ============================
 
