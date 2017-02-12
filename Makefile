@@ -1,6 +1,13 @@
 .PHONY : install
-install :
-	@ ./compile.sh --upload
+install : SSD1306
+
+.PHONY : SSD1306
+SSD1306 :
+	@ ./compile.sh --upload SSD1306
+
+.PHONY : HMC5883L
+HMC5883L :
+	@ ./compile.sh --upload HMC5883L
 
 .PHONY : check
 check :

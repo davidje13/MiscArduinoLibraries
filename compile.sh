@@ -3,20 +3,16 @@ set -e;
 
 SCRIPTDIR="$(dirname "$0")";
 
-# Pro/Pro Mini, ATmega328 8MHz 3.3V (matches 8MHz chip sold by HT)
-BOARD="arduino:avr:pro:cpu=8MHzatmega328";
-COMPORT="/dev/cu.usbserial-A104W1DT";
-
-# Board format:
-# arduino:avr:<board>:<flags>
-# For a list of boards & flags, see:
-#  /Applications/Arduino.app/Contents/Java/hardware/arduino/avr/boards.txt
+DEMO="$2";
+if [[ -z "$DEMO" ]]; then
+	DEMO="SSD1306";
+fi;
 
 # To change optimisation level, replace the 3 -Os occurrences in:
 #  /Applications/Arduino.app/Contents/Java/hardware/arduino/avr/platform.txt
 
 SOURCE="$SCRIPTDIR/wrapper/Main.ino";
-SRCDIR="$SCRIPTDIR/demos/SSD1306";
+SRCDIR="$SCRIPTDIR/demos/$DEMO";
 LIBDIR="$SCRIPTDIR/libraries";
 OUTPUT="$(cd "$SRCDIR" && pwd)/out"; # must be absolute (bug in arduino-builder)
 
@@ -54,12 +50,7 @@ BUILDER="arduino-builder";
 BASEDIR="$IDE_PACKAGE/Contents/Java";
 HWDIR="$BASEDIR/hardware";
 
-# Most of these config values come from boards.txt for the chosen $BOARD
-UPLOADER="$HWDIR/tools/avr/bin/avrdude";
-UPLOADER_CONF="$HWDIR/tools/avr/etc/avrdude.conf";
-UPLOADER_DEVICE="atmega328p";
-UPLOADER_PROGRAMMER="arduino";
-UPLOADER_BAUDRATE="57600";
+. "$SCRIPTDIR/target.sh";
 
 mkdir -p "$OUTPUT";
 

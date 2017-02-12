@@ -26,6 +26,9 @@
 #include <BlendMode.h>
 #include <Pattern.h>
 #include <SceneRenderer.h>
+#include <Vector.h>
+#include <Matrix.h>
+#include <Quaternion.h>
 #include <ProgMem.h>
 #include <avr/pgmspace.h>
 

@@ -32,8 +32,7 @@ which have been optimised for the data storage.
 
 ## Dependencies
 
-* The SceneRenderer tools use the FastMath library when generating quaternions.
-  Note that the FastMath library is not public domain, but MIT licensed.
+* The SceneRenderer header uses the Geometry library's vector type
 * The library can be used with the ProgMem library to avoid storing constant
   data in RAM (relevant functions are templated). This is an optional
   dependency.

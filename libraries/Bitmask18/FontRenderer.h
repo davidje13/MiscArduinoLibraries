@@ -183,6 +183,9 @@ public:
 
 	[[gnu::nonnull]]
 	void print(const Font &f, const char *message, int8_t yShift = 0) {
+		if(!message) {
+			return;
+		}
 		char c;
 		for(const char *p = message; (c = p[0]) != '\0'; p = p + 1) {
 			print_part(f, c, yShift);
@@ -191,6 +194,9 @@ public:
 	}
 
 	void print(const Font &f, ProgMem<char> message, int8_t yShift = 0) {
+		if(!message) {
+			return;
+		}
 		char c;
 		for(ProgMem<char> p = message; (c = p[0]) != '\0'; p = p + 1) {
 			print_part(f, c, yShift);
