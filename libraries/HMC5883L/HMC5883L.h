@@ -29,13 +29,13 @@ class HMC5883L {
 public:
 	static const constexpr uint8_t NO_PIN = 0xFF;
 
-	enum ConnectionStatus : uint8_t {
+	enum class ConnectionStatus : uint8_t {
 		CONNECTED = 0,
 		REQUEST_ERR_DATA_TOO_LONG = 1,
 		REQUEST_ERR_NACK_ADDR = 2,
 		REQUEST_ERR_NACK_DATA = 3,
 		REQUEST_ERR_OTHER = 4,
-		READ_ID_FAILED,
+		READ_TIMEOUT,
 		ID_MISMATCH
 	};
 
@@ -224,8 +224,6 @@ public:
 			zz = z;
 		}
 	};
-
-	typedef void(*callback_t)(reading, void*);
 
 private:
 	enum WireError : uint8_t {
@@ -530,7 +528,7 @@ public:
 		}
 		uint8_t buffer[3];
 		if(!read(3, buffer, 10000)) {
-			return ConnectionStatus::READ_ID_FAILED;
+			return ConnectionStatus::READ_TIMEOUT;
 		}
 		if(buffer[0] != 0x48 || buffer[1] != 0x34 || buffer[2] != 0x33) {
 			return ConnectionStatus::ID_MISMATCH;
@@ -611,15 +609,6 @@ public:
 		}
 	}
 
-	bool poll(callback_t callback, void *data, uint16_t maxMicros = 0) {
-		reading r;
-		if(peek_reading(r, maxMicros)) {
-			(*callback)(r, data);
-			return true;
-		}
-		return false;
-	}
-
 	reading current_reading(void) {
 		if(state == ReqState::NONE) {
 			rapidSamples = false;
@@ -657,14 +646,6 @@ public:
 	reading read_sync(void) {
 		read_async();
 		return next_reading();
-	}
-
-	[[gnu::always_inline]]
-	void read_continuous_sync(Rate rate, callback_t callback, void *data) {
-		read_continuous_async(rate);
-		while(state != ReqState::NONE) {
-			(*callback)(next_reading(), data);
-		}
 	}
 
 	[[nodiscard]]
@@ -752,7 +733,7 @@ public:
 		return record_calibration(c, positive_bias);
 	}
 
-	HMC5883L(uint8_t drdy = 0xFF)
+	HMC5883L(uint8_t drdy = NO_PIN)
 		: state(ReqState::NONE)
 		, drdyPin(drdy)
 		, gainCache(Gain::G1090) // Assume default
@@ -769,7 +750,7 @@ public:
 	{
 		// Device supports up to 400kHz
 		Wire.setClock(400000);
-		if(drdyPin != 0xFF) {
+		if(drdyPin != NO_PIN) {
 			pinMode(drdyPin, INPUT);
 		}
 	}

@@ -9,6 +9,10 @@ SSD1306 :
 HMC5883L :
 	@ ./compile.sh --upload HMC5883L
 
+.PHONY : ITG3200
+ITG3200 :
+	@ ./compile.sh --upload ITG3200
+
 .PHONY : check
 check :
 	@ ./compile.sh --check

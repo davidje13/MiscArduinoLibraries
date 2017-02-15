@@ -110,19 +110,31 @@ void demoText(Display &display) {
 		bitmask.clear();
 
 		auto r = MakeFontRenderer(&bitmask, 0, 0, bitmask.width(), 0);
-		r.print(f0, ProgMemString("A0: "), 4);
+		r.set_yshift(4);
+		r.print(f0, ProgMemString("A0: "));
+		r.set_yshift(0);
 		r.print_number(f2, analogRead(A0), 4);
-		r.print(f0, ProgMemString(" /1024"), 8);
+		r.set_yshift(8);
+		r.print(f0, ProgMemString(" /1024"));
+		r.set_yshift(0);
 
 		r.move(0, 20, bitmask.width(), 0);
-		r.print(f0, ProgMemString("A1: "), 4);
+		r.set_yshift(4);
+		r.print(f0, ProgMemString("A1: "));
+		r.set_yshift(0);
 		r.print_number(f2, analogRead(A1), 4);
-		r.print(f0, ProgMemString(" /1024"), 8);
+		r.set_yshift(8);
+		r.print(f0, ProgMemString(" /1024"));
+		r.set_yshift(0);
 
 		r.move(0, 40, bitmask.width(), 0);
-		r.print(f0, ProgMemString("A2: "), 4);
+		r.set_yshift(4);
+		r.print(f0, ProgMemString("A2: "));
+		r.set_yshift(0);
 		r.print_number(f2, analogRead(A2), 4);
-		r.print(f0, ProgMemString(" /1024"), 8);
+		r.set_yshift(8);
+		r.print(f0, ProgMemString(" /1024"));
+		r.set_yshift(0);
 
 		display.send(bitmask);
 		delay(100);
@@ -141,7 +153,9 @@ void demoText(Display &display) {
 			bitmask.clear();
 			r.move(40, 5, bitmask.width() - 50, 0);
 			r.print_number(f3, remainingCents / 100, 2);
-			r.print(f1, ':', 16);
+			r.set_yshift(16);
+			r.print(f1, ':');
+			r.set_yshift(0);
 			r.print_number(f3, remainingCents % 100, 2);
 			display.send(bitmask);
 			delay(1);

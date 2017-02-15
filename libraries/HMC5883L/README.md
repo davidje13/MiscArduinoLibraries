@@ -11,7 +11,8 @@ device.
 
 ## Features
 
-* I2C communication
+* I2C communication (at 400kHz)
+* Connection diagnostics
 * Optional support for DRDY (interupt) pin - if not provided, will fall-back to
   polling over I2C
 * Optional support for configuring DRDY pin as interrupt - if a pin is given

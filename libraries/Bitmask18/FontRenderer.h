@@ -35,13 +35,14 @@ class FontRenderer {
 	int16_t cx;
 	int16_t cy;
 	int16_t lnHeight;
+	int8_t yShift;
 
 	uint8_t wordbuffer[8];
 	uint8_t wordlen;
 	int16_t wordw;
 	bool softhyphen;
 
-	void dump(const Font &f, uint8_t lim, int8_t yShift) {
+	void dump(const Font &f, uint8_t lim) {
 		for(uint8_t i = 0; i < lim; ++ i) {
 			uint16_t cw = (f.render(*tgt, wordbuffer[i], cx, cy + yShift) + f.spacing());
 			cx += cw;
@@ -72,6 +73,7 @@ public:
 		, cx(xPos + indent)
 		, cy(yPos)
 		, lnHeight(0)
+		, yShift(0)
 		, wordbuffer()
 		, wordlen(0)
 		, wordw(0)
@@ -84,6 +86,11 @@ public:
 		cy = yPos;
 	}
 
+	[[gnu::always_inline]]
+	void set_yshift(int8_t y) {
+		yShift = y;
+	}
+
 	[[gnu::pure,nodiscard,gnu::always_inline]]
 	int16_t cursor_x(void) const {
 		return cx;
@@ -94,15 +101,15 @@ public:
 		return cy;
 	}
 
-	void end_section(const Font &f, int8_t yShift) {
+	void end_section(const Font &f) {
 		if(wordlen != 0) {
-			dump(f, wordlen, yShift);
+			dump(f, wordlen);
 			wordw = 0; // Not required, but be safe
 			softhyphen = false;
 		}
 	}
 
-	void print_part(const Font &f, uint8_t c, int8_t yShift) {
+	void print_part(const Font &f, uint8_t c) {
 		static PROGMEM const char OPTIONAL_RENDER[] = " \r\n\t";
 		static PROGMEM const char WRAP_BEFORE[] = "([{<#";
 		static PROGMEM const char WRAP_AFTER[] = ",:;?!)]}>/\\|%";
@@ -111,7 +118,7 @@ public:
 		int16_t cw = int16_t(f.measure(c)) + int16_t(f.spacing());
 
 		if(strchr_P(OPTIONAL_RENDER, c) != nullptr) {
-			end_section(f, yShift);
+			end_section(f);
 
 			int16_t next;
 			if(c == '\t') {
@@ -144,13 +151,13 @@ public:
 			// special case
 			(strchr_P(WRAP_AFTER_EXCL_NUM, latest_char()) != nullptr && (c < '0' || c > '9'))
 		) {
-			end_section(f, yShift);
+			end_section(f);
 		}
 
 		if(f.char_supported(c)) {
 			if(cx + wordw + cw > xlim) {
 				if(x + wordw + cw > xlim) {
-					end_section(f, yShift);
+					end_section(f);
 					softhyphen = true;
 				}
 				if(softhyphen && cx + int16_t(f.measure('-')) <= xlim) {
@@ -163,7 +170,7 @@ public:
 
 			// TODO: better forced-wrapping
 			if(wordlen >= sizeof(wordbuffer)) {
-				dump(f, 4, yShift);
+				dump(f, 4);
 				softhyphen = true;
 			}
 
@@ -172,43 +179,43 @@ public:
 		}
 
 		if(strchr_P(WRAP_AFTER, c) != nullptr) {
-			end_section(f, yShift);
+			end_section(f);
 		}
 	}
 
-	void print(const Font &f, char c, int8_t yShift = 0) {
-		print_part(f, c, yShift);
-		end_section(f, yShift);
+	void print(const Font &f, char c) {
+		print_part(f, c);
+		end_section(f);
 	}
 
 	[[gnu::nonnull]]
-	void print(const Font &f, const char *message, int8_t yShift = 0) {
+	void print(const Font &f, const char *message) {
 		if(!message) {
 			return;
 		}
 		char c;
 		for(const char *p = message; (c = p[0]) != '\0'; p = p + 1) {
-			print_part(f, c, yShift);
+			print_part(f, c);
 		}
-		end_section(f, yShift);
+		end_section(f);
 	}
 
-	void print(const Font &f, ProgMem<char> message, int8_t yShift = 0) {
+	void print(const Font &f, ProgMem<char> message) {
 		if(!message) {
 			return;
 		}
 		char c;
 		for(ProgMem<char> p = message; (c = p[0]) != '\0'; p = p + 1) {
-			print_part(f, c, yShift);
+			print_part(f, c);
 		}
-		end_section(f, yShift);
+		end_section(f);
 	}
 
 	template <typename T>
-	void print_number(const Font &f, T n, uint8_t minDigits = 1, int8_t yShift = 0) {
+	void print_number(const Font &f, T n, uint8_t minDigits = 1) {
 		T r = n;
 		if(r < 0) {
-			print_part(f, '-', yShift);
+			print_part(f, '-');
 			r = -r;
 		}
 		uint8_t c = 0;
@@ -222,7 +229,32 @@ public:
 		}
 		c = min(max(c, minDigits), lim);
 		buf[lim] = '\0';
-		print(f, &buf[lim-c], yShift);
+		print(f, &buf[lim-c]);
+	}
+
+	void print_number(
+		const Font &f,
+		float n,
+		uint8_t decimalPlaces = 0,
+		uint8_t minDigits = 1
+	) {
+		float r = n;
+		if(r < 0) {
+			print_part(f, '-');
+			r = -r;
+		}
+		uint32_t integer = uint32_t(r);
+		print_number(f, integer, minDigits);
+		if(decimalPlaces == 0) {
+			return;
+		}
+		print(f, '.');
+		r -= integer;
+		for(int i = 0; i < decimalPlaces; ++ i) {
+			r *= 10;
+		}
+		// TODO: add 0.5 for rounding (but needs integer part to be altered too)
+		print_number(f, uint32_t(r), decimalPlaces);
 	}
 };
 

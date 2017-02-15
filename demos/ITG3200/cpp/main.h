@@ -18,22 +18,23 @@
  *    GND -- GND
  *    SCL -- A5 (SCL), with pull-up resistor (e.g. 10k to 3.3V)
  *    SDA -- A4 (SDA), with pull-up resistor (e.g. 10k to 3.3V)
- * M_DRDY -- D* (optional, any pin, ideally interrupt-capable; set below)
- * A_INT1 -- none (not used by compass)
- *  G_INT -- none (not used by compass)
+ * M_DRDY -- none (not used by gyroscope)
+ * A_INT1 -- none (not used by gyroscope)
+ *  G_INT -- D* (optional, any pin, ideally interrupt-capable; set below)
  */
 
-#define MAGNETOMETER_DRDY HMC5883L::NO_PIN
+#define GYROSCOPE_INT ITG3200::NO_PIN
 
 #define OLED_PIN_CS  10
 #define OLED_PIN_RST 7
 #define OLED_PIN_DC  9
 
-#include <HMC5883L.h>
+#include <ITG3200.h>
+#include <GyroAccumulator.h>
 #include <SSD1306.h>
 #include <Bitmask18.h>
 #include <Font.h>
-#include <FontVariable.h>
+#include <FontFixed.h>
 #include <FontRenderer.h>
 #include <Wire.h>
 
@@ -44,7 +45,7 @@ void message(
 	Message msg1,
 	Message msg2
 ) {
-	Font f(FONTVARIABLE_DATA, FONTVARIABLE_IMG, FONTVARIABLE_MASK);
+	Font f(FONTFIXED_DATA, FONTFIXED_IMG, FONTFIXED_MASK);
 
 	bitmask.clear();
 	auto r = MakeFontRenderer(&bitmask, 0, 0, bitmask.width(), 0);
@@ -87,92 +88,119 @@ void show_reading(
 }
 
 template <typename Display>
-void demoCompass(
-	HMC5883L &compass,
+void demoGyroscope(
+	ITG3200 &gyroscope,
 	Display &display
 ) {
 	Bitmask18<display.width(),display.height()> bitmask;
 
-	HMC5883L::ConnectionStatus status = compass.connection_status();
-	if(status != HMC5883L::ConnectionStatus::CONNECTED) {
+	Font f(FONTFIXED_DATA, FONTFIXED_IMG, FONTFIXED_MASK);
+
+	gyroscope.awake();
+
+	ITG3200::ConnectionStatus status = gyroscope.connection_status();
+	if(status != ITG3200::ConnectionStatus::CONNECTED) {
 		ProgMem<char> detail;
 		switch(status) {
-		case HMC5883L::ConnectionStatus::CONNECTED:
+		case ITG3200::ConnectionStatus::CONNECTED:
 			break;
-		case HMC5883L::ConnectionStatus::REQUEST_ERR_DATA_TOO_LONG:
+		case ITG3200::ConnectionStatus::REQUEST_ERR_DATA_TOO_LONG:
 			detail = ProgMemString("REQUEST_ERR_DATA_TOO_LONG");
 			break;
-		case HMC5883L::ConnectionStatus::REQUEST_ERR_NACK_ADDR:
+		case ITG3200::ConnectionStatus::REQUEST_ERR_NACK_ADDR:
 			detail = ProgMemString("REQUEST_ERR_NACK_ADDR");
 			break;
-		case HMC5883L::ConnectionStatus::REQUEST_ERR_NACK_DATA:
+		case ITG3200::ConnectionStatus::REQUEST_ERR_NACK_DATA:
 			detail = ProgMemString("REQUEST_ERR_NACK_DATA");
 			break;
-		case HMC5883L::ConnectionStatus::REQUEST_ERR_OTHER:
+		case ITG3200::ConnectionStatus::REQUEST_ERR_OTHER:
 			detail = ProgMemString("REQUEST_ERR_OTHER");
 			break;
-		case HMC5883L::ConnectionStatus::READ_TIMEOUT:
+		case ITG3200::ConnectionStatus::READ_TIMEOUT:
 			detail = ProgMemString("READ_TIMEOUT");
 			break;
-		case HMC5883L::ConnectionStatus::ID_MISMATCH:
+		case ITG3200::ConnectionStatus::ID_MISMATCH:
 			detail = ProgMemString("ID_MISMATCH");
 			break;
 		}
 		message(display, bitmask, ProgMemString(
-			"No compass (HMC5883L) found on I2C!"
+			"No gyroscope (ITG3200) found on I2C!"
 		), detail);
 		delay(3000);
 		return;
 	}
 
-	message(display, bitmask, ProgMemString("Running compass self-test..."));
+	// Filter out low frequency noise. Also sets base frequency to 1kHz
+	gyroscope.set_filter_bandwidth(ITG3200::LowPassBandwidth::L188_HZ);
 
-	if(compass.test()) {
-		message(display, bitmask, ProgMemString("Self-test passed :D"));
-	} else {
-		message(display, bitmask, ProgMemString("Self-test failed :("));
+	// No point sampling too fast; takes 10ms to update screen; divide the
+	// 1kHz above by 16 to sample ~every 60ms
+	gyroscope.set_sample_rate_divider(16);
+
+	// More reliable clock source according to data sheet
+	gyroscope.set_clock_source_sync(ITG3200::ClockSource::X_GYRO);
+
+	GyroAccumulator<ITG3200::reading> accumulator;
+
+	message(display, bitmask, ProgMemString("Finding zero point..."));
+	accumulator.begin_calibration();
+	for(int n = 0; n < 128; ++ n) {
+		auto reading = gyroscope.next_reading();
+		if(reading.is_valid()) {
+			accumulator.accumulate(reading);
+		}
 	}
-
-	delay(2000);
-
-	compass.set_averaging(HMC5883L::Averaging::A4);
-	compass.set_gain(HMC5883L::Gain::G1370);
-	compass.read_continuous_async(HMC5883L::Rate::R75_HZ);
+	accumulator.complete_calibration();
 
 	uint16_t t0 = millis();
+	bool frameDot = false;
 	while(uint16_t(millis() - t0) < 20000) {
-		auto reading = compass.next_reading();
-		if(reading.is_saturated()) {
-			message(display, bitmask, ProgMemString("SATURATED!"));
-		} else if(!reading.is_valid()) {
+		auto reading = gyroscope.next_reading();
+		if(!reading.is_valid()) {
 			message(display, bitmask, ProgMemString("NO DATA!"));
 		} else {
-			// Rotate according to angle from chip to display
-			// (this should be changed to match the circuit. For non-trivial
-			// rotations, consider using quaternions from the Geometry lib)
-			int16_t x = -reading.y();
-			int16_t y = reading.z();
-//			int16_t z = reading.x();
-			int16_t d = sqrt(x * int32_t(x) + y * int32_t(y));
+			accumulator.accumulate(reading);
 
 			bitmask.clear();
-			show_reading(bitmask, 33, 1, 61, 61, x, y, d);
+			frameDot = !frameDot;
+			if(frameDot) {
+				bitmask.fill_rect(120, 0, 8, 8);
+			}
+
+			show_reading(bitmask,  1, 17, 31, 31,
+				sin(accumulator.x_millideg() * PI * 2.0 / 360000.0) * 1000,
+				cos(accumulator.x_millideg() * PI * 2.0 / 360000.0) * 1000,
+				1000
+			);
+			show_reading(bitmask, 33, 17, 31, 31,
+				sin(accumulator.y_millideg() * PI * 2.0 / 360000.0) * 1000,
+				cos(accumulator.y_millideg() * PI * 2.0 / 360000.0) * 1000,
+				1000
+			);
+			show_reading(bitmask, 65, 17, 31, 31,
+				sin(accumulator.z_millideg() * PI * 2.0 / 360000.0) * 1000,
+				cos(accumulator.z_millideg() * PI * 2.0 / 360000.0) * 1000,
+				1000
+			);
+			auto r = MakeFontRenderer(&bitmask, 97, 54, 31, 0);
+			r.print_number(f, reading.temperature_millicelsius() * 0.001, 1, 2);
+			r.print(f, 'C');
 			display.send(bitmask);
 		}
 	}
 
-	compass.stop();
+	gyroscope.sleep();
 }
 
 void setup(void) {
 	Wire.begin();
 
-	HMC5883L compass(MAGNETOMETER_DRDY);
+	ITG3200 gyroscope(false, GYROSCOPE_INT);
 
 	SSD1306<> oled(OLED_PIN_CS, OLED_PIN_RST, OLED_PIN_DC);
 	oled.set_on(true);
 
 	while(true) {
-		demoCompass(compass, oled);
+		demoGyroscope(gyroscope, oled);
 	}
 }
