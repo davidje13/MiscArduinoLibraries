@@ -13,6 +13,10 @@ HMC5883L :
 ITG3200 :
 	@ ./compile.sh --upload ITG3200
 
+.PHONY : ADXL345
+ADXL345 :
+	@ ./compile.sh --upload ADXL345
+
 .PHONY : check
 check :
 	@ ./compile.sh --check

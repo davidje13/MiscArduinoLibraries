@@ -439,7 +439,9 @@ private:
 
 	reading grab_reading(void) {
 		if(currentRegister != DATA_X_MSB) {
-			set_register(DATA_X_MSB);
+			if(set_register(DATA_X_MSB) != SUCCESS) {
+				return reading();
+			}
 		}
 		uint8_t buffer[6];
 		if(!read(6, buffer, 10000)) {
