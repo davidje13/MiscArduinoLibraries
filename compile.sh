@@ -15,6 +15,7 @@ SOURCE="$SCRIPTDIR/wrapper/Main.ino";
 SRCDIR="$SCRIPTDIR/demos/$DEMO";
 LIBDIR="$SCRIPTDIR/libraries";
 OUTPUT="$(cd "$SRCDIR" && pwd)/out"; # must be absolute (bug in arduino-builder)
+BOOSTDIR="/opt/local/include";
 
 MODE="upload";
 
@@ -24,6 +25,10 @@ fi;
 
 if [[ "$1" == "--check" ]]; then
 	MODE="check";
+fi;
+
+if [[ "$1" == "--local-test" ]]; then
+	MODE="local-test";
 fi;
 
 # Invoke all generator scripts
@@ -36,6 +41,31 @@ find "$SRCDIR" -iname '*.gen.sh' -type f | while read LN; do
 done;
 
 if [[ "$MODE" == "preprocess" ]]; then
+	exit 0;
+fi;
+
+if [[ "$MODE" == "local-test" ]]; then
+	if [[ -z "$2" ]]; then
+		LIB=".";
+		TESTNAME="all";
+	else
+		LIB="libraries/$2";
+		TESTNAME="$2";
+	fi;
+
+	mkdir -p "$SCRIPTDIR/out";
+	find "$LIB" -path '*/test/*.cpp' -exec \
+		g++ --std=c++11 -isystem"$BOOSTDIR" \
+		-o "$SCRIPTDIR/out/test-$TESTNAME" \
+		"$SCRIPTDIR/test.cpp" \
+		{} +;
+
+	"./out/test-$TESTNAME" \
+		--build_info=true \
+		--color_output=true \
+		--show_progress=true \
+		--log_level=warning \
+		--report_level=confirm;
 	exit 0;
 fi;
 

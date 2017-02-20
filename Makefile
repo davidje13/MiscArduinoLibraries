@@ -29,5 +29,13 @@ preprocess :
 clean :
 	@ rm -rf "out";
 
+.PHONY : local-test
+local-test :
+	@ ./compile.sh --local-test
+
+.PHONY : remote-test
+remote-test :
+# TODO
+
 .PHONY : test
-test : check
+test : local-test remote-test check
