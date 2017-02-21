@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef FONT1_H_INCLUDED
 #define FONT1_H_INCLUDED
 
-#include <avr/pgmspace.h>
+#include <ProgMem.h>
 
 // 8x16
 static PROGMEM const uint8_t F1DATA[] = {

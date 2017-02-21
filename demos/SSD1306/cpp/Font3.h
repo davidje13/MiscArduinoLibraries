@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef FONT3_H_INCLUDED
 #define FONT3_H_INCLUDED
 
-#include <avr/pgmspace.h>
+#include <ProgMem.h>
 
 // large-num
 static PROGMEM const uint8_t F3DATA[] = {

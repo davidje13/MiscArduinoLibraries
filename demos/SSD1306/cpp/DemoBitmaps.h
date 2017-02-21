@@ -24,7 +24,6 @@
 
 #include <StaticBitmask18.h>
 #include <ProgMem.h>
-#include <avr/pgmspace.h>
 
 #include "logo.h"
 

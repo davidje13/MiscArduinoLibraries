@@ -1,5 +1,5 @@
 /*
- * SSD1306 - SSD1306 communication library.
+ * SSD1306 - SSD1306 (Display) communication library.
  * Written in 2017 by David Evans
  *
  * To the extent possible under law, the author(s) have dedicated all copyright

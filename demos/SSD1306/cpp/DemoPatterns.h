@@ -26,7 +26,6 @@
 #include <BlendMode.h>
 #include <Pattern.h>
 #include <ProgMem.h>
-#include <avr/pgmspace.h>
 
 struct PatternDetails {
 	BlendMode blend;

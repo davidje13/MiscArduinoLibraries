@@ -19,7 +19,10 @@ ADXL345 :
 
 .PHONY : check
 check :
-	@ ./compile.sh --check
+	@ ./compile.sh --check SSD1306
+	@ ./compile.sh --check HMC5883L
+	@ ./compile.sh --check ITG3200
+	@ ./compile.sh --check ADXL345
 
 .PHONY : preprocess
 preprocess :

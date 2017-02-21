@@ -19,7 +19,19 @@
 #ifndef PROGMEM_H_INCLUDED
 #define PROGMEM_H_INCLUDED
 
-#include <avr/pgmspace.h>
+#if defined(__AVR__)
+#  include <avr/pgmspace.h>
+#else
+#  define PROGMEM
+#  define PSTR(s) s
+#  define memcpy_P(a,b,l) memcpy(a,b,l)
+#  define strchr_P(a,b) strchr(a,b)
+#  define pgm_read_byte_near(x) (*static_cast<const uint8_t*>(x))
+#  define pgm_read_word_near(x) (*static_cast<const uint16_t*>(x))
+#  define pgm_read_dword_near(x) (*static_cast<const uint32_t*>(x))
+#  define pgm_read_float_near(x) (*static_cast<const float*>(x))
+#  define pgm_read_ptr_near(x) (*static_cast<void* const*>(x))
+#endif
 
 // If the newer nodiscard attribute is available, use it
 #ifdef __has_cpp_attribute

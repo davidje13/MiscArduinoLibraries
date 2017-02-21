@@ -23,6 +23,14 @@
 #  define nodiscard gnu::warn_unused_result
 #endif
 
+#if defined(__AVR__)
+#  include <avr/pgmspace.h>
+#else
+#  define PROGMEM
+#  define pgm_read_byte_near(x) (*static_cast<const uint8_t*>(x))
+#  define pgm_read_word_near(x) (*static_cast<const uint16_t*>(x))
+#endif
+
 /**
  * Fast 16-bit approximation of sin(x). This approximation never varies more
  * than 0.69% from the correct value

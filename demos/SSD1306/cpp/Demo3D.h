@@ -30,7 +30,6 @@
 #include <Matrix.h>
 #include <Quaternion.h>
 #include <ProgMem.h>
-#include <avr/pgmspace.h>
 
 /*
  *  x-> y^ z.

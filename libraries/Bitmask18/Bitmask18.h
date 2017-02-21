@@ -24,7 +24,6 @@
 #include "Pattern.h"
 
 #include <ProgMem.h>
-#include <avr/pgmspace.h>
 
 // If the newer nodiscard attribute is available, use it
 #ifdef __has_cpp_attribute

@@ -1,9 +1,5 @@
 #include <boost/test/unit_test.hpp>
 
-#define PROGMEM
-#define pgm_read_word_near(x) (*static_cast<const uint16_t*>(x))
-#define pgm_read_byte_near(x) (*static_cast<const uint8_t*>(x))
-
 #include "../FastMath.h"
 #include <cmath>
 
