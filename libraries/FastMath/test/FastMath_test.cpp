@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include "../FastMath.h"
+#include "../FastMath.cpp"
 #include <cmath>
 
 BOOST_AUTO_TEST_SUITE(FastMath_test)

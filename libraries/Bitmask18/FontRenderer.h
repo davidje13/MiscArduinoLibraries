@@ -13,9 +13,11 @@
 #ifndef FONTRENDERER_H_INCLUDED
 #define FONTRENDERER_H_INCLUDED
 
-#include "Font.h"
-
-#include <ProgMem.h>
+#ifdef ARDUINO
+#  include <ProgMem.h>
+#else
+#  include <ProgMem/ProgMem.h>
+#endif
 
 // If the newer nodiscard attribute is available, use it
 #ifdef __has_cpp_attribute
@@ -41,13 +43,22 @@ class FontRenderer {
 	int16_t wordw;
 	bool softhyphen;
 
+	template <typename T>
+	[[gnu::const,nodiscard,gnu::always_inline]]
+	static constexpr inline T max2(T a, T b) { return (a < b) ? b : a; }
+
+	template <typename T>
+	[[gnu::const,nodiscard,gnu::always_inline]]
+	static constexpr inline T min2(T a, T b) { return (a < b) ? a : b; }
+
+	template <typename Font>
 	void dump(const Font &f, uint8_t lim) {
 		for(uint8_t i = 0; i < lim; ++ i) {
 			uint16_t cw = (f.render(*tgt, wordbuffer[i], cx, cy + yShift) + f.spacing());
 			cx += cw;
 			wordw -= cw;
 		}
-		lnHeight = max(lnHeight, f.line_height());
+		lnHeight = max2(lnHeight, int16_t(f.line_height()));
 		wordlen -= lim;
 		memcpy(wordbuffer, &wordbuffer[lim], wordlen);
 	}
@@ -100,6 +111,7 @@ public:
 		return cy;
 	}
 
+	template <typename Font>
 	void end_section(const Font &f) {
 		if(wordlen != 0) {
 			dump(f, wordlen);
@@ -108,6 +120,7 @@ public:
 		}
 	}
 
+	template <typename Font>
 	void print_part(const Font &f, uint8_t c) {
 		static PROGMEM const char OPTIONAL_RENDER[] = " \r\n\t";
 		static PROGMEM const char WRAP_BEFORE[] = "([{<#";
@@ -125,7 +138,7 @@ public:
 			} else {
 				next = cx + cw;
 			}
-			next = min(next, xlim);
+			next = min2(next, xlim);
 			if(cx + cw <= next) {
 				f.render(*tgt, c, cx, cy);
 			}
@@ -136,7 +149,7 @@ public:
 				break;
 			case '\n':
 				cx = x;
-				cy += max(lnHeight, f.line_height());
+				cy += max2(lnHeight, int16_t(f.line_height()));
 				lnHeight = 0;
 				break;
 			default:
@@ -182,12 +195,13 @@ public:
 		}
 	}
 
+	template <typename Font>
 	void print(const Font &f, char c) {
 		print_part(f, c);
 		end_section(f);
 	}
 
-	[[gnu::nonnull]]
+	template <typename Font>
 	void print(const Font &f, const char *message) {
 		if(!message) {
 			return;
@@ -199,6 +213,7 @@ public:
 		end_section(f);
 	}
 
+	template <typename Font>
 	void print(const Font &f, ProgMem<char> message) {
 		if(!message) {
 			return;
@@ -210,7 +225,7 @@ public:
 		end_section(f);
 	}
 
-	template <typename T>
+	template <typename Font, typename T>
 	void print_number(const Font &f, T n, uint8_t minDigits = 1) {
 		T r = n;
 		if(r < 0) {
@@ -226,11 +241,49 @@ public:
 			r /= 10;
 			++ c;
 		}
-		c = min(max(c, minDigits), lim);
+		c = min2(max2(c, minDigits), lim);
 		buf[lim] = '\0';
 		print(f, &buf[lim-c]);
 	}
 
+	template <typename Font, typename T>
+	void print_number_base(const Font &f, T n, uint8_t base, uint8_t minDigits = 1) {
+		T r = n;
+		if(r < 0) {
+			print_part(f, '-');
+			r = -r;
+		}
+
+		if(base == 1) {
+			while(r --) {
+				print(f, '1');
+			}
+		} else {
+			uint8_t c = 0;
+			char buf[33]; // 32-bit int in base 2
+			uint8_t lim = sizeof(buf) - 1;
+			memset(buf, '0', lim);
+			while(r > 0 && c < lim) {
+				uint8_t d = (r % base);
+				char digit;
+				if(d < 10) {
+					digit = d + '0';
+				} else if(d < 36) {
+					digit = d + 'A' - 10;
+				} else {
+					digit = d + 'a' - 36;
+				}
+				buf[lim-c-1] = digit;
+				r /= base;
+				++ c;
+			}
+			c = min2(max2(c, minDigits), lim);
+			buf[lim] = '\0';
+			print(f, &buf[lim-c]);
+		}
+	}
+
+	template <typename Font>
 	void print_number(
 		const Font &f,
 		float n,

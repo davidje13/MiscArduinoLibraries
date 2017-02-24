@@ -56,6 +56,9 @@ if [[ "$MODE" == "local-test" ]]; then
 	mkdir -p "$SCRIPTDIR/out";
 	find "$LIB" -path '*/test/*.cpp' -exec \
 		g++ --std=c++11 -isystem"$BOOSTDIR" \
+		-fno-rtti \
+		-Wall -Wextra --pedantic \
+		-I "$SCRIPTDIR/libraries" \
 		-o "$SCRIPTDIR/out/test-$TESTNAME" \
 		"$SCRIPTDIR/test.cpp" \
 		{} +;

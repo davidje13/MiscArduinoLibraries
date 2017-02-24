@@ -15,7 +15,11 @@
 
 #include "PatternData.h"
 
-#include <ProgMem.h>
+#ifdef ARDUINO
+#  include <ProgMem.h>
+#else
+#  include <ProgMem/ProgMem.h>
+#endif
 
 // If the newer nodiscard attribute is available, use it
 #ifdef __has_cpp_attribute

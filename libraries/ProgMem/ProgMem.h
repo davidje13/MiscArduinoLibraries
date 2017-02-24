@@ -26,11 +26,11 @@
 #  define PSTR(s) s
 #  define memcpy_P(a,b,l) memcpy(a,b,l)
 #  define strchr_P(a,b) strchr(a,b)
-#  define pgm_read_byte_near(x) (*static_cast<const uint8_t*>(x))
-#  define pgm_read_word_near(x) (*static_cast<const uint16_t*>(x))
-#  define pgm_read_dword_near(x) (*static_cast<const uint32_t*>(x))
-#  define pgm_read_float_near(x) (*static_cast<const float*>(x))
-#  define pgm_read_ptr_near(x) (*static_cast<void* const*>(x))
+#  define pgm_read_byte_near(x) (*(const uint8_t*)(x))
+#  define pgm_read_word_near(x) (*(const uint16_t*)(x))
+#  define pgm_read_dword_near(x) (*(const uint32_t*)(x))
+#  define pgm_read_float_near(x) (*(const float*)(x))
+#  define pgm_read_ptr_near(x) (*(void* const*)(x))
 #endif
 
 // If the newer nodiscard attribute is available, use it
@@ -162,7 +162,7 @@ public:
 
 	[[gnu::pure,nodiscard,gnu::always_inline]]
 	inline T *operator[](int index) const {
-		return pgm_read_ptr_near(this->p + index);
+		return static_cast<T*>(pgm_read_ptr_near(this->p + index));
 	}
 };
 

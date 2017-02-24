@@ -15,7 +15,11 @@
 
 #include "BlendMode.h"
 
-#include <ProgMem.h>
+#ifdef ARDUINO
+#  include <ProgMem.h>
+#else
+#  include <ProgMem/ProgMem.h>
+#endif
 
 // If the newer nodiscard attribute is available, use it
 #ifdef __has_cpp_attribute
@@ -124,7 +128,7 @@ public:
 	}
 
 	template <typename T>
-	[[gnu::pure,nodiscard,gnu::nonnull]]
+	[[gnu::pure,nodiscard]]
 	uint16_t measure(T message) const {
 		if(!message) {
 			return 0;
@@ -200,7 +204,6 @@ public:
 	}
 
 	template <typename Bitmask, typename T>
-	[[gnu::nonnull]]
 	uint8_t render(Bitmask &bitmask, T message, int x, int y) const {
 		if(!message) {
 			return 0;
