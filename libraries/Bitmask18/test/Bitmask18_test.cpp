@@ -1,4 +1,6 @@
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+#include <boost/test/data/generators.hpp>
 
 #include "../Bitmask18.h"
 
@@ -72,7 +74,7 @@ BOOST_AUTO_TEST_CASE(pixel_set) {
 
 BOOST_AUTO_TEST_CASE(fill_rect_small) {
 	Bitmask18<16,16> bitmask;
-	bitmask.fill_rect(2, 2, 4, 4, BlendMode::ON, PATTERN_ON);
+	bitmask.fill_rect(2, 2, 4, 4, BlendMode::XOR, PATTERN_ON);
 	BOOST_CHECK_EQUAL(bitmask.raw()[0], 0x00);
 	BOOST_CHECK_EQUAL(bitmask.raw()[1], 0x00);
 	BOOST_CHECK_EQUAL(bitmask.raw()[2], 0x3C);
@@ -86,7 +88,7 @@ BOOST_AUTO_TEST_CASE(fill_rect_small) {
 
 BOOST_AUTO_TEST_CASE(fill_rect_clip) {
 	Bitmask18<16,16> bitmask;
-	bitmask.fill_rect(-2, -2, 19, 19, BlendMode::ON, PATTERN_ON);
+	bitmask.fill_rect(-2, -2, 19, 19, BlendMode::XOR, PATTERN_ON);
 	for(int i = 6; i < 32; ++ i) {
 		BOOST_CHECK_EQUAL(bitmask.raw()[i], 0xFF);
 	}
@@ -94,7 +96,7 @@ BOOST_AUTO_TEST_CASE(fill_rect_clip) {
 
 BOOST_AUTO_TEST_CASE(outline_rect) {
 	Bitmask18<16,16> bitmask;
-	bitmask.outline_rect(2, 2, 4, 4, 1, BlendMode::ON, PATTERN_ON);
+	bitmask.outline_rect(2, 2, 4, 4, 1, BlendMode::XOR, PATTERN_ON);
 	BOOST_CHECK_EQUAL(bitmask.raw()[0], 0x00);
 	BOOST_CHECK_EQUAL(bitmask.raw()[1], 0x00);
 	BOOST_CHECK_EQUAL(bitmask.raw()[2], 0x3C);
@@ -108,7 +110,7 @@ BOOST_AUTO_TEST_CASE(outline_rect) {
 
 BOOST_AUTO_TEST_CASE(outline_rect_clip) {
 	Bitmask18<16,16> bitmask;
-	bitmask.outline_rect(-2, -2, 19, 19, 1, BlendMode::ON, PATTERN_ON);
+	bitmask.outline_rect(-2, -2, 19, 19, 1, BlendMode::XOR, PATTERN_ON);
 	for(int i = 6; i < 32; ++ i) {
 		BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x00);
 	}
@@ -142,10 +144,12 @@ BOOST_AUTO_TEST_CASE(render_fs_bitmap_progmem) {
 	}
 }
 
-BOOST_AUTO_TEST_CASE(render_bitmap_tiny) {
+BOOST_DATA_TEST_CASE(render_bitmap_tiny,
+	boost::unit_test::data::xrange(-3, 10, 1) *
+	boost::unit_test::data::xrange(-3, 10, 1),
+	x, y
+) {
 	const uint8_t bmp[] = {0xF1, 0xF3, 0xF2, 0xF3};
-	Bitmask18<8,8> bitmask;
-
 	const uint32_t checkA[] = {
 		0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000,
 		0x001000, 0x003000, 0x002000, 0x003000,
@@ -158,22 +162,144 @@ BOOST_AUTO_TEST_CASE(render_bitmap_tiny) {
 		0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF
 	};
 
-	for(int x = -3; x < 10; ++ x) {
-		for(int y = -3; y < 10; ++ y) {
-			bitmask.clear(BlendMode::OFF);
-			bitmask.render_bitmap(bmp, nullptr, x, y, 4, 2, 4, BlendMode::ON);
-			for(int i = 0; i < 8; ++ i) {
-				BOOST_CHECK_EQUAL(bitmask.raw()[i], uint8_t(checkA[i+9-x] >> (12 - y)));
-			}
-			bitmask.clear(BlendMode::ON);
-			bitmask.render_bitmap(bmp, nullptr, x, y, 4, 2, 4, BlendMode::ON);
-			for(int i = 0; i < 8; ++ i) {
-				BOOST_CHECK_EQUAL(bitmask.raw()[i], uint8_t(checkB[i+9-x] >> (12 - y)));
-			}
+	Bitmask18<8,8> bitmask;
+
+	bitmask.render_bitmap(bmp, nullptr, x, y, 4, 2, 4, BlendMode::ON);
+	for(int i = 0; i < 8; ++ i) {
+		BOOST_CHECK_EQUAL(bitmask.raw()[i], uint8_t(checkA[i+9-x] >> (12 - y)));
+	}
+	bitmask.clear(BlendMode::ON);
+	bitmask.render_bitmap(bmp, nullptr, x, y, 4, 2, 4, BlendMode::ON);
+	for(int i = 0; i < 8; ++ i) {
+		BOOST_CHECK_EQUAL(bitmask.raw()[i], uint8_t(checkB[i+9-x] >> (12 - y)));
+	}
+}
+
+BOOST_AUTO_TEST_CASE(fill_ellipse) {
+	const uint8_t check[] = {
+		0x00, 0x00, 0x00, 0x70, 0xF8, 0xF8, 0xFC, 0xFC,
+		0xFC, 0xFC, 0xFC, 0xFC, 0xF8, 0xF8, 0x70, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01,
+		0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00
+	};
+
+	Bitmask18<16,16> bitmask;
+	bitmask.fill_ellipse(3, 2, 12, 7, BlendMode::XOR, PATTERN_ON);
+	for(int i = 0; i < 32; ++ i) {
+		BOOST_CHECK_EQUAL(bitmask.raw()[i], check[i]);
+	}
+}
+
+BOOST_DATA_TEST_CASE(fill_ellipse_tiny_horizontal,
+	boost::unit_test::data::xrange(-3, 3, 1) *
+	boost::unit_test::data::xrange(-1, 3, 1) *
+	boost::unit_test::data::xrange(0, 3, 1),
+	x, y, t
+) {
+	// Bug in Boost Test < 1.61.0: only supports up to 3 data dimensions
+	// https://svn.boost.org/trac/boost/ticket/11889
+	for(int w = 0; w < 12; ++ w) {
+		Bitmask18<16,16> bitmask;
+		bitmask.fill_ellipse(x, y, w, t, BlendMode::XOR, PATTERN_ON);
+		bitmask.fill_rect(x, y, w, t, BlendMode::XOR, PATTERN_ON);
+		for(int i = 0; i < 32; ++ i) {
+			BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x00);
 		}
 	}
 }
 
-// TODO: test large bitmaps, ellipses, triangles, lines
+BOOST_DATA_TEST_CASE(fill_ellipse_tiny_vertical,
+	boost::unit_test::data::xrange(-3, 3, 1) *
+	boost::unit_test::data::xrange(-1, 3, 1) *
+	boost::unit_test::data::xrange(0, 3, 1),
+	x, y, t
+) {
+	for(int w = 0; w < 12; ++ w) {
+		Bitmask18<16,16> bitmask;
+		bitmask.fill_ellipse(x, y, t, w, BlendMode::XOR, PATTERN_ON);
+		bitmask.fill_rect(x, y, t, w, BlendMode::XOR, PATTERN_ON);
+		for(int i = 0; i < 32; ++ i) {
+			BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x00);
+		}
+	}
+}
+
+BOOST_DATA_TEST_CASE(fill_ellipse_narrow_horizontal,
+	boost::unit_test::data::xrange(3, 14, 1),
+	w
+) {
+	const uint8_t ends[] = {
+		0, 0, 0, 1, 0, 1, 1, 1, 1, 2, 1, 2, 2, 2
+	};
+
+	int x = 2;
+	Bitmask18<16,16> bitmask;
+	bitmask.fill_ellipse(x, 5, w, 3, BlendMode::XOR, PATTERN_ON);
+	int i = 0;
+	for(; i < x; ++ i) {
+		BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x00);
+	}
+	for(; i < x + ends[w]; ++ i) {
+		BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x40);
+	}
+	for(; i < x + w - ends[w] && i < 16; ++ i) {
+		BOOST_CHECK_EQUAL(bitmask.raw()[i], 0xE0);
+	}
+	for(; i < x + w && i < 16; ++ i) {
+		BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x40);
+	}
+	for(; i < 32; ++ i) {
+		BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x00);
+	}
+}
+
+BOOST_AUTO_TEST_CASE(outline_ellipse) {
+	const uint8_t check[] = {
+		0x00, 0x00, 0x00, 0x70, 0x88, 0x88, 0x04, 0x04,
+		0x04, 0x04, 0x04, 0x04, 0x88, 0x88, 0x70, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01,
+		0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00
+	};
+
+	Bitmask18<16,16> bitmask;
+	bitmask.outline_ellipse(3, 2, 12, 7, 1, BlendMode::XOR, PATTERN_ON);
+	for(int i = 0; i < 32; ++ i) {
+		BOOST_CHECK_EQUAL(bitmask.raw()[i], check[i]);
+	}
+}
+
+BOOST_DATA_TEST_CASE(outline_ellipse_tiny_horizontal,
+	boost::unit_test::data::xrange(-3, 3, 1) *
+	boost::unit_test::data::xrange(-1, 3, 1) *
+	boost::unit_test::data::xrange(0, 3, 1),
+	x, y, t
+) {
+	for(int w = 0; w < 12; ++ w) {
+		Bitmask18<16,16> bitmask;
+		bitmask.outline_ellipse(x, y, w, t, 1, BlendMode::XOR, PATTERN_ON);
+		bitmask.fill_rect(x, y, w, t, BlendMode::XOR, PATTERN_ON);
+		for(int i = 0; i < 32; ++ i) {
+			BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x00);
+		}
+	}
+}
+
+BOOST_DATA_TEST_CASE(outline_ellipse_tiny_vertical,
+	boost::unit_test::data::xrange(-3, 3, 1) *
+	boost::unit_test::data::xrange(-1, 3, 1) *
+	boost::unit_test::data::xrange(0, 3, 1),
+	x, y, t
+) {
+	for(int w = 0; w < 12; ++ w) {
+		Bitmask18<16,16> bitmask;
+		bitmask.outline_ellipse(x, y, t, w, 1, BlendMode::XOR, PATTERN_ON);
+		bitmask.fill_rect(x, y, t, w, BlendMode::XOR, PATTERN_ON);
+		for(int i = 0; i < 32; ++ i) {
+			BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x00);
+		}
+	}
+}
+
+// TODO: test large bitmaps, triangles, lines
 
 BOOST_AUTO_TEST_SUITE_END()
