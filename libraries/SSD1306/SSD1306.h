@@ -14,8 +14,6 @@
 #ifndef SSD1306_H_INCLUDED
 #define SSD1306_H_INCLUDED
 
-#include <SPI.h>
-
 // If the newer nodiscard attribute is available, use it
 #ifdef __has_cpp_attribute
 #  if !__has_cpp_attribute(nodiscard)
@@ -65,6 +63,7 @@ public:
 template <
 	uint8_t DISP_WIDTH,
 	uint8_t DISP_HEIGHT,
+	typename SpiT,
 	typename CSPinT,
 	typename RSTPinT,
 	typename DCPinT,
@@ -148,7 +147,8 @@ class SSD1306 {
 //		V_UNKNOWN = 0x4
 	};
 
-	uint8_t spiNesting;
+	Flattener<SpiT,uint8_t> spiComm;
+#define spiNesting spiComm.flattened_value
 	Flattener<CSPinT,uint8_t> csPin;
 #define curColStart csPin.flattened_value
 	Flattener<RSTPinT,uint8_t> rstPin;
@@ -163,16 +163,15 @@ class SSD1306 {
 public:
 	void begin_communication(void) {
 		if(spiNesting == 0) {
-			csPin.low();
-
 			// Data to device on RISING edge => mode 0 or 3
 			// Doesn't appear to matter whether mode 0 or 3 is used
 			// (even mode 2 seems to work)
-			SPI.beginTransaction(SPISettings(
-				8000000, // Arduino running at 8MHz
-				MSBFIRST,
-				SPI_MODE0
-			));
+			spiComm.beginTransaction(
+				10000000, // SSD1306 requires tCycle >= 100ns (<= 10MHz)
+				SpiT::ByteOrder::MSB_FIRST,
+				SpiT::DataMode::MODE0
+			);
+			csPin.low();
 		}
 		++ spiNesting;
 	}
@@ -180,8 +179,8 @@ public:
 	[[gnu::always_inline]]
 	inline void end_communication(void) {
 		if((-- spiNesting) == 0) {
-			SPI.endTransaction();
 			csPin.high();
+			spiComm.endTransaction();
 		}
 	}
 
@@ -195,14 +194,14 @@ private:
 	[[gnu::always_inline]]
 	inline void transfer_wrapped(uint8_t data) {
 		begin_communication();
-		SPI.transfer(data);
+		spiComm.transfer(data);
 		end_communication();
 	}
 
 	void set_voltage(Voltage v) {
 		begin_communication();
-		SPI.transfer(SET_VCOMH_DESELECT_LEVEL);
-		SPI.transfer(v << 4);
+		spiComm.transfer(SET_VCOMH_DESELECT_LEVEL);
+		spiComm.transfer(v << 4);
 		end_communication();
 	}
 
@@ -210,31 +209,31 @@ private:
 		// 1 <= phase1 <= 15 (default = 2)
 		// 1 <= phase2 <= 15 (default = 2)
 		begin_communication();
-		SPI.transfer(SET_PRECHARGE_PERIOD);
-		SPI.transfer((phase2 << 4) | phase1);
+		spiComm.transfer(SET_PRECHARGE_PERIOD);
+		spiComm.transfer((phase2 << 4) | phase1);
 		end_communication();
 	}
 
 	void set_charge_pump(bool enabled) {
 		begin_communication();
 		if(display_on) {
-			SPI.transfer(DISPLAY_OFF);
+			spiComm.transfer(DISPLAY_OFF);
 		}
 
-		SPI.transfer(X_CHARGE_PUMP_SETTING);
-		SPI.transfer(enabled ? 0x14 : 0x10);
+		spiComm.transfer(X_CHARGE_PUMP_SETTING);
+		spiComm.transfer(enabled ? 0x14 : 0x10);
 
 		// Must switch display on to take effect
 		if(display_on) {
-			SPI.transfer(DISPLAY_ON);
+			spiComm.transfer(DISPLAY_ON);
 		}
 		end_communication();
 	}
 
 	void set_com_pins_config(DisplayMode d) {
 		begin_communication();
-		SPI.transfer(SET_COM_PINS_CONFIG);
-		SPI.transfer((d << 4) | 0x02);
+		spiComm.transfer(SET_COM_PINS_CONFIG);
+		spiComm.transfer((d << 4) | 0x02);
 		end_communication();
 	}
 
@@ -250,8 +249,8 @@ private:
 		// MULTIPLEX_RATIO controlled by set_displayed_height
 
 		begin_communication();
-		SPI.transfer(SET_DISP_CLOCK_DIVIDE);
-		SPI.transfer((freq << 4) | (divide - 1));
+		spiComm.transfer(SET_DISP_CLOCK_DIVIDE);
+		spiComm.transfer((freq << 4) | (divide - 1));
 		end_communication();
 	}
 
@@ -266,8 +265,8 @@ private:
 		// Use set_region to move
 		// Writing advances column, then row, then reset to 0, 0
 		begin_communication();
-		SPI.transfer(SET_MEMORY_ADDR_MODE);
-		SPI.transfer(0x00);
+		spiComm.transfer(SET_MEMORY_ADDR_MODE);
+		spiComm.transfer(0x00);
 		end_communication();
 		reset_cursor_cache();
 	}
@@ -276,8 +275,8 @@ private:
 		// Use set_region to move
 		// Writing advances row, then column, then reset to 0, 0
 		begin_communication();
-		SPI.transfer(SET_MEMORY_ADDR_MODE);
-		SPI.transfer(0x01);
+		spiComm.transfer(SET_MEMORY_ADDR_MODE);
+		spiComm.transfer(0x01);
 		end_communication();
 		reset_cursor_cache();
 	}
@@ -286,8 +285,8 @@ private:
 		// Use set_page_start to move
 		// Writing advances column, then reset to column 0 (row will not change)
 		begin_communication();
-		SPI.transfer(SET_MEMORY_ADDR_MODE);
-		SPI.transfer(0x10); // Default
+		spiComm.transfer(SET_MEMORY_ADDR_MODE);
+		spiComm.transfer(0x10); // Default
 		end_communication();
 		reset_cursor_cache();
 	}
@@ -300,17 +299,17 @@ private:
 		uint8_t pageEnd
 	) {
 		if(pageStart != curPageStart || pageEnd != curPageEnd) {
-			SPI.transfer(SET_PAGE_ADDR);
-			SPI.transfer(pageStart);
-			SPI.transfer(pageEnd);
+			spiComm.transfer(SET_PAGE_ADDR);
+			spiComm.transfer(pageStart);
+			spiComm.transfer(pageEnd);
 			curPageStart = pageStart;
 			curPageEnd = pageEnd;
 		}
 
 		if(colStart != curColStart || colEnd != curColEnd) {
-			SPI.transfer(SET_COLUMN_ADDR);
-			SPI.transfer(colStart);
-			SPI.transfer(colEnd);
+			spiComm.transfer(SET_COLUMN_ADDR);
+			spiComm.transfer(colStart);
+			spiComm.transfer(colEnd);
 			curColStart = colStart;
 			curColEnd = colEnd;
 		}
@@ -319,14 +318,14 @@ private:
 	// MUST ALREADY BE INSIDE begin_communication/end_communication block!
 	void set_page_start(uint8_t page, uint8_t column) {
 		if(page != curPageStart) {
-			SPI.transfer(PAGE_START | page);
+			spiComm.transfer(PAGE_START | page);
 			curPageStart = page;
 		}
 		if((column & 0x0F) != (curColStart & 0x0F)) {
-			SPI.transfer(LOWER_COLUMN | (column & 0x0F));
+			spiComm.transfer(LOWER_COLUMN | (column & 0x0F));
 		}
 		if((column >> 4) != (curColStart >> 4)) {
-			SPI.transfer(HIGHER_COLUMN | (column >> 4));
+			spiComm.transfer(HIGHER_COLUMN | (column >> 4));
 		}
 		curColStart = column;
 	}
@@ -347,14 +346,14 @@ private:
 			mask &= baseMask;
 		}
 		for(uint8_t X = 0; X != w; ++ X) {
-			SPI.transfer(read_shifted(data, data, X, yShift) & mask);
+			spiComm.transfer(read_shifted(data, data, X, yShift) & mask);
 		}
 		for(uint8_t Y = 1; Y < hPage; ++ Y) {
 			const auto Y0 = data + (Y * step - step);
 			const auto Y1 = Y0 + step;
 			mask = (Y == hPage - 1) ? baseMask : 0xFF;
 			for(uint8_t X = 0; X < w; ++ X) {
-				SPI.transfer(read_shifted(Y0, Y1, X, yShift) & mask);
+				spiComm.transfer(read_shifted(Y0, Y1, X, yShift) & mask);
 			}
 		}
 	}
@@ -388,7 +387,7 @@ private:
 			// Optimised version for common case
 			for(uint8_t Y = 0; Y < hPage; ++ Y) {
 				for(uint8_t X = 0; X < w; ++ X) {
-					SPI.transfer(data[Y * step + X]);
+					spiComm.transfer(data[Y * step + X]);
 				}
 			}
 		} else {
@@ -476,8 +475,8 @@ public:
 	void set_contrast(uint8_t value) {
 		// 0 <= value <= 255 (default = 0x7F) higher value = brighter
 		begin_communication();
-		SPI.transfer(SET_CONTRAST_CONTROL);
-		SPI.transfer(value);
+		spiComm.transfer(SET_CONTRAST_CONTROL);
+		spiComm.transfer(value);
 		end_communication();
 	}
 
@@ -498,8 +497,8 @@ public:
 		// display, which in turn affects the brightness. Applies even if
 		// display is set to set_fs_white = true
 		begin_communication();
-		SPI.transfer(SET_MULTIPLEX_RATIO);
-		SPI.transfer(h - 1);
+		spiComm.transfer(SET_MULTIPLEX_RATIO);
+		spiComm.transfer(h - 1);
 		end_communication();
 	}
 
@@ -519,8 +518,8 @@ public:
 		// This one applies even if the display is set to set_fs_white = true
 		uint8_t shift = posmod(offset, height());
 		begin_communication();
-		SPI.transfer(SET_DISPLAY_OFFSET);
-		SPI.transfer(shift);
+		spiComm.transfer(SET_DISPLAY_OFFSET);
+		spiComm.transfer(shift);
 		end_communication();
 	}
 
@@ -623,19 +622,22 @@ public:
 		}
 
 		if(v_wrap != 0) {
-			SPI.transfer(CONFIG_SCROLL_VERT_AREA);
-			SPI.transfer(vertical_top);
-			SPI.transfer(v_height);
+			spiComm.transfer(CONFIG_SCROLL_VERT_AREA);
+			spiComm.transfer(vertical_top);
+			spiComm.transfer(v_height);
 		}
 
-		SPI.transfer((x_speed > 0) ? CONFIG_SCROLL_VRIGHT : CONFIG_SCROLL_VLEFT);
-		SPI.transfer(0x00); // Dummy byte
-		SPI.transfer(horizontal_top_page);
-		SPI.transfer(frame_freq_value);
-		SPI.transfer(horizontal_base_page);
-		SPI.transfer(v_wrap);
+		spiComm.transfer((x_speed > 0)
+			? CONFIG_SCROLL_VRIGHT
+			: CONFIG_SCROLL_VLEFT
+		);
+		spiComm.transfer(0x00); // Dummy byte
+		spiComm.transfer(horizontal_top_page);
+		spiComm.transfer(frame_freq_value);
+		spiComm.transfer(horizontal_base_page);
+		spiComm.transfer(v_wrap);
 
-		SPI.transfer(SCROLL_ON);
+		spiComm.transfer(SCROLL_ON);
 		end_communication();
 
 		scrolling = true;
@@ -655,8 +657,8 @@ public:
 		}
 	}
 
-	SSD1306(CSPinT cs, RSTPinT rst, DCPinT dc)
-		: spiNesting(0)
+	SSD1306(SpiT spi, CSPinT cs, RSTPinT rst, DCPinT dc)
+		: spiComm(spi, 0) // spiNesting
 		, csPin(cs, 0) // curColStart
 		, rstPin(rst, 0) // curColEnd
 		, dcPin(dc, 0) // framerate
@@ -665,8 +667,6 @@ public:
 		, display_on(false)
 		, scrolling(false)
 	{
-		SPI.begin();
-
 		csPin.set_output();
 		rstPin.set_output();
 		dcPin.set_output();
@@ -693,10 +693,11 @@ public:
 		set_on(false);
 
 		if(spiNesting > 0) {
-			SPI.endTransaction();
+			spiNesting = 1;
+			end_communication();
 		}
-		SPI.end();
 	}
+#undef spiNesting
 #undef curColStart
 #undef curColEnd
 #undef framerate
@@ -705,18 +706,34 @@ public:
 template <
 	uint8_t DISP_WIDTH = 128,
 	uint8_t DISP_HEIGHT = 64,
+	typename SpiT,
 	typename CSPinT,
 	typename RSTPinT,
 	typename DCPinT
 >
 [[gnu::always_inline]]
-inline SSD1306<DISP_WIDTH, DISP_HEIGHT, CSPinT, RSTPinT, DCPinT> MakeSSD1306(
+inline SSD1306<
+	DISP_WIDTH,
+	DISP_HEIGHT,
+	SpiT,
+	CSPinT,
+	RSTPinT,
+	DCPinT
+> MakeSSD1306(
+	SpiT spi,
 	CSPinT cs,
 	RSTPinT rst,
 	DCPinT dc
 ) {
-	return SSD1306<DISP_WIDTH, DISP_HEIGHT, CSPinT, RSTPinT, DCPinT>(
-		cs, rst, dc
+	return SSD1306<
+		DISP_WIDTH,
+		DISP_HEIGHT,
+		SpiT,
+		CSPinT,
+		RSTPinT,
+		DCPinT
+	>(
+		spi, cs, rst, dc
 	);
 }
 

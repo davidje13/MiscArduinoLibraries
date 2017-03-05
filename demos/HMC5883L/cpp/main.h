@@ -31,6 +31,7 @@
 #include <FontRenderer.h>
 #include <ArduinoPin.h>
 #include <VoidPin.h>
+#include <ArduinoSPI.h>
 #include <Wire.h>
 
 #define MAGNETOMETER_DRDY VoidPin()
@@ -171,7 +172,12 @@ void setup(void) {
 
 	auto compass = MakeHMC5883L(MAGNETOMETER_DRDY);
 
-	auto oled = MakeSSD1306<128,64>(OLED_PIN_CS, OLED_PIN_RST, OLED_PIN_DC);
+	auto oled = MakeSSD1306<128,64>(
+		ArduinoSPI(),
+		OLED_PIN_CS,
+		OLED_PIN_RST,
+		OLED_PIN_DC
+	);
 	oled.set_on(true);
 
 	while(true) {

@@ -32,6 +32,7 @@
 #include <SSD1306.h>
 #include <ArduinoPin.h>
 #include <ArduinoAnalogPin.h>
+#include <ArduinoSPI.h>
 #include <DemoBitmaps.h>
 #include <DemoPixels.h>
 #include <DemoLines.h>
@@ -64,7 +65,12 @@ void setup(void) {
 	);
 	randomMemory = random();
 
-	auto oled = MakeSSD1306<128,64>(OLED_PIN_CS, OLED_PIN_RST, OLED_PIN_DC);
+	auto oled = MakeSSD1306<128,64>(
+		ArduinoSPI(),
+		OLED_PIN_CS,
+		OLED_PIN_RST,
+		OLED_PIN_DC
+	);
 	oled.set_on(true);
 
 	while(true) {

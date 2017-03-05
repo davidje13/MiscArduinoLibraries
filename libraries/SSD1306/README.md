@@ -34,6 +34,7 @@ always make them public if you want to play).
 ```cpp
 #include <SSD1306.h>
 #include <ArduinoPin.h>
+#include <ArduinoSPI.h>
 
 ...
 
@@ -43,6 +44,7 @@ int OLED_PIN_CS  = ?; // Set to any available pin
 int OLED_PIN_RST = ?; // Set to any available pin
 int OLED_PIN_DC  = ?; // Set to any available pin
 auto myDisplay = MakeSSD1306<128,64>(
+	ArduinoSPI(),
 	ArduinoPin(OLED_PIN_CS),
 	ArduinoPin(OLED_PIN_RST),
 	ArduinoPin(OLED_PIN_DC)
