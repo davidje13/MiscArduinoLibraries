@@ -34,7 +34,7 @@ class RawArduinoPin {
 
 public:
 	[[gnu::always_inline]]
-	inline RawPin(uint8_t pin)
+	inline RawArduinoPin(uint8_t pin)
 		: outvar(portOutputRegister(digitalPinToPort(pin)))
 		, p(pin)
 		, pinmask(digitalPinToBitMask(pin))
