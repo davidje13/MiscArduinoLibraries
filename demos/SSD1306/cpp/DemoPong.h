@@ -28,8 +28,8 @@
 #include <Pattern.h>
 #include <SceneRenderer.h>
 
-template <typename Display>
-void demoPong(Display &display, int batL = -1, int batR = -1) {
+template <typename Display, typename BatLPinT, typename BatRPinT>
+void demoPong(Display &display, BatLPinT batL, BatRPinT batR) {
 	Bitmask18<display.width(),display.height()> bitmask;
 
 	printTitle(bitmask, ProgMemString("Pong!"));
@@ -67,13 +67,13 @@ void demoPong(Display &display, int batL = -1, int batR = -1) {
 	Font f0(F0DATA, F0IMG, F0MASK);
 
 	while(true) {
-		if(batL != -1) {
-			batLPos = (analogRead(batL) * long(h - batSize)) / 1024 + batSize / 2;
+		if(batL.supports_analog_input()) {
+			batLPos = batL.read_analog(h - batSize) + batSize / 2;
 		} else {
 			batLPos = pBall.y >> shift;
 		}
-		if(batR != -1) {
-			batRPos = (analogRead(batR) * long(h - batSize)) / 1024 + batSize / 2;
+		if(batR.supports_analog_input()) {
+			batRPos = batR.read_analog(h - batSize) + batSize / 2;
 		} else {
 			batRPos = pBall.y >> shift;
 		}

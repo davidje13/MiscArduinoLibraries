@@ -32,11 +32,17 @@ tap, double-tap, inactivity, and free-fall events.
 
 ```cpp
 #include <ADXL345.h>
+#include <VoidPin.h>
 
 ...
 
 bool usingAlternateAddress = true;
-ADXL345 Accelerometer(usingAlternateAddress, /*optional INT1, INT2 pins here*/);
+auto accelerometer = MakeADXL345(
+	VoidPin(), // optional int1 pin
+	VoidPin(), // optional int2 pin
+	HIGH, // interrupt pins are active HIGH
+	usingAlternateAddress
+);
 
 accelerometer.configure_fifo_bypass();
 accelerometer.configure_double_tap_detection(

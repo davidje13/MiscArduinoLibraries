@@ -29,16 +29,9 @@
  *    CS -- D* (any available pin; set below)
  */
 
-// To play PONG, attach potentiometers to A0 and A1
-#define PONG_POT_L 0
-#define PONG_POT_R 1
-
-// These can be set to any available pin
-#define OLED_PIN_CS  10
-#define OLED_PIN_RST 7
-#define OLED_PIN_DC  9
-
 #include <SSD1306.h>
+#include <ArduinoPin.h>
+#include <ArduinoAnalogPin.h>
 #include <DemoBitmaps.h>
 #include <DemoPixels.h>
 #include <DemoLines.h>
@@ -47,6 +40,15 @@
 #include <DemoText.h>
 #include <DemoClock.h>
 #include <Demo3D.h>
+
+// These can be set to any available pin
+#define OLED_PIN_CS  FixedArduinoPin<10>()
+#define OLED_PIN_RST FixedArduinoPin<7>()
+#define OLED_PIN_DC  FixedArduinoPin<9>()
+
+// To play PONG, attach potentiometers to A0 and A1
+#define PONG_POT_L FixedArduinoAnalogPin<0>()
+#define PONG_POT_R FixedArduinoAnalogPin<1>()
 
 __attribute__((section(".noinit")))
 static volatile uint16_t randomMemory;
@@ -62,8 +64,7 @@ void setup(void) {
 	);
 	randomMemory = random();
 
-	SSD1306<> oled(OLED_PIN_CS, OLED_PIN_RST, OLED_PIN_DC);
-
+	auto oled = MakeSSD1306<128,64>(OLED_PIN_CS, OLED_PIN_RST, OLED_PIN_DC);
 	oled.set_on(true);
 
 	while(true) {

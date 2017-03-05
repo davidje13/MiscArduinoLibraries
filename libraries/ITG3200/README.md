@@ -29,11 +29,12 @@ temperature (which can be used to improve accuracy).
 ```cpp
 #include <ITG3200.h>
 #include <GyroAccumulator.h>
+#include <VoidPin.h>
 
 ...
 
 bool AD0 = false;
-ITG3200 gyroscope(AD0, /*optional interrupt pin here*/);
+auto gyroscope = MakeITG3200(VoidPin(), AD0); // Optional interrupt pin
 
 gyroscope.set_filter_bandwidth(ITG3200::LowPassBandwidth::L188_HZ); // 1kHz
 gyroscope.set_sample_rate_divider(16); // New sample every 60 ms

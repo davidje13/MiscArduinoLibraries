@@ -23,12 +23,6 @@
  *  G_INT -- D* (optional, any pin, ideally interrupt-capable; set below)
  */
 
-#define GYROSCOPE_INT ITG3200::NO_PIN
-
-#define OLED_PIN_CS  10
-#define OLED_PIN_RST 7
-#define OLED_PIN_DC  9
-
 #include <ITG3200.h>
 #include <GyroAccumulator.h>
 #include <SSD1306.h>
@@ -36,7 +30,15 @@
 #include <Font.h>
 #include <FontFixed.h>
 #include <FontRenderer.h>
+#include <ArduinoPin.h>
+#include <VoidPin.h>
 #include <Wire.h>
+
+#define GYROSCOPE_INT VoidPin()
+
+#define OLED_PIN_CS  FixedArduinoPin<10>()
+#define OLED_PIN_RST FixedArduinoPin<7>()
+#define OLED_PIN_DC  FixedArduinoPin<9>()
 
 template <typename Display, typename Bitmask, typename Message>
 void message(
@@ -87,9 +89,9 @@ void show_reading(
 	);
 }
 
-template <typename Display>
+template <typename Gyro, typename Display>
 void demoGyroscope(
-	ITG3200 &gyroscope,
+	Gyro &gyroscope,
 	Display &display
 ) {
 	Bitmask18<display.width(),display.height()> bitmask;
@@ -98,28 +100,28 @@ void demoGyroscope(
 
 	gyroscope.awake();
 
-	ITG3200::ConnectionStatus status = gyroscope.connection_status();
-	if(status != ITG3200::ConnectionStatus::CONNECTED) {
+	auto status = gyroscope.connection_status();
+	if(status != Gyro::ConnectionStatus::CONNECTED) {
 		ProgMem<char> detail;
 		switch(status) {
-		case ITG3200::ConnectionStatus::CONNECTED:
+		case Gyro::ConnectionStatus::CONNECTED:
 			break;
-		case ITG3200::ConnectionStatus::REQUEST_ERR_DATA_TOO_LONG:
+		case Gyro::ConnectionStatus::REQUEST_ERR_DATA_TOO_LONG:
 			detail = ProgMemString("REQUEST_ERR_DATA_TOO_LONG");
 			break;
-		case ITG3200::ConnectionStatus::REQUEST_ERR_NACK_ADDR:
+		case Gyro::ConnectionStatus::REQUEST_ERR_NACK_ADDR:
 			detail = ProgMemString("REQUEST_ERR_NACK_ADDR");
 			break;
-		case ITG3200::ConnectionStatus::REQUEST_ERR_NACK_DATA:
+		case Gyro::ConnectionStatus::REQUEST_ERR_NACK_DATA:
 			detail = ProgMemString("REQUEST_ERR_NACK_DATA");
 			break;
-		case ITG3200::ConnectionStatus::REQUEST_ERR_OTHER:
+		case Gyro::ConnectionStatus::REQUEST_ERR_OTHER:
 			detail = ProgMemString("REQUEST_ERR_OTHER");
 			break;
-		case ITG3200::ConnectionStatus::READ_TIMEOUT:
+		case Gyro::ConnectionStatus::READ_TIMEOUT:
 			detail = ProgMemString("READ_TIMEOUT");
 			break;
-		case ITG3200::ConnectionStatus::ID_MISMATCH:
+		case Gyro::ConnectionStatus::ID_MISMATCH:
 			detail = ProgMemString("ID_MISMATCH");
 			break;
 		}
@@ -131,16 +133,16 @@ void demoGyroscope(
 	}
 
 	// Filter out low frequency noise. Also sets base frequency to 1kHz
-	gyroscope.set_filter_bandwidth(ITG3200::LowPassBandwidth::L188_HZ);
+	gyroscope.set_filter_bandwidth(Gyro::LowPassBandwidth::L188_HZ);
 
 	// No point sampling too fast; takes 10ms to update screen; divide the
 	// 1kHz above by 16 to sample ~every 60ms
 	gyroscope.set_sample_rate_divider(16);
 
 	// More reliable clock source according to data sheet
-	gyroscope.set_clock_source_sync(ITG3200::ClockSource::X_GYRO);
+	gyroscope.set_clock_source_sync(Gyro::ClockSource::X_GYRO);
 
-	GyroAccumulator<ITG3200::reading> accumulator;
+	GyroAccumulator<typename Gyro::reading> accumulator;
 
 	message(display, bitmask, ProgMemString("Finding zero point..."));
 	accumulator.begin_calibration();
@@ -195,9 +197,9 @@ void demoGyroscope(
 void setup(void) {
 	Wire.begin();
 
-	ITG3200 gyroscope(false, GYROSCOPE_INT);
+	auto gyroscope = MakeITG3200(GYROSCOPE_INT, false);
 
-	SSD1306<> oled(OLED_PIN_CS, OLED_PIN_RST, OLED_PIN_DC);
+	auto oled = MakeSSD1306<128,64>(OLED_PIN_CS, OLED_PIN_RST, OLED_PIN_DC);
 	oled.set_on(true);
 
 	while(true) {

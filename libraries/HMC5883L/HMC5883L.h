@@ -25,10 +25,20 @@
 #  define nodiscard gnu::warn_unused_result
 #endif
 
+template <
+	typename DRDYPinT
+>
 class HMC5883L {
-public:
-	static const constexpr uint8_t NO_PIN = 0xFF;
+	// This class is a simplified version of boost's compressed_pair. It is used
+	// to allow empty structs to be stored without taking up any memory.
+	template <typename OptionalT, typename KnownT>
+	class Flattener : public OptionalT {
+	public:
+		KnownT flattened_value;
+		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
+	};
 
+public:
 	enum class ConnectionStatus : uint8_t {
 		CONNECTED = 0,
 		REQUEST_ERR_DATA_TOO_LONG = 1,
@@ -279,7 +289,7 @@ private:
 
 	static const constexpr uint8_t I2C_ADDR = 0x1E;
 	static const constexpr uint8_t CONFA_RATE_MASK = 0x1C;
-	static HMC5883L *interruptTarget;
+	static HMC5883L<DRDYPinT> *interruptTarget;
 
 	static bool test_ok(int32_t value, int32_t gain) {
 		if(value * gain_value(Gain::G390) > (575 * gain)) {
@@ -292,9 +302,9 @@ private:
 	}
 
 	volatile ReqState state;
-	uint8_t drdyPin;
 	Gain gainCache;
-	uint8_t confACache;
+	Flattener<DRDYPinT, uint8_t> drdyPin;
+#define confACache drdyPin.flattened_value
 	uint8_t currentRegister : 4;
 	bool singleSample : 1;
 	bool rapidSamples : 1;
@@ -350,11 +360,10 @@ private:
 	}
 
 	void begin_polling(void) {
-		int8_t drdyInt = digitalPinToInterrupt(drdyPin);
-		if(drdyInt != NOT_AN_INTERRUPT) {
+		if(drdyPin.supports_interrupts()) {
 			interruptTarget = this;
 			state = ReqState::POLLING_INT;
-			attachInterrupt(drdyInt, &interrupted_global, FALLING);
+			drdyPin.set_interrupt_on_falling(&interrupted_global);
 		} else {
 			state = ReqState::POLLING;
 		}
@@ -365,7 +374,7 @@ private:
 		rapidSamples = false;
 		ReqState s = state; // avoid volatile
 		if(s == ReqState::POLLING_INT || s == ReqState::POLLING_INT_GOT_DATA) {
-			detachInterrupt(digitalPinToInterrupt(drdyPin));
+			drdyPin.remove_interrupt();
 			interruptTarget = nullptr;
 		}
 		state = ReqState::NONE;
@@ -402,8 +411,8 @@ private:
 		) {
 			return false;
 		}
-		if(drdyPin != 0xFF) {
-			if(digitalRead(drdyPin) == LOW) {
+		if(drdyPin.exists()) {
+			if(drdyPin.read_digital() == false) {
 				return true;
 			}
 		} else if(status_data_ready()) {
@@ -652,7 +661,7 @@ public:
 
 	[[nodiscard]]
 	bool record_calibration(
-		calibrator::calibration &output,
+		typename calibrator::calibration &output,
 		bool positive_bias = true
 	) {
 		stop();
@@ -712,7 +721,7 @@ public:
 	}
 
 	bool record_calibration(calibrator &c, bool positive_bias = true) {
-		calibrator::calibration current;
+		typename calibrator::calibration current;
 		if(!record_calibration(current, positive_bias)) {
 			return false;
 		}
@@ -721,7 +730,7 @@ public:
 	}
 
 	bool recalibrate(calibrator &c) {
-		calibrator::calibration current;
+		typename calibrator::calibration current;
 		if(!record_calibration(current, c.is_positive_bias())) {
 			return false;
 		}
@@ -731,15 +740,16 @@ public:
 
 	[[nodiscard,gnu::always_inline]]
 	bool test(bool positive_bias = true) {
-		calibrator::calibration c;
+		typename calibrator::calibration c;
 		return record_calibration(c, positive_bias);
 	}
 
-	HMC5883L(uint8_t drdy = NO_PIN)
+	HMC5883L(DRDYPinT drdy)
 		: state(ReqState::NONE)
-		, drdyPin(drdy)
 		, gainCache(Gain::G1090) // Assume default
-		, confACache( // Assume default
+		, drdyPin(
+			drdy,
+			// confACache - Assume default
 			uint8_t(Averaging::A1) |
 			uint8_t(Rate::R15_HZ) |
 			uint8_t(NO_BIAS)
@@ -752,16 +762,31 @@ public:
 	{
 		// Device supports up to 400kHz
 		Wire.setClock(400000);
-		if(drdyPin != NO_PIN) {
-			pinMode(drdyPin, INPUT);
-		}
+		drdyPin.set_input();
 	}
 
 	~HMC5883L(void) {
 		stop();
 	}
+
+#undef confACache
 };
 
-HMC5883L *HMC5883L::interruptTarget = nullptr;
+template <
+	typename DRDYPinT
+>
+HMC5883L<DRDYPinT> *HMC5883L<DRDYPinT>::interruptTarget = nullptr;
+
+template <
+	typename DRDYPinT
+>
+[[gnu::always_inline]]
+inline HMC5883L<DRDYPinT> MakeHMC5883L(
+	DRDYPinT drdy // optional (use VoidPin to omit)
+) {
+	return HMC5883L<DRDYPinT>(
+		drdy
+	);
+}
 
 #endif

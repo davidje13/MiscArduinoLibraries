@@ -25,13 +25,6 @@
 #  define nodiscard gnu::warn_unused_result
 #endif
 
-[[nodiscard,gnu::always_inline]]
-static inline uint8_t block_interrupts(void) {
-	uint8_t oldSREG = SREG;
-	cli();
-	return oldSREG;
-}
-
 [[gnu::const,nodiscard,gnu::always_inline]]
 static constexpr inline int posmod(int a, int b) {
 	return ((a % b) + b) % b;
@@ -70,11 +63,23 @@ public:
 };
 
 template <
-	uint8_t DISP_WIDTH = 128,
-	uint8_t DISP_HEIGHT = 64,
+	uint8_t DISP_WIDTH,
+	uint8_t DISP_HEIGHT,
+	typename CSPinT,
+	typename RSTPinT,
+	typename DCPinT,
 	uint8_t DISP_HEIGHT_BYTES = (DISP_HEIGHT + 7) / 8
 >
 class SSD1306 {
+	// This class is a simplified version of boost's compressed_pair. It is used
+	// to allow empty structs to be stored without taking up any memory.
+	template <typename OptionalT, typename KnownT>
+	class Flattener : public OptionalT {
+	public:
+		KnownT flattened_value;
+		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
+	};
+
 	enum Command : uint8_t {
 		LOWER_COLUMN =             0x00, // Memory mode: page. values [00-0F]
 		HIGHER_COLUMN =            0x10, // Memory mode: page. values [10-1F]
@@ -143,23 +148,22 @@ class SSD1306 {
 //		V_UNKNOWN = 0x4
 	};
 
-	uint8_t csPin;
-	uint8_t rstPin;
-	uint8_t dcPin;
-
 	uint8_t spiNesting;
+	Flattener<CSPinT,uint8_t> csPin;
+#define curColStart csPin.flattened_value
+	Flattener<RSTPinT,uint8_t> rstPin;
+#define curColEnd rstPin.flattened_value
+	Flattener<DCPinT,uint8_t> dcPin;
+#define framerate dcPin.flattened_value
 	uint8_t curPageStart : 4;
 	uint8_t curPageEnd   : 4;
-	uint8_t curColStart;
-	uint8_t curColEnd;
-	uint8_t framerate;
 	bool display_on : 4;
 	bool scrolling  : 4;
 
 public:
 	void begin_communication(void) {
 		if(spiNesting == 0) {
-			digitalWrite(csPin, LOW);
+			csPin.low();
 
 			// Data to device on RISING edge => mode 0 or 3
 			// Doesn't appear to matter whether mode 0 or 3 is used
@@ -177,7 +181,7 @@ public:
 	inline void end_communication(void) {
 		if((-- spiNesting) == 0) {
 			SPI.endTransaction();
-			digitalWrite(csPin, HIGH);
+			csPin.high();
 		}
 	}
 
@@ -379,7 +383,7 @@ private:
 
 		set_region(x, x + w - 1, yPage, yPage + hPage - 1);
 
-		digitalWrite(dcPin, HIGH);
+		dcPin.high();
 		if(yShift == 0 && (h & 7) == 0) {
 			// Optimised version for common case
 			for(uint8_t Y = 0; Y < hPage; ++ Y) {
@@ -390,7 +394,7 @@ private:
 		} else {
 			send_raw_b(data, step, w, h, hPage, yShift);
 		}
-		digitalWrite(dcPin, LOW);
+		dcPin.low();
 		end_communication();
 	}
 
@@ -429,9 +433,9 @@ public:
 
 	void reset(void) {
 		// Set RES# LOW for at least 3 microseconds
-		digitalWrite(rstPin, LOW);
+		rstPin.low();
 		delayMicroseconds(5);
-		digitalWrite(rstPin, HIGH);
+		rstPin.high();
 
 		display_on = false; // Reset process leaves display OFF
 		scrolling = false;
@@ -651,27 +655,24 @@ public:
 		}
 	}
 
-	SSD1306(uint8_t cs, uint8_t rst, uint8_t dc)
-		: csPin(cs)
-		, rstPin(rst)
-		, dcPin(dc)
-		, spiNesting(0)
+	SSD1306(CSPinT cs, RSTPinT rst, DCPinT dc)
+		: spiNesting(0)
+		, csPin(cs, 0) // curColStart
+		, rstPin(rst, 0) // curColEnd
+		, dcPin(dc, 0) // framerate
 		, curPageStart(0)
 		, curPageEnd(0)
-		, curColStart(0)
-		, curColEnd(0)
-		, framerate(0)
 		, display_on(false)
 		, scrolling(false)
 	{
 		SPI.begin();
 
-		pinMode(csPin, OUTPUT);
-		pinMode(rstPin, OUTPUT);
-		pinMode(dcPin, OUTPUT);
-		digitalWrite(csPin, HIGH);
-		digitalWrite(rstPin, HIGH);
-		digitalWrite(dcPin, LOW);
+		csPin.set_output();
+		rstPin.set_output();
+		dcPin.set_output();
+		csPin.high();
+		rstPin.high();
+		dcPin.low();
 
 		// Reset pin should stay HIGH until V_DD is stable, then run the reset
 		// process to initialise
@@ -696,6 +697,27 @@ public:
 		}
 		SPI.end();
 	}
+#undef curColStart
+#undef curColEnd
+#undef framerate
 };
+
+template <
+	uint8_t DISP_WIDTH = 128,
+	uint8_t DISP_HEIGHT = 64,
+	typename CSPinT,
+	typename RSTPinT,
+	typename DCPinT
+>
+[[gnu::always_inline]]
+inline SSD1306<DISP_WIDTH, DISP_HEIGHT, CSPinT, RSTPinT, DCPinT> MakeSSD1306(
+	CSPinT cs,
+	RSTPinT rst,
+	DCPinT dc
+) {
+	return SSD1306<DISP_WIDTH, DISP_HEIGHT, CSPinT, RSTPinT, DCPinT>(
+		cs, rst, dc
+	);
+}
 
 #endif

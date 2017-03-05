@@ -23,19 +23,21 @@
  *  G_INT -- none (not used by compass)
  */
 
-#define MAGNETOMETER_DRDY HMC5883L::NO_PIN
-
-#define OLED_PIN_CS  10
-#define OLED_PIN_RST 7
-#define OLED_PIN_DC  9
-
 #include <HMC5883L.h>
 #include <SSD1306.h>
 #include <Bitmask18.h>
 #include <Font.h>
 #include <FontVariable.h>
 #include <FontRenderer.h>
+#include <ArduinoPin.h>
+#include <VoidPin.h>
 #include <Wire.h>
+
+#define MAGNETOMETER_DRDY VoidPin()
+
+#define OLED_PIN_CS  FixedArduinoPin<10>()
+#define OLED_PIN_RST FixedArduinoPin<7>()
+#define OLED_PIN_DC  FixedArduinoPin<9>()
 
 template <typename Display, typename Bitmask, typename Message>
 void message(
@@ -86,35 +88,35 @@ void show_reading(
 	);
 }
 
-template <typename Display>
+template <typename Compass, typename Display>
 void demoCompass(
-	HMC5883L &compass,
+	Compass &compass,
 	Display &display
 ) {
 	Bitmask18<display.width(),display.height()> bitmask;
 
-	HMC5883L::ConnectionStatus status = compass.connection_status();
-	if(status != HMC5883L::ConnectionStatus::CONNECTED) {
+	auto status = compass.connection_status();
+	if(status != Compass::ConnectionStatus::CONNECTED) {
 		ProgMem<char> detail;
 		switch(status) {
-		case HMC5883L::ConnectionStatus::CONNECTED:
+		case Compass::ConnectionStatus::CONNECTED:
 			break;
-		case HMC5883L::ConnectionStatus::REQUEST_ERR_DATA_TOO_LONG:
+		case Compass::ConnectionStatus::REQUEST_ERR_DATA_TOO_LONG:
 			detail = ProgMemString("REQUEST_ERR_DATA_TOO_LONG");
 			break;
-		case HMC5883L::ConnectionStatus::REQUEST_ERR_NACK_ADDR:
+		case Compass::ConnectionStatus::REQUEST_ERR_NACK_ADDR:
 			detail = ProgMemString("REQUEST_ERR_NACK_ADDR");
 			break;
-		case HMC5883L::ConnectionStatus::REQUEST_ERR_NACK_DATA:
+		case Compass::ConnectionStatus::REQUEST_ERR_NACK_DATA:
 			detail = ProgMemString("REQUEST_ERR_NACK_DATA");
 			break;
-		case HMC5883L::ConnectionStatus::REQUEST_ERR_OTHER:
+		case Compass::ConnectionStatus::REQUEST_ERR_OTHER:
 			detail = ProgMemString("REQUEST_ERR_OTHER");
 			break;
-		case HMC5883L::ConnectionStatus::READ_TIMEOUT:
+		case Compass::ConnectionStatus::READ_TIMEOUT:
 			detail = ProgMemString("READ_TIMEOUT");
 			break;
-		case HMC5883L::ConnectionStatus::ID_MISMATCH:
+		case Compass::ConnectionStatus::ID_MISMATCH:
 			detail = ProgMemString("ID_MISMATCH");
 			break;
 		}
@@ -135,9 +137,9 @@ void demoCompass(
 
 	delay(2000);
 
-	compass.set_averaging(HMC5883L::Averaging::A4);
-	compass.set_gain(HMC5883L::Gain::G1370);
-	compass.read_continuous_async(HMC5883L::Rate::R75_HZ);
+	compass.set_averaging(Compass::Averaging::A4);
+	compass.set_gain(Compass::Gain::G1370);
+	compass.read_continuous_async(Compass::Rate::R75_HZ);
 
 	uint16_t t0 = millis();
 	while(uint16_t(millis() - t0) < 20000) {
@@ -167,9 +169,9 @@ void demoCompass(
 void setup(void) {
 	Wire.begin();
 
-	HMC5883L compass(MAGNETOMETER_DRDY);
+	auto compass = MakeHMC5883L(MAGNETOMETER_DRDY);
 
-	SSD1306<> oled(OLED_PIN_CS, OLED_PIN_RST, OLED_PIN_DC);
+	auto oled = MakeSSD1306<128,64>(OLED_PIN_CS, OLED_PIN_RST, OLED_PIN_DC);
 	oled.set_on(true);
 
 	while(true) {

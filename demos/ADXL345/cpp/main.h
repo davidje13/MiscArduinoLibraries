@@ -23,21 +23,23 @@
  *  G_INT -- none (not used by accelerometer)
  */
 
-#define ACCELEROMETER_INT1 ADXL345::NO_PIN
-#define ACCELEROMETER_INT2 ADXL345::NO_PIN
-#define ACCELEROMETER_VOLTAGE ADXL345::Voltage::V3_3
-
-#define OLED_PIN_CS  10
-#define OLED_PIN_RST 7
-#define OLED_PIN_DC  9
-
 #include <ADXL345.h>
 #include <SSD1306.h>
 #include <Bitmask18.h>
 #include <Font.h>
 #include <FontFixed.h>
 #include <FontRenderer.h>
+#include <ArduinoPin.h>
+#include <VoidPin.h>
 #include <Wire.h>
+
+#define ACCELEROMETER_INT1 VoidPin()
+#define ACCELEROMETER_INT2 VoidPin()
+#define ACCELEROMETER_VOLTAGE Voltage::V3_3
+
+#define OLED_PIN_CS  FixedArduinoPin<10>()
+#define OLED_PIN_RST FixedArduinoPin<7>()
+#define OLED_PIN_DC  FixedArduinoPin<9>()
 
 template <typename Display, typename Bitmask, typename Message>
 void message(
@@ -88,37 +90,37 @@ void show_reading(
 	);
 }
 
-template <typename Display>
+template <typename Accel, typename Display>
 void demoAccelerometer(
-	ADXL345 &accelerometer,
+	Accel &accelerometer,
 	Display &display
 ) {
 	Bitmask18<display.width(),display.height()> bitmask;
 
 	Font f(FONTFIXED_DATA, FONTFIXED_IMG, FONTFIXED_MASK);
 
-	ADXL345::ConnectionStatus status = accelerometer.connection_status();
-	if(status != ADXL345::ConnectionStatus::CONNECTED) {
+	auto status = accelerometer.connection_status();
+	if(status != Accel::ConnectionStatus::CONNECTED) {
 		ProgMem<char> detail;
 		switch(status) {
-		case ADXL345::ConnectionStatus::CONNECTED:
+		case Accel::ConnectionStatus::CONNECTED:
 			break;
-		case ADXL345::ConnectionStatus::REQUEST_ERR_DATA_TOO_LONG:
+		case Accel::ConnectionStatus::REQUEST_ERR_DATA_TOO_LONG:
 			detail = ProgMemString("REQUEST_ERR_DATA_TOO_LONG");
 			break;
-		case ADXL345::ConnectionStatus::REQUEST_ERR_NACK_ADDR:
+		case Accel::ConnectionStatus::REQUEST_ERR_NACK_ADDR:
 			detail = ProgMemString("REQUEST_ERR_NACK_ADDR");
 			break;
-		case ADXL345::ConnectionStatus::REQUEST_ERR_NACK_DATA:
+		case Accel::ConnectionStatus::REQUEST_ERR_NACK_DATA:
 			detail = ProgMemString("REQUEST_ERR_NACK_DATA");
 			break;
-		case ADXL345::ConnectionStatus::REQUEST_ERR_OTHER:
+		case Accel::ConnectionStatus::REQUEST_ERR_OTHER:
 			detail = ProgMemString("REQUEST_ERR_OTHER");
 			break;
-		case ADXL345::ConnectionStatus::READ_TIMEOUT:
+		case Accel::ConnectionStatus::READ_TIMEOUT:
 			detail = ProgMemString("READ_TIMEOUT");
 			break;
-		case ADXL345::ConnectionStatus::ID_MISMATCH:
+		case Accel::ConnectionStatus::ID_MISMATCH:
 			detail = ProgMemString("ID_MISMATCH");
 			break;
 		}
@@ -142,7 +144,7 @@ void demoAccelerometer(
 		"Running accelerometer self-test..."
 	));
 
-	if(accelerometer.test(ACCELEROMETER_VOLTAGE)) {
+	if(accelerometer.test(Accel::ACCELEROMETER_VOLTAGE)) {
 		message(display, bitmask, ProgMemString("Self-test passed :D"));
 	} else {
 		message(display, bitmask, ProgMemString("Self-test failed :("));
@@ -179,9 +181,14 @@ void demoAccelerometer(
 void setup(void) {
 	Wire.begin();
 
-	ADXL345 accelerometer(true, ACCELEROMETER_INT1, ACCELEROMETER_INT2);
+	auto accelerometer = MakeADXL345(
+		ACCELEROMETER_INT1,
+		ACCELEROMETER_INT2,
+		HIGH, // interrupt high
+		true  // alternate address
+	);
 
-	SSD1306<> oled(OLED_PIN_CS, OLED_PIN_RST, OLED_PIN_DC);
+	auto oled = MakeSSD1306<128,64>(OLED_PIN_CS, OLED_PIN_RST, OLED_PIN_DC);
 	oled.set_on(true);
 
 	while(true) {

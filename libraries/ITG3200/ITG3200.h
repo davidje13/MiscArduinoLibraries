@@ -30,7 +30,19 @@
 // Recommended startup call (better accuracy):
 // gyroscope.set_clock_source_sync(ITG3200::ClockSource::X_GYRO);
 
+template <
+	typename IntPinT
+>
 class ITG3200 {
+	// This class is a simplified version of boost's compressed_pair. It is used
+	// to allow empty structs to be stored without taking up any memory.
+	template <typename OptionalT, typename KnownT>
+	class Flattener : public OptionalT {
+	public:
+		KnownT flattened_value;
+		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
+	};
+
 	static const constexpr uint8_t I2C_ADDR = 0x68;
 
 	enum Register : uint8_t {
@@ -108,8 +120,8 @@ public:
 	};
 
 private:
-	uint8_t intPin; // TODO: actually use this if available
-	uint8_t powerCache;
+	Flattener<IntPinT,uint8_t> intPin; // TODO: actually use this if available
+#define powerCache intPin.flattened_value
 	bool addrLSB : 4;
 	bool hasSetRange : 4;
 
@@ -275,8 +287,6 @@ private:
 
 public:
 
-	static const constexpr uint8_t NO_PIN = 0xFF;
-
 	ConnectionStatus connection_status(void) {
 		uint8_t regID;
 		WireError err = read(WHO_AM_I, 1, &regID, 10000);
@@ -437,17 +447,14 @@ public:
 		set_filter_bandwidth(LowPassBandwidth::L256_HZ);
 	}
 
-	ITG3200(bool AD0 = false, uint8_t interrupt = NO_PIN)
-		: intPin(interrupt)
-		, powerCache(0x00) // Assume default
+	ITG3200(IntPinT interrupt, bool AD0)
+		: intPin(interrupt, 0x00) // powerCache - assume default
 		, addrLSB(AD0)
 		, hasSetRange(false)
 	{
 		// Device supports up to 400kHz
 		Wire.setClock(400000);
-		if(intPin != NO_PIN) {
-			pinMode(intPin, INPUT);
-		}
+		intPin.set_input();
 		if(connection_status() == ConnectionStatus::CONNECTED) {
 			reset();
 		}
@@ -455,6 +462,22 @@ public:
 
 	~ITG3200(void) {
 	}
+
+#undef powerCache
 };
+
+template <
+	typename IntPinT
+>
+[[gnu::always_inline]]
+inline ITG3200<IntPinT> MakeITG3200(
+	IntPinT interrupt, // optional (use VoidPin to omit)
+	bool AD0 = false
+) {
+	return ITG3200<IntPinT>(
+		interrupt,
+		AD0
+	);
+}
 
 #endif

@@ -29,10 +29,11 @@ device.
 
 ```cpp
 #include <HMC5883L.h>
+#include <VoidPin.h>
 
 ...
 
-HMC5883L compass(/*optional DRDY pin here*/);
+auto compass = MakeHMC5883L(VoidPin()); // optional DRDY pin
 
 compass.set_averaging(HMC5883L::Averaging::A4); // 4 samples for each reading
 compass.set_gain(HMC5883L::Gain::G1370);

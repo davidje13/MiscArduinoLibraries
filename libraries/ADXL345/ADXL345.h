@@ -25,10 +25,21 @@
 #  define nodiscard gnu::warn_unused_result
 #endif
 
+template <
+	typename Int1PinT,
+	typename Int2PinT
+>
 class ADXL345 {
-public:
-	static const constexpr uint8_t NO_PIN = 0xFF;
+	// This class is a simplified version of boost's compressed_pair. It is used
+	// to allow empty structs to be stored without taking up any memory.
+	template <typename OptionalT, typename KnownT>
+	class Flattener : public OptionalT {
+	public:
+		KnownT flattened_value;
+		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
+	};
 
+public:
 	enum class ConnectionStatus : uint8_t {
 		CONNECTED = 0,
 		REQUEST_ERR_DATA_TOO_LONG = 1,
@@ -209,11 +220,11 @@ private:
 		PCTL_LINK       = 0x20
 	};
 
-	uint8_t int1Pin;
-	uint8_t int2Pin;
 	uint8_t actTapStatus; // unused 0x80 is commandeered for activity status
-	uint8_t intStatus;
-	uint8_t intEnable;
+	Flattener<Int1PinT,uint8_t> int1Pin;
+#define intStatus int1Pin.flattened_value
+	Flattener<Int2PinT,uint8_t> int2Pin;
+#define intEnable int2Pin.flattened_value
 	uint8_t intMap;
 	uint8_t power; // unused 0x80 is commandeered for interrupts low config
 	// also 0x40 is commandeered for alternative address config
@@ -847,32 +858,48 @@ public:
 	}
 
 	ADXL345(
-		bool altAddress = true,
-		uint8_t int1 = NO_PIN,
-		uint8_t int2 = NO_PIN,
-		uint8_t activeIntMode = HIGH
+		bool altAddress,
+		Int1PinT int1,
+		Int2PinT int2,
+		bool activeIntModeHigh
 	)
-		: int1Pin(int1)
-		, int2Pin(int2)
-		, actTapStatus(0x00)
-		, intStatus(0x00)
-		, intEnable(0x00)
+		: actTapStatus(0x00)
+		, int1Pin(int1, 0x00) // intStatus
+		, int2Pin(int2, 0x00) // intEnable
 		, intMap(0x00)
-		, power(((activeIntMode == LOW) * 0x80) | (altAddress * 0x40))
+		, power((activeIntModeHigh * 0x80) | (altAddress * 0x40))
 	{
 		// Device supports up to 400kHz
 		Wire.setClock(400000);
-		if(int1Pin != NO_PIN) {
-			pinMode(int1Pin, INPUT);
-		}
-		if(int2Pin != NO_PIN) {
-			pinMode(int2Pin, INPUT);
-		}
+		int1Pin.set_input();
+		int2Pin.set_input();
 	}
 
 	~ADXL345(void) {
 		set_on(false);
 	}
+
+#undef intStatus
+#undef intEnable
 };
+
+template <
+	typename Int1PinT,
+	typename Int2PinT
+>
+[[gnu::always_inline]]
+inline ADXL345<Int1PinT, Int2PinT> MakeADXL345(
+	Int1PinT int1, // optional (use VoidPin to omit)
+	Int2PinT int2, // optional (use VoidPin to omit)
+	bool activeIntModeHigh = true,
+	bool altAddress = true
+) {
+	return ADXL345<Int1PinT, Int2PinT>(
+		altAddress,
+		int1,
+		int2,
+		activeIntModeHigh
+	);
+}
 
 #endif

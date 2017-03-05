@@ -33,6 +33,7 @@ always make them public if you want to play).
 
 ```cpp
 #include <SSD1306.h>
+#include <ArduinoPin.h>
 
 ...
 
@@ -41,7 +42,11 @@ always make them public if you want to play).
 int OLED_PIN_CS  = ?; // Set to any available pin
 int OLED_PIN_RST = ?; // Set to any available pin
 int OLED_PIN_DC  = ?; // Set to any available pin
-SSD1306<128,64> myDisplay(OLED_PIN_CS, OLED_PIN_RST, OLED_PIN_DC);
+auto myDisplay = MakeSSD1306<128,64>(
+	ArduinoPin(OLED_PIN_CS),
+	ArduinoPin(OLED_PIN_RST),
+	ArduinoPin(OLED_PIN_DC)
+);
 // Put any pre-switch-on configuration here, e.g. to rotate the screen 180:
 myDisplay.set_x_flip(true);
 myDisplay.set_y_flip(true);
