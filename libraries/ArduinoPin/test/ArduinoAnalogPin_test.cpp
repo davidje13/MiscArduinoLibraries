@@ -1,6 +1,6 @@
 #include <boost/test/unit_test.hpp>
 
-#include "arduino_mock.h"
+#include "MockArduinoPin.h"
 
 template <int v>
 struct ConstExprChecker { static constexpr bool value(void) { return true; } };

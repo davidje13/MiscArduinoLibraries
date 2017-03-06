@@ -147,46 +147,39 @@ private:
 
 	[[gnu::always_inline]]
 	typename TwiT::Error set_register(Register r, uint8_t value) {
-		twiComm.begin_transmission(i2c_addr(), i2c_speed());
-		twiComm.write(r);
-		twiComm.write(value);
-		return twiComm.end_transmission(true);
+		auto t = twiComm.begin_transmission(i2c_addr(), i2c_speed());
+		t.write(r);
+		t.write(value);
+		return t.stop();
 	}
 
 	ConnectionStatus read(
 		Register r,
-		uint8_t count,
 		void *buffer,
+		uint8_t count,
 		uint16_t maxMicros
 	) {
-		twiComm.begin_transmission(i2c_addr(), i2c_speed());
-		twiComm.write(r);
-		auto err = twiComm.end_transmission(true);
+		auto err = twiComm.send(i2c_addr(), i2c_speed(), r);
 		if(err != TwiT::Error::SUCCESS) {
 			return ConnectionStatus(err);
 		}
 
-		twiComm.request_from(i2c_addr(), count, i2c_speed());
-		uint16_t t0 = micros();
-		uint8_t *b = static_cast<uint8_t*>(buffer);
-		while(true) {
-			while(twiComm.available()) {
-				*b = twiComm.read();
-				++ b;
-				if((-- count) == 0) {
-					return ConnectionStatus::CONNECTED;
-				}
-			}
-			if(uint16_t(micros() - t0) > maxMicros) {
-				return ConnectionStatus::READ_TIMEOUT;
-			}
+		bool success = twiComm.request_from(
+			i2c_addr(), i2c_speed(),
+			buffer, count,
+			maxMicros
+		);
+		if(success) {
+			return ConnectionStatus::CONNECTED;
+		} else {
+			return ConnectionStatus::READ_TIMEOUT;
 		}
 	}
 
 	bool check_interrupt(InterruptCondition condition) {
 		uint8_t state;
 		if(
-			read(INTERRUPT_STATUS, 1, &state, 10000) !=
+			read(INTERRUPT_STATUS, &state, 1, 10000) !=
 			ConnectionStatus::CONNECTED
 		) {
 			return false;
@@ -306,7 +299,7 @@ public:
 
 	ConnectionStatus connection_status(void) {
 		uint8_t regID;
-		auto err = read(WHO_AM_I, 1, &regID, 10000);
+		auto err = read(WHO_AM_I, &regID, 1, 10000);
 		if(err != ConnectionStatus::CONNECTED) {
 			return err;
 		}
@@ -322,7 +315,7 @@ public:
 	 */
 	void check_configuration(void) {
 		uint8_t output;
-		read(POWER_MANAGEMENT, 1, &output, 10000);
+		read(POWER_MANAGEMENT, &output, 1, 10000);
 		powerCache = output & 0x3F;
 	}
 
@@ -407,7 +400,7 @@ public:
 		while(true) {
 			if(check_interrupt(InterruptCondition::DATA_AVAILABLE)) {
 				if(
-					read(TEMPERATURE_MSB, 8, buffer, 10000) !=
+					read(TEMPERATURE_MSB, buffer, 8, 10000) !=
 					ConnectionStatus::CONNECTED
 				) {
 					continue;
@@ -425,7 +418,7 @@ public:
 		while(true) {
 			if(check_interrupt(InterruptCondition::DATA_AVAILABLE)) {
 				if(
-					read(TEMPERATURE_MSB, 8, buffer, 10000) !=
+					read(TEMPERATURE_MSB, buffer, 8, 10000) !=
 					ConnectionStatus::CONNECTED
 				) {
 					return false;
@@ -444,7 +437,7 @@ public:
 		uint8_t buffer[9];
 		if(checkInterrupt) {
 			if(
-				read(INTERRUPT_STATUS, 9, buffer, 10000) !=
+				read(INTERRUPT_STATUS, buffer, 9, 10000) !=
 				ConnectionStatus::CONNECTED
 			) {
 				return reading();
@@ -452,7 +445,7 @@ public:
 		} else {
 			buffer[0] = 0x00;
 			if(
-				read(TEMPERATURE_MSB, 8, buffer + 1, 10000) !=
+				read(TEMPERATURE_MSB, buffer + 1, 8, 10000) !=
 				ConnectionStatus::CONNECTED
 			) {
 				return reading();

@@ -38,6 +38,10 @@ class ADXL345 {
 		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
 	};
 
+	template <typename T>
+	[[gnu::const,nodiscard,gnu::always_inline]]
+	static constexpr inline T min2(T a, T b) { return (a < b) ? a : b; }
+
 public:
 	enum class ConnectionStatus : uint8_t {
 		CONNECTED = 0,
@@ -233,19 +237,19 @@ private:
 
 	[[gnu::always_inline]]
 	typename TwiT::Error set_register(Register r) {
-		twiComm.begin_transmission(i2c_addr(), i2c_speed());
-		twiComm.write(r);
-		return twiComm.end_transmission();
+		return twiComm.send(i2c_addr(), i2c_speed(), r);
 	}
 
 	[[gnu::always_inline]]
-	typename TwiT::Error set_register(Register r, uint8_t *values, uint8_t count) {
-		twiComm.begin_transmission(i2c_addr(), i2c_speed());
-		twiComm.write(r);
-		for(uint8_t i = 0; i < count; ++ i) {
-			twiComm.write(values[i]);
-		}
-		return twiComm.end_transmission();
+	typename TwiT::Error set_register(
+		Register r,
+		const uint8_t *values,
+		uint8_t count
+	) {
+		auto t = twiComm.begin_transmission(i2c_addr(), i2c_speed());
+		t.write(r);
+		t.write(values, count);
+		return t.stop();
 	}
 
 	[[gnu::always_inline]]
@@ -253,22 +257,12 @@ private:
 		return set_register(r, &value, 1);
 	}
 
-	bool read(uint8_t count, void *buffer, uint16_t maxMicros) {
-		twiComm.request_from(i2c_addr(), count, i2c_speed());
-		uint16_t t0 = micros();
-		uint8_t *b = static_cast<uint8_t*>(buffer);
-		while(true) {
-			while(twiComm.available()) {
-				*b = twiComm.read();
-				++ b;
-				if((-- count) == 0) {
-					return true;
-				}
-			}
-			if(uint16_t(micros() - t0) > maxMicros) {
-				return false;
-			}
-		}
+	bool read(void *buffer, uint8_t count, uint16_t maxMicros) {
+		return twiComm.request_from(
+			i2c_addr(), i2c_speed(),
+			buffer, count,
+			maxMicros
+		);
 	}
 
 	bool setIntConfig(Interrupt i, InterruptPin pin) {
@@ -327,7 +321,7 @@ private:
 			return reading();
 		}
 		uint8_t data[6];
-		if(!read(6, data, 10000)) {
+		if(!read(data, 6, 10000)) {
 			return reading();
 		}
 		return reading(
@@ -347,7 +341,7 @@ public:
 			return ConnectionStatus(err);
 		}
 		uint8_t devid;
-		if(!read(1, &devid, 10000)) {
+		if(!read(&devid, 1, 10000)) {
 			return ConnectionStatus::READ_TIMEOUT;
 		}
 		if(devid != 0xE5) {
@@ -582,18 +576,18 @@ public:
 	}
 
 	void configure_fifo(uint8_t samples) {
-		set_register(FIFO_CONTROL, 0x40 | min(samples, 31));
+		set_register(FIFO_CONTROL, 0x40 | min2(samples, 31));
 	}
 
 	void configure_fifo_stream(uint8_t watermarkTriggerPoint) {
-		set_register(FIFO_CONTROL, 0x80 | min(watermarkTriggerPoint, 31));
+		set_register(FIFO_CONTROL, 0x80 | min2(watermarkTriggerPoint, 31));
 	}
 
 	void configure_fifo_trigger(InterruptPin pin, uint8_t samplesBefore) {
 		set_register(FIFO_CONTROL,
 			0xC0 |
 			((pin == InterruptPin::INTERRUPT2) ? 0x20 : 0x00) |
-			min(samplesBefore, 31)
+			min2(samplesBefore, 31)
 		);
 	}
 
@@ -626,11 +620,11 @@ public:
 		// with new data
 		uint8_t ats;
 		set_register(ACT_TAP_STATUS);
-		read(1, &ats, 10000);
+		read(&ats, 1, 10000);
 
 		uint8_t is;
 		set_register(INT_SOURCE);
-		read(1, &is, 10000);
+		read(&is, 1, 10000);
 		intStatus = (intStatus & ~(
 			Interrupt::DATA_READY |
 			Interrupt::WATERMARK |
@@ -751,11 +745,11 @@ public:
 		}
 		uint8_t fifoSize;
 		set_register(FIFO_STATUS);
-		read(1, &fifoSize, 10000);
+		read(&fifoSize, 1, 10000);
 		if(onlyIfTriggered && !(fifoSize & 0x80)) {
 			return 0;
 		}
-		fifoSize = min((fifoSize & 0x3F) + 1, maxReadings);
+		fifoSize = min2((fifoSize & 0x3F) + 1, maxReadings);
 
 		for(uint8_t i = 0; i < fifoSize; ++ i) {
 			output[i] = grab_reading();
@@ -789,9 +783,9 @@ public:
 		uint8_t oldBW;
 		uint8_t oldFIFO;
 		set_register(BW_RATE);
-		read(1, &oldBW, 10000);
+		read(&oldBW, 1, 10000);
 		set_register(FIFO_CONTROL);
-		read(1, &oldFIFO, 10000);
+		read(&oldFIFO, 1, 10000);
 
 		// Run test
 		uint8_t config[] = {

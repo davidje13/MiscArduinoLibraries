@@ -326,38 +326,29 @@ private:
 	[[gnu::always_inline]]
 	typename TwiT::Error set_register(Register r) {
 		currentRegister = r;
-		twiComm.begin_transmission(i2c_addr(), i2c_speed());
-		twiComm.write(r);
-		return twiComm.end_transmission();
+		return twiComm.send(i2c_addr(), i2c_speed(), r);
 	}
 
 	[[gnu::always_inline]]
 	typename TwiT::Error set_register(Register r, uint8_t value) {
 		currentRegister = r + 1;
-		twiComm.begin_transmission(i2c_addr(), i2c_speed());
-		twiComm.write(r);
-		twiComm.write(value);
-		return twiComm.end_transmission();
+		auto t = twiComm.begin_transmission(i2c_addr(), i2c_speed());
+		t.write(r);
+		t.write(value);
+		return t.stop();
 	}
 
-	bool read(uint8_t count, void *buffer, uint16_t maxMicros) {
-		twiComm.request_from(i2c_addr(), count, i2c_speed());
-		uint16_t t0 = micros();
-		uint8_t *b = static_cast<uint8_t*>(buffer);
+	bool read(void *buffer, uint8_t count, uint16_t maxMicros) {
 		currentRegister += count;
-		while(true) {
-			while(twiComm.available()) {
-				*b = twiComm.read();
-				++ b;
-				if((-- count) == 0) {
-					return true;
-				}
-			}
-			if(uint16_t(micros() - t0) > maxMicros) {
-				currentRegister = 0xF; // Unknown state
-				return false;
-			}
+		bool success = twiComm.request_from(
+			i2c_addr(), i2c_speed(),
+			buffer, count,
+			maxMicros
+		);
+		if(!success) {
+			currentRegister = 0xF; // Unknown state
 		}
+		return success;
 	}
 
 	void begin_polling(void) {
@@ -386,7 +377,7 @@ private:
 			return false;
 		}
 		uint8_t status = 0x00;
-		read(1, &status, 1000);
+		read(&status, 1, 1000);
 		return (status & DATA_LOCKED) != 0;
 	}
 
@@ -395,7 +386,7 @@ private:
 			return false;
 		}
 		uint8_t status = 0x00;
-		read(1, &status, 1000);
+		read(&status, 1, 1000);
 		return (status & DATA_READY) != 0;
 	}
 
@@ -457,7 +448,7 @@ private:
 			}
 		}
 		uint8_t buffer[6];
-		if(!read(6, buffer, 10000)) {
+		if(!read(buffer, 6, 10000)) {
 			return reading();
 		}
 		if(gainChanged) {
@@ -542,7 +533,7 @@ public:
 			return ConnectionStatus(err);
 		}
 		uint8_t buffer[3];
-		if(!read(3, buffer, 10000)) {
+		if(!read(buffer, 3, 10000)) {
 			return ConnectionStatus::READ_TIMEOUT;
 		}
 		if(buffer[0] != 0x48 || buffer[1] != 0x34 || buffer[2] != 0x33) {
@@ -558,7 +549,7 @@ public:
 	void check_configuration(void) {
 		set_register(CONFIGURATION_A);
 		uint8_t output[2];
-		read(2, output, 10000);
+		read(output, 2, 10000);
 		confACache = output[0];
 		gainCache = Gain(output[1]);
 		confASent = true;
@@ -682,7 +673,7 @@ public:
 		uint8_t buffer[6];
 		bool success = false;
 		while(true) {
-			if(!read(6, buffer, 10000)) {
+			if(!read(buffer, 6, 10000)) {
 				break;
 			}
 			int16_t x = (buffer[0] << 8) | buffer[1];
@@ -708,7 +699,7 @@ public:
 			set_register(CONFIGURATION_B, uint8_t(gain));
 			delay(14);
 			// Skip next reading (will have old gain)
-			if(!read(6, buffer, 10000)) {
+			if(!read(buffer, 6, 10000)) {
 				break;
 			}
 			delay(14);

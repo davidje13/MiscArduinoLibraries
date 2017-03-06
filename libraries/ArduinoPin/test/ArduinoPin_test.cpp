@@ -1,6 +1,9 @@
 #include <boost/test/unit_test.hpp>
 
-#include "arduino_mock.h"
+#include "MockArduinoPin.h"
+
+#define digitalPinToTimer(x) (((x) == 2) ? 9 : NOT_ON_TIMER)
+#define digitalPinToInterrupt(x) (((x) == 5) ? 3 : NOT_AN_INTERRUPT)
 
 static void voidFunc(void) {
 }

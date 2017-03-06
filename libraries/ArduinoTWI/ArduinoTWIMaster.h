@@ -32,6 +32,14 @@ class ArduinoTWIMaster {
 	static void inc(void);
 	static void dec(void);
 
+	[[gnu::always_inline]]
+	inline void set_clock(uint32_t hz, bool force = false) {
+		if(lastClockHz != hz || force) {
+			Wire.setClock(hz);
+			lastClockHz = hz;
+		}
+	}
+
 public:
 	enum Error : uint8_t {
 		SUCCESS = 0,
@@ -39,6 +47,91 @@ public:
 		NACK_ADDR = 2,
 		NACK_DATA = 3,
 		OTHER = 4
+	};
+
+	class Transmission {
+		Transmission(void) {
+			inc();
+		}
+
+		friend class ArduinoTWIMaster;
+
+	public:
+		Transmission(const Transmission&) = delete;
+		Transmission(Transmission&&) = default;
+
+		[[gnu::always_inline]]
+		inline void write(uint8_t data) {
+			Wire.write(data);
+		}
+
+		[[gnu::always_inline]]
+		inline void write(const uint8_t *data, uint8_t count) {
+			Wire.write(data, count);
+		}
+
+		[[gnu::always_inline]]
+		inline Error stop(void) {
+			return Error(Wire.endTransmission(true));
+		}
+
+		[[gnu::always_inline]]
+		inline Error restart(void) {
+			return Error(Wire.endTransmission(false));
+		}
+
+		~Transmission(void) {
+			dec();
+		}
+	};
+
+	class Request {
+		Request(void) {
+			inc();
+		}
+
+		friend class ArduinoTWIMaster;
+
+	public:
+		Request(const Request&) = delete;
+		Request(Request&&) = default;
+
+		[[nodiscard,gnu::always_inline]]
+		inline uint8_t available(void) const {
+			return uint8_t(Wire.available());
+		}
+
+		[[nodiscard,gnu::always_inline]]
+		inline uint8_t read(void) {
+			return Wire.read();
+		}
+
+		[[nodiscard,gnu::always_inline]]
+		inline uint8_t peek(void) const {
+			return Wire.peek();
+		}
+
+		[[nodiscard]]
+		bool read(void *buffer, uint8_t count, uint16_t maxMicros) {
+			uint16_t t0 = micros();
+			uint8_t *b = static_cast<uint8_t*>(buffer);
+			while(true) {
+				while(available()) {
+					*b = read();
+					++ b;
+					if((-- count) == 0) {
+						return true;
+					}
+				}
+				if(uint16_t(micros() - t0) > maxMicros) {
+					return false;
+				}
+			}
+		}
+
+		~Request(void) {
+			dec();
+		}
 	};
 
 	[[gnu::always_inline]]
@@ -64,76 +157,43 @@ public:
 		dec();
 	}
 
-	[[gnu::always_inline]]
-	inline void set_clock(uint32_t hz, bool force = false) {
-		if(lastClockHz != hz || force) {
-			Wire.setClock(hz);
-			lastClockHz = hz;
-		}
-	}
-
-	// TODO: ideally this would return a new object which owns the transaction
-	// (with endTransmission happening implicitly when destroyed), but this
-	// would add lots of overhead in places where it is used.
-	[[gnu::always_inline]]
-	inline void begin_transmission(uint8_t address) {
+	[[nodiscard,gnu::always_inline]]
+	inline Transmission begin_transmission(uint8_t address, uint32_t hz) {
+		set_clock(hz);
 		Wire.beginTransmission(address);
+		return Transmission();
 	}
 
-	[[gnu::always_inline]]
-	inline void begin_transmission(uint8_t address, uint32_t hz) {
-		set_clock(hz);
-		begin_transmission(address);
+	[[nodiscard,gnu::always_inline]]
+	inline Error send(uint8_t address, uint32_t hz, uint8_t value) {
+		auto t = begin_transmission(address, hz);
+		t.write(value);
+		return t.stop();
 	}
 
-	[[gnu::always_inline]]
-	inline Error end_transmission(bool stop = true) {
-		return Error(Wire.endTransmission(stop));
-	}
-
-	[[gnu::always_inline]]
-	inline uint8_t request_from(
+	[[nodiscard,gnu::always_inline]]
+	inline Request request_from(
 		uint8_t address,
-		uint8_t count,
-		bool stop = true
-	) {
-		return Wire.requestFrom(address, count, uint8_t(stop));
-	}
-
-	[[gnu::always_inline]]
-	inline uint8_t request_from(
-		uint8_t address,
-		uint8_t count,
 		uint32_t hz,
+		uint8_t count,
 		bool stop = true
 	) {
 		set_clock(hz);
-		return request_from(address, count, stop);
+		Wire.requestFrom(address, count, uint8_t(stop));
+		return Request();
 	}
 
 	[[gnu::always_inline]]
-	inline void write(uint8_t data) {
-		Wire.write(data);
-	}
-
-	[[gnu::always_inline]]
-	inline void write(const uint8_t *data, uint8_t count) {
-		Wire.write(data, count);
-	}
-
-	[[nodiscard,gnu::always_inline]]
-	inline uint8_t available(void) const {
-		return uint8_t(Wire.available());
-	}
-
-	[[nodiscard,gnu::always_inline]]
-	inline uint8_t read(void) {
-		return Wire.read();
-	}
-
-	[[nodiscard,gnu::always_inline]]
-	inline uint8_t peek(void) const {
-		return Wire.peek();
+	inline bool request_from(
+		uint8_t address,
+		uint32_t hz,
+		void *buffer,
+		uint8_t count,
+		uint16_t maxMicros,
+		bool stop = true
+	) {
+		return request_from(address, hz, count, stop)
+			.read(buffer, count, maxMicros);
 	}
 };
 

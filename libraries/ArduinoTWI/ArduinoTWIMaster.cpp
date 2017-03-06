@@ -11,6 +11,7 @@
  * <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+#include <Arduino.h>
 #include "ArduinoTWIMaster.h"
 
 uint8_t ArduinoTWIMaster::refCount = 0;

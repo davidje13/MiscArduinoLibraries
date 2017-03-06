@@ -59,6 +59,7 @@ if [[ "$MODE" == "local-test" ]]; then
 		-fno-rtti \
 		-Wall -Wextra --pedantic \
 		-I "$SCRIPTDIR/libraries" \
+		-I "$SCRIPTDIR/mocks" \
 		-o "$SCRIPTDIR/out/test-$TESTNAME" \
 		"$SCRIPTDIR/test.cpp" \
 		{} +;
