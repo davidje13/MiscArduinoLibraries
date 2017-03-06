@@ -166,7 +166,7 @@ public:
 			// Data to device on RISING edge => mode 0 or 3
 			// Doesn't appear to matter whether mode 0 or 3 is used
 			// (even mode 2 seems to work)
-			spiComm.beginTransaction(
+			spiComm.begin_transaction(
 				10000000, // SSD1306 requires tCycle >= 100ns (<= 10MHz)
 				SpiT::ByteOrder::MSB_FIRST,
 				SpiT::DataMode::MODE0
@@ -180,7 +180,7 @@ public:
 	inline void end_communication(void) {
 		if((-- spiNesting) == 0) {
 			csPin.high();
-			spiComm.endTransaction();
+			spiComm.end_transaction();
 		}
 	}
 

@@ -64,7 +64,7 @@ public:
 	// (with endTransaction happening implicitly when destroyed), but this
 	// would add lots of overhead in places where it is used.
 	[[gnu::always_inline]]
-	inline void beginTransaction(
+	inline void begin_transaction(
 		uint32_t maxFrequency,
 		ByteOrder byteOrder,
 		DataMode dataMode
@@ -77,7 +77,7 @@ public:
 	}
 
 	[[gnu::always_inline]]
-	inline void endTransaction(void) {
+	inline void end_transaction(void) {
 		SPI.endTransaction();
 	}
 

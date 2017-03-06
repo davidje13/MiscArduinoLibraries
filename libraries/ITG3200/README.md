@@ -30,11 +30,16 @@ temperature (which can be used to improve accuracy).
 #include <ITG3200.h>
 #include <GyroAccumulator.h>
 #include <VoidPin.h>
+#include <ArduinoTWIMaster.h>
 
 ...
 
 bool AD0 = false;
-auto gyroscope = MakeITG3200(VoidPin(), AD0); // Optional interrupt pin
+auto gyroscope = MakeITG3200(
+	ArduinoTWIMaster(),
+	VoidPin(), // optional interrupt pin
+	AD0
+);
 
 gyroscope.set_filter_bandwidth(ITG3200::LowPassBandwidth::L188_HZ); // 1kHz
 gyroscope.set_sample_rate_divider(16); // New sample every 60 ms

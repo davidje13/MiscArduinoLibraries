@@ -30,10 +30,14 @@ device.
 ```cpp
 #include <HMC5883L.h>
 #include <VoidPin.h>
+#include <ArduinoTWIMaster.h>
 
 ...
 
-auto compass = MakeHMC5883L(VoidPin()); // optional DRDY pin
+auto compass = MakeHMC5883L(
+	ArduinoTWIMaster(),
+	VoidPin() // optional DRDY pin
+);
 
 compass.set_averaging(HMC5883L::Averaging::A4); // 4 samples for each reading
 compass.set_gain(HMC5883L::Gain::G1370);

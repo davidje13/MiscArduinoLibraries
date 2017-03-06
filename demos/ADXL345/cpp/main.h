@@ -32,7 +32,7 @@
 #include <ArduinoPin.h>
 #include <VoidPin.h>
 #include <ArduinoSPI.h>
-#include <Wire.h>
+#include <ArduinoTWIMaster.h>
 
 #define ACCELEROMETER_INT1 VoidPin()
 #define ACCELEROMETER_INT2 VoidPin()
@@ -180,9 +180,8 @@ void demoAccelerometer(
 }
 
 void setup(void) {
-	Wire.begin();
-
 	auto accelerometer = MakeADXL345(
+		ArduinoTWIMaster(),
 		ACCELEROMETER_INT1,
 		ACCELEROMETER_INT2,
 		HIGH, // interrupt high

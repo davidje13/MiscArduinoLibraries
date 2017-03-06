@@ -14,8 +14,6 @@
 #ifndef HMC5883L_H_INCLUDED
 #define HMC5883L_H_INCLUDED
 
-#include <Wire.h>
-
 // If the newer nodiscard attribute is available, use it
 #ifdef __has_cpp_attribute
 #  if !__has_cpp_attribute(nodiscard)
@@ -26,6 +24,7 @@
 #endif
 
 template <
+	typename TwiT,
 	typename DRDYPinT
 >
 class HMC5883L {
@@ -236,14 +235,6 @@ public:
 	};
 
 private:
-	enum WireError : uint8_t {
-		SUCCESS = 0,
-		DATA_TOO_LONG = 1,
-		NACK_ADDR = 2,
-		NACK_DATA = 3,
-		OTHER = 4
-	};
-
 	enum TestMode : uint8_t {
 		NO_BIAS       = 0x00, // Default
 		POSITIVE_BIAS = 0x01, // Applies ~+1.1Ga bias for testing purposes
@@ -287,9 +278,8 @@ private:
 		POLLING_INT_GOT_DATA
 	};
 
-	static const constexpr uint8_t I2C_ADDR = 0x1E;
 	static const constexpr uint8_t CONFA_RATE_MASK = 0x1C;
-	static HMC5883L<DRDYPinT> *interruptTarget;
+	static HMC5883L<TwiT, DRDYPinT> *interruptTarget;
 
 	static bool test_ok(int32_t value, int32_t gain) {
 		if(value * gain_value(Gain::G390) > (575 * gain)) {
@@ -302,7 +292,8 @@ private:
 	}
 
 	volatile ReqState state;
-	Gain gainCache;
+	Flattener<TwiT,Gain> twiComm;
+#define gainCache twiComm.flattened_value
 	Flattener<DRDYPinT, uint8_t> drdyPin;
 #define confACache drdyPin.flattened_value
 	uint8_t currentRegister : 4;
@@ -322,31 +313,41 @@ private:
 		}
 	}
 
-	[[gnu::always_inline]]
-	WireError set_register(Register r) {
-		currentRegister = r;
-		Wire.beginTransmission(I2C_ADDR);
-		Wire.write(r);
-		return WireError(Wire.endTransmission(true));
+	[[gnu::const,nodiscard,gnu::always_inline]]
+	static constexpr uint8_t i2c_addr(void) {
+		return 0x1E;
+	}
+
+	[[gnu::const,nodiscard,gnu::always_inline]]
+	static constexpr uint32_t i2c_speed(void) {
+		return 400000; // Device supports up to 400kHz
 	}
 
 	[[gnu::always_inline]]
-	WireError set_register(Register r, uint8_t value) {
+	typename TwiT::Error set_register(Register r) {
+		currentRegister = r;
+		twiComm.begin_transmission(i2c_addr(), i2c_speed());
+		twiComm.write(r);
+		return twiComm.end_transmission();
+	}
+
+	[[gnu::always_inline]]
+	typename TwiT::Error set_register(Register r, uint8_t value) {
 		currentRegister = r + 1;
-		Wire.beginTransmission(I2C_ADDR);
-		Wire.write(r);
-		Wire.write(value);
-		return WireError(Wire.endTransmission(true));
+		twiComm.begin_transmission(i2c_addr(), i2c_speed());
+		twiComm.write(r);
+		twiComm.write(value);
+		return twiComm.end_transmission();
 	}
 
 	bool read(uint8_t count, void *buffer, uint16_t maxMicros) {
-		Wire.requestFrom(I2C_ADDR, count, uint8_t(true));
+		twiComm.request_from(i2c_addr(), count, i2c_speed());
 		uint16_t t0 = micros();
 		uint8_t *b = static_cast<uint8_t*>(buffer);
 		currentRegister += count;
 		while(true) {
-			while(Wire.available()) {
-				*b = Wire.read();
+			while(twiComm.available()) {
+				*b = twiComm.read();
 				++ b;
 				if((-- count) == 0) {
 					return true;
@@ -381,7 +382,7 @@ private:
 	}
 
 	bool status_data_locked(void) {
-		if(set_register(STATUS) != SUCCESS) {
+		if(set_register(STATUS) != TwiT::Error::SUCCESS) {
 			return false;
 		}
 		uint8_t status = 0x00;
@@ -390,7 +391,7 @@ private:
 	}
 
 	bool status_data_ready(void) {
-		if(set_register(STATUS) != SUCCESS) {
+		if(set_register(STATUS) != TwiT::Error::SUCCESS) {
 			return false;
 		}
 		uint8_t status = 0x00;
@@ -434,7 +435,10 @@ private:
 
 	void send_conf_a(void) {
 		if(!confASent) {
-			if(set_register(CONFIGURATION_A, confACache) == SUCCESS) {
+			if(
+				set_register(CONFIGURATION_A, confACache) ==
+				TwiT::Error::SUCCESS
+			) {
 				confASent = true;
 			}
 		}
@@ -448,7 +452,7 @@ private:
 
 	reading grab_reading(void) {
 		if(currentRegister != DATA_X_MSB) {
-			if(set_register(DATA_X_MSB) != SUCCESS) {
+			if(set_register(DATA_X_MSB) != TwiT::Error::SUCCESS) {
 				return reading();
 			}
 		}
@@ -533,8 +537,8 @@ public:
 	};
 
 	ConnectionStatus connection_status(void) {
-		WireError err = set_register(IDENTITY_A);
-		if(err != SUCCESS) {
+		auto err = set_register(IDENTITY_A);
+		if(err != TwiT::Error::SUCCESS) {
 			return ConnectionStatus(err);
 		}
 		uint8_t buffer[3];
@@ -744,9 +748,9 @@ public:
 		return record_calibration(c, positive_bias);
 	}
 
-	HMC5883L(DRDYPinT drdy)
+	HMC5883L(TwiT twi, DRDYPinT drdy)
 		: state(ReqState::NONE)
-		, gainCache(Gain::G1090) // Assume default
+		, twiComm(twi, Gain::G1090) // gainCache - Assume default
 		, drdyPin(
 			drdy,
 			// confACache - Assume default
@@ -760,8 +764,6 @@ public:
 		, gainChanged(false)
 		, confASent(false)
 	{
-		// Device supports up to 400kHz
-		Wire.setClock(400000);
 		drdyPin.set_input();
 	}
 
@@ -769,22 +771,27 @@ public:
 		stop();
 	}
 
+#undef gainCache
 #undef confACache
 };
 
 template <
+	typename TwiT,
 	typename DRDYPinT
 >
-HMC5883L<DRDYPinT> *HMC5883L<DRDYPinT>::interruptTarget = nullptr;
+HMC5883L<TwiT, DRDYPinT> *HMC5883L<TwiT, DRDYPinT>::interruptTarget = nullptr;
 
 template <
+	typename TwiT,
 	typename DRDYPinT
 >
 [[gnu::always_inline]]
-inline HMC5883L<DRDYPinT> MakeHMC5883L(
+inline HMC5883L<TwiT, DRDYPinT> MakeHMC5883L(
+	TwiT twi,
 	DRDYPinT drdy // optional (use VoidPin to omit)
 ) {
-	return HMC5883L<DRDYPinT>(
+	return HMC5883L<TwiT, DRDYPinT>(
+		twi,
 		drdy
 	);
 }

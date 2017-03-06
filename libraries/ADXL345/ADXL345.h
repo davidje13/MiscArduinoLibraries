@@ -14,8 +14,6 @@
 #ifndef ADXL345_H_INCLUDED
 #define ADXL345_H_INCLUDED
 
-#include <Wire.h>
-
 // If the newer nodiscard attribute is available, use it
 #ifdef __has_cpp_attribute
 #  if !__has_cpp_attribute(nodiscard)
@@ -26,6 +24,7 @@
 #endif
 
 template <
+	typename TwiT,
 	typename Int1PinT,
 	typename Int2PinT
 >
@@ -187,14 +186,6 @@ private:
 		FIFO_STATUS           = 0x39  // r
 	};
 
-	enum WireError : uint8_t {
-		SUCCESS = 0,
-		DATA_TOO_LONG = 1,
-		NACK_ADDR = 2,
-		NACK_DATA = 3,
-		OTHER = 4
-	};
-
 	enum Range : uint8_t {
 		R2  = 0x00,
 		R4  = 0x01,
@@ -225,7 +216,8 @@ private:
 #define intStatus int1Pin.flattened_value
 	Flattener<Int2PinT,uint8_t> int2Pin;
 #define intEnable int2Pin.flattened_value
-	uint8_t intMap;
+	Flattener<TwiT,uint8_t> twiComm;
+#define intMap twiComm.flattened_value
 	uint8_t power; // unused 0x80 is commandeered for interrupts low config
 	// also 0x40 is commandeered for alternative address config
 
@@ -234,35 +226,40 @@ private:
 		return (power & 0x40) ? 0x53 : 0x1D;
 	}
 
-	[[gnu::always_inline]]
-	WireError set_register(Register r) {
-		Wire.beginTransmission(i2c_addr());
-		Wire.write(r);
-		return WireError(Wire.endTransmission(true));
+	[[gnu::const,nodiscard,gnu::always_inline]]
+	static constexpr uint32_t i2c_speed(void) {
+		return 400000; // Device supports up to 400kHz
 	}
 
 	[[gnu::always_inline]]
-	WireError set_register(Register r, uint8_t *values, uint8_t count) {
-		Wire.beginTransmission(i2c_addr());
-		Wire.write(r);
+	typename TwiT::Error set_register(Register r) {
+		twiComm.begin_transmission(i2c_addr(), i2c_speed());
+		twiComm.write(r);
+		return twiComm.end_transmission();
+	}
+
+	[[gnu::always_inline]]
+	typename TwiT::Error set_register(Register r, uint8_t *values, uint8_t count) {
+		twiComm.begin_transmission(i2c_addr(), i2c_speed());
+		twiComm.write(r);
 		for(uint8_t i = 0; i < count; ++ i) {
-			Wire.write(values[i]);
+			twiComm.write(values[i]);
 		}
-		return WireError(Wire.endTransmission(true));
+		return twiComm.end_transmission();
 	}
 
 	[[gnu::always_inline]]
-	WireError set_register(Register r, uint8_t value) {
+	typename TwiT::Error set_register(Register r, uint8_t value) {
 		return set_register(r, &value, 1);
 	}
 
 	bool read(uint8_t count, void *buffer, uint16_t maxMicros) {
-		Wire.requestFrom(i2c_addr(), count, uint8_t(true));
+		twiComm.request_from(i2c_addr(), count, i2c_speed());
 		uint16_t t0 = micros();
 		uint8_t *b = static_cast<uint8_t*>(buffer);
 		while(true) {
-			while(Wire.available()) {
-				*b = Wire.read();
+			while(twiComm.available()) {
+				*b = twiComm.read();
 				++ b;
 				if((-- count) == 0) {
 					return true;
@@ -326,7 +323,7 @@ private:
 	}
 
 	reading grab_reading(void) {
-		if(set_register(DATA_X0) != SUCCESS) {
+		if(set_register(DATA_X0) != TwiT::Error::SUCCESS) {
 			return reading();
 		}
 		uint8_t data[6];
@@ -345,8 +342,8 @@ private:
 
 public:
 	ConnectionStatus connection_status(void) {
-		WireError err = set_register(DEVID);
-		if(err != SUCCESS) {
+		auto err = set_register(DEVID);
+		if(err != TwiT::Error::SUCCESS) {
 			return ConnectionStatus(err);
 		}
 		uint8_t devid;
@@ -858,6 +855,7 @@ public:
 	}
 
 	ADXL345(
+		TwiT twi,
 		bool altAddress,
 		Int1PinT int1,
 		Int2PinT int2,
@@ -866,11 +864,9 @@ public:
 		: actTapStatus(0x00)
 		, int1Pin(int1, 0x00) // intStatus
 		, int2Pin(int2, 0x00) // intEnable
-		, intMap(0x00)
+		, twiComm(twi, 0x00) // intMap
 		, power((activeIntModeHigh * 0x80) | (altAddress * 0x40))
 	{
-		// Device supports up to 400kHz
-		Wire.setClock(400000);
 		int1Pin.set_input();
 		int2Pin.set_input();
 	}
@@ -881,20 +877,24 @@ public:
 
 #undef intStatus
 #undef intEnable
+#undef intMap
 };
 
 template <
+	typename TwiT,
 	typename Int1PinT,
 	typename Int2PinT
 >
 [[gnu::always_inline]]
-inline ADXL345<Int1PinT, Int2PinT> MakeADXL345(
+inline ADXL345<TwiT, Int1PinT, Int2PinT> MakeADXL345(
+	TwiT twi,
 	Int1PinT int1, // optional (use VoidPin to omit)
 	Int2PinT int2, // optional (use VoidPin to omit)
 	bool activeIntModeHigh = true,
 	bool altAddress = true
 ) {
-	return ADXL345<Int1PinT, Int2PinT>(
+	return ADXL345<TwiT, Int1PinT, Int2PinT>(
+		twi,
 		altAddress,
 		int1,
 		int2,

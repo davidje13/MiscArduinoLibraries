@@ -33,11 +33,13 @@ tap, double-tap, inactivity, and free-fall events.
 ```cpp
 #include <ADXL345.h>
 #include <VoidPin.h>
+#include <ArduinoTWIMaster.h>
 
 ...
 
 bool usingAlternateAddress = true;
 auto accelerometer = MakeADXL345(
+	ArduinoTWIMaster(),
 	VoidPin(), // optional int1 pin
 	VoidPin(), // optional int2 pin
 	HIGH, // interrupt pins are active HIGH

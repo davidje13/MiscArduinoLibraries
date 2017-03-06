@@ -33,7 +33,7 @@
 #include <ArduinoPin.h>
 #include <VoidPin.h>
 #include <ArduinoSPI.h>
-#include <Wire.h>
+#include <ArduinoTWIMaster.h>
 
 #define GYROSCOPE_INT VoidPin()
 
@@ -196,9 +196,11 @@ void demoGyroscope(
 }
 
 void setup(void) {
-	Wire.begin();
-
-	auto gyroscope = MakeITG3200(GYROSCOPE_INT, false);
+	auto gyroscope = MakeITG3200(
+		ArduinoTWIMaster(),
+		GYROSCOPE_INT,
+		false
+	);
 
 	auto oled = MakeSSD1306<128,64>(
 		ArduinoSPI(),

@@ -32,7 +32,7 @@
 #include <ArduinoPin.h>
 #include <VoidPin.h>
 #include <ArduinoSPI.h>
-#include <Wire.h>
+#include <ArduinoTWIMaster.h>
 
 #define MAGNETOMETER_DRDY VoidPin()
 
@@ -168,9 +168,10 @@ void demoCompass(
 }
 
 void setup(void) {
-	Wire.begin();
-
-	auto compass = MakeHMC5883L(MAGNETOMETER_DRDY);
+	auto compass = MakeHMC5883L(
+		ArduinoTWIMaster(),
+		MAGNETOMETER_DRDY
+	);
 
 	auto oled = MakeSSD1306<128,64>(
 		ArduinoSPI(),

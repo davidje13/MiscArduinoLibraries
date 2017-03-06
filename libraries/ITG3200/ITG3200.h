@@ -14,8 +14,6 @@
 #ifndef ITG3200_H_INCLUDED
 #define ITG3200_H_INCLUDED
 
-#include <Wire.h>
-
 // If the newer nodiscard attribute is available, use it
 #ifdef __has_cpp_attribute
 #  if !__has_cpp_attribute(nodiscard)
@@ -31,6 +29,7 @@
 // gyroscope.set_clock_source_sync(ITG3200::ClockSource::X_GYRO);
 
 template <
+	typename TwiT,
 	typename IntPinT
 >
 class ITG3200 {
@@ -77,7 +76,7 @@ public:
 		REQUEST_ERR_NACK_ADDR = 2,
 		REQUEST_ERR_NACK_DATA = 3,
 		REQUEST_ERR_OTHER = 4,
-		READ_TIMEOUT = 5,
+		READ_TIMEOUT,
 		ID_MISMATCH
 	};
 
@@ -120,61 +119,76 @@ public:
 	};
 
 private:
+	struct FlattenedAddrRange {
+		bool addrLSB : 4;
+		bool hasSetRange : 4;
+
+		FlattenedAddrRange(bool alsb, bool hsr)
+			: addrLSB(alsb)
+			, hasSetRange(hsr)
+		{}
+	};
+
 	Flattener<IntPinT,uint8_t> intPin; // TODO: actually use this if available
 #define powerCache intPin.flattened_value
-	bool addrLSB : 4;
-	bool hasSetRange : 4;
-
-	enum WireError : uint8_t {
-		SUCCESS = 0,
-		DATA_TOO_LONG = 1,
-		NACK_ADDR = 2,
-		NACK_DATA = 3,
-		OTHER = 4,
-		READ_TIMEOUT = 5
-	};
+	Flattener<TwiT,FlattenedAddrRange> twiComm;
+#define addrLSB twiComm.flattened_value.addrLSB
+#define hasSetRange twiComm.flattened_value.hasSetRange
 
 	[[gnu::pure,nodiscard,gnu::always_inline]]
 	uint8_t i2c_addr(void) const {
 		return I2C_ADDR | addrLSB;
 	}
 
-	[[gnu::always_inline]]
-	WireError set_register(Register r, uint8_t value) {
-		Wire.beginTransmission(i2c_addr());
-		Wire.write(r);
-		Wire.write(value);
-		return WireError(Wire.endTransmission(true));
+	[[gnu::const,nodiscard,gnu::always_inline]]
+	static constexpr uint32_t i2c_speed(void) {
+		return 400000; // Device supports up to 400kHz
 	}
 
-	WireError read(Register r, uint8_t count, void *buffer, uint16_t maxMicros) {
-		Wire.beginTransmission(i2c_addr());
-		Wire.write(r);
-		WireError err = WireError(Wire.endTransmission(true));
-		if(err != SUCCESS) {
-			return err;
+	[[gnu::always_inline]]
+	typename TwiT::Error set_register(Register r, uint8_t value) {
+		twiComm.begin_transmission(i2c_addr(), i2c_speed());
+		twiComm.write(r);
+		twiComm.write(value);
+		return twiComm.end_transmission(true);
+	}
+
+	ConnectionStatus read(
+		Register r,
+		uint8_t count,
+		void *buffer,
+		uint16_t maxMicros
+	) {
+		twiComm.begin_transmission(i2c_addr(), i2c_speed());
+		twiComm.write(r);
+		auto err = twiComm.end_transmission(true);
+		if(err != TwiT::Error::SUCCESS) {
+			return ConnectionStatus(err);
 		}
 
-		Wire.requestFrom(i2c_addr(), count, uint8_t(true));
+		twiComm.request_from(i2c_addr(), count, i2c_speed());
 		uint16_t t0 = micros();
 		uint8_t *b = static_cast<uint8_t*>(buffer);
 		while(true) {
-			while(Wire.available()) {
-				*b = Wire.read();
+			while(twiComm.available()) {
+				*b = twiComm.read();
 				++ b;
 				if((-- count) == 0) {
-					return SUCCESS;
+					return ConnectionStatus::CONNECTED;
 				}
 			}
 			if(uint16_t(micros() - t0) > maxMicros) {
-				return READ_TIMEOUT;
+				return ConnectionStatus::READ_TIMEOUT;
 			}
 		}
 	}
 
 	bool check_interrupt(InterruptCondition condition) {
 		uint8_t state;
-		if(read(INTERRUPT_STATUS, 1, &state, 10000) != SUCCESS) {
+		if(
+			read(INTERRUPT_STATUS, 1, &state, 10000) !=
+			ConnectionStatus::CONNECTED
+		) {
 			return false;
 		}
 		return (state & uint8_t(condition)) != 0;
@@ -182,7 +196,10 @@ private:
 
 	void check_config(void) {
 		if(!hasSetRange) {
-			set_register(DLPF_FULL_SCALE, uint8_t(LowPassBandwidth::L256_HZ) | R2000);
+			set_register(
+				DLPF_FULL_SCALE,
+				uint8_t(LowPassBandwidth::L256_HZ) | R2000
+			);
 			hasSetRange = true;
 		}
 	}
@@ -289,9 +306,9 @@ public:
 
 	ConnectionStatus connection_status(void) {
 		uint8_t regID;
-		WireError err = read(WHO_AM_I, 1, &regID, 10000);
-		if(err != SUCCESS) {
-			return ConnectionStatus(err);
+		auto err = read(WHO_AM_I, 1, &regID, 10000);
+		if(err != ConnectionStatus::CONNECTED) {
+			return err;
 		}
 		if(regID != i2c_addr()) {
 			return ConnectionStatus::ID_MISMATCH;
@@ -324,7 +341,7 @@ public:
 
 	void configure_interrupt(
 		InterruptCondition conditions,
-		InterruptMode mode      = InterruptMode::PULSE_PIN_LATCH_REG_UNTIL_STATUS_READ,
+		InterruptMode mode = InterruptMode::PULSE_PIN_LATCH_REG_UNTIL_STATUS_READ,
 		InterruptStates pinMode = InterruptStates::ACTIVE_HIGH_INACTIVE_LOW
 	) {
 		set_register(INTERRUPT_CONFIG,
@@ -389,7 +406,10 @@ public:
 		uint8_t buffer[8];
 		while(true) {
 			if(check_interrupt(InterruptCondition::DATA_AVAILABLE)) {
-				if(read(TEMPERATURE_MSB, 8, buffer, 10000) != SUCCESS) {
+				if(
+					read(TEMPERATURE_MSB, 8, buffer, 10000) !=
+					ConnectionStatus::CONNECTED
+				) {
 					continue;
 				}
 				return make_reading(buffer);
@@ -404,7 +424,10 @@ public:
 		uint16_t t0 = micros();
 		while(true) {
 			if(check_interrupt(InterruptCondition::DATA_AVAILABLE)) {
-				if(read(TEMPERATURE_MSB, 8, buffer, 10000) != SUCCESS) {
+				if(
+					read(TEMPERATURE_MSB, 8, buffer, 10000) !=
+					ConnectionStatus::CONNECTED
+				) {
 					return false;
 				}
 				output = make_reading(buffer);
@@ -420,12 +443,18 @@ public:
 		check_config();
 		uint8_t buffer[9];
 		if(checkInterrupt) {
-			if(read(INTERRUPT_STATUS, 9, buffer, 10000) != SUCCESS) {
+			if(
+				read(INTERRUPT_STATUS, 9, buffer, 10000) !=
+				ConnectionStatus::CONNECTED
+			) {
 				return reading();
 			}
 		} else {
 			buffer[0] = 0x00;
-			if(read(TEMPERATURE_MSB, 8, buffer + 1, 10000) != SUCCESS) {
+			if(
+				read(TEMPERATURE_MSB, 8, buffer + 1, 10000) !=
+				ConnectionStatus::CONNECTED
+			) {
 				return reading();
 			}
 		}
@@ -447,13 +476,10 @@ public:
 		set_filter_bandwidth(LowPassBandwidth::L256_HZ);
 	}
 
-	ITG3200(IntPinT interrupt, bool AD0)
+	ITG3200(TwiT twi, IntPinT interrupt, bool AD0)
 		: intPin(interrupt, 0x00) // powerCache - assume default
-		, addrLSB(AD0)
-		, hasSetRange(false)
+		, twiComm(twi, FlattenedAddrRange(AD0, false)) // addrLSB, hasSetRange
 	{
-		// Device supports up to 400kHz
-		Wire.setClock(400000);
 		intPin.set_input();
 		if(connection_status() == ConnectionStatus::CONNECTED) {
 			reset();
@@ -464,17 +490,22 @@ public:
 	}
 
 #undef powerCache
+#undef addrLSB
+#undef hasSetRange
 };
 
 template <
+	typename TwiT,
 	typename IntPinT
 >
 [[gnu::always_inline]]
-inline ITG3200<IntPinT> MakeITG3200(
+inline ITG3200<TwiT, IntPinT> MakeITG3200(
+	TwiT twi,
 	IntPinT interrupt, // optional (use VoidPin to omit)
 	bool AD0 = false
 ) {
-	return ITG3200<IntPinT>(
+	return ITG3200<TwiT, IntPinT>(
+		twi,
 		interrupt,
 		AD0
 	);
