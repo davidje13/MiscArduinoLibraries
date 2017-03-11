@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(render_fs_bitmap_progmem) {
 		0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F
 	};
 	Bitmask18<16,16> bitmask;
-	bitmask.render_fs_bitmap(WrapProgMem(fsbmp));
+	bitmask.render_fs_bitmap(MakeProgMem(fsbmp));
 	for(int i = 0; i < 32; ++ i) {
 		BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x60 + i);
 	}

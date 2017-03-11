@@ -25,7 +25,7 @@ to access the underlying data pointer for these cases.
 #include <ProgMem.h>
 
 static PROGMEM const uint8_t myByteData[] = {0x00, 0x11, 0x22};
-auto myWrappedByteData = WrapProgMem(myByteData);
+auto myWrappedByteData = MakeProgMem(myByteData);
 myWrappedByteData[0]; // 0x00
 myWrappedByteData[1]; // 0x11
 myWrappedByteData += 2;
@@ -40,7 +40,7 @@ static PROGMEM const Coordinate myCoordinates[] = {
 	{10, 0},
 	{100, 5}
 };
-auto myWrappedCoordinates = WrapProgMem(myCoordinates);
+auto myWrappedCoordinates = MakeProgMem(myCoordinates);
 myWrappedCoordinates[0]; // Coordinate(0, 0)
 
 myTextFunction(ProgMemString("Hello; I won't use up any RAM!"));

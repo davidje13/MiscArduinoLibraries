@@ -92,9 +92,9 @@ template <typename Display>
 void demoCube(Display &display) {
 //	Bitmask18<64,8> bitmask;
 	Bitmask18<display.width(),display.height()> bitmask;
-	auto verts = WrapProgMem(CUBE_VERTICES);
-	auto lines = WrapProgMem(CUBE_LINES);
-	auto tris = WrapProgMem(CUBE_TRIANGLES);
+	auto verts = MakeProgMem(CUBE_VERTICES);
+	auto lines = MakeProgMem(CUBE_LINES);
+	auto tris = MakeProgMem(CUBE_TRIANGLES);
 	uint16_t nVerts = sizeof(CUBE_VERTICES) / (sizeof(*CUBE_VERTICES) * 3);
 	uint16_t nLines = sizeof(CUBE_LINES) / (sizeof(*CUBE_LINES) * 2);
 	uint16_t nTris = sizeof(CUBE_TRIANGLES) / (sizeof(*CUBE_TRIANGLES) * 3);

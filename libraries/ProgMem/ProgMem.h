@@ -168,7 +168,7 @@ public:
 
 template <typename T>
 [[gnu::always_inline]]
-static inline ProgMem<T> WrapProgMem(const T *ptr) {
+static inline ProgMem<T> MakeProgMem(const T *ptr) {
 	return ProgMem<T>(ptr);
 }
 
