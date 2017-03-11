@@ -3,6 +3,7 @@
 #include "../Font.h"
 #include "../FontVariable.h"
 #include "../FontFixed.h"
+#include "MockBitmask.h"
 
 BOOST_AUTO_TEST_SUITE(Font_test)
 
@@ -54,36 +55,6 @@ BOOST_AUTO_TEST_CASE(measure_message_fixed) {
 	Font font(FONTFIXED_DATA, FONTFIXED_IMG, FONTFIXED_MASK);
 	BOOST_CHECK_EQUAL(font.measure("ai"), 5 + 1 + 5);
 }
-
-class FakeBitmask {
-public:
-	struct Captured {
-		int x;
-		int y;
-		int w;
-		int h;
-		int step;
-		BlendMode mode;
-	};
-
-	Captured captured[8];
-	int nCaptured;
-
-	FakeBitmask(void) : captured(), nCaptured(0) {}
-
-	template <typename T>
-	void render_bitmap(T img, T mask, int x, int y, int w, int h, int step, BlendMode mode) {
-		(void) img;
-		(void) mask; // TODO
-		captured[nCaptured].x = x;
-		captured[nCaptured].y = y;
-		captured[nCaptured].w = w;
-		captured[nCaptured].h = h;
-		captured[nCaptured].step = step;
-		captured[nCaptured].mode = mode;
-		++ nCaptured;
-	}
-};
 
 BOOST_AUTO_TEST_CASE(render_char_variable) {
 	Font font(FONTVARIABLE_DATA, FONTVARIABLE_IMG, FONTVARIABLE_MASK);

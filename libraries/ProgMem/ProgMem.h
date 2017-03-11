@@ -19,6 +19,8 @@
 #ifndef PROGMEM_H_INCLUDED
 #define PROGMEM_H_INCLUDED
 
+#include "ext.h"
+
 #if defined(__AVR__)
 #  include <avr/pgmspace.h>
 #else
@@ -26,14 +28,22 @@
 #  define PSTR(s) s
 #  define memcpy_P(a,b,l) memcpy(a,b,l)
 #  define strchr_P(a,b) strchr(a,b)
-#  define pgm_read_byte_near(x) (*(const uint8_t*)(x))
-#  define pgm_read_word_near(x) (*(const uint16_t*)(x))
-#  define pgm_read_dword_near(x) (*(const uint32_t*)(x))
-#  define pgm_read_float_near(x) (*(const float*)(x))
-#  define pgm_read_ptr_near(x) (*(void* const*)(x))
+#  define pgm_read_byte_near(x) (*reinterpret_cast<const uint8_t*>(x))
+#  define pgm_read_word_near(x) (*reinterpret_cast<const uint16_t*>(x))
+#  define pgm_read_dword_near(x) (*reinterpret_cast<const uint32_t*>(x))
+#  define pgm_read_float_near(x) (*reinterpret_cast<const float*>(x))
+template <typename T>
+[[gnu::pure,nodiscard,gnu::always_inline]]
+inline void *pgm_read_ptr_near(T *const *x) {
+	return *x;
+}
+template <typename T>
+[[gnu::pure,nodiscard,gnu::always_inline]]
+inline void *pgm_read_ptr_near(const T *const *x) {
+	// Match AVR API: no const safety
+	return const_cast<void*>(reinterpret_cast<const void*>(*x));
+}
 #endif
-
-#include "ext.h"
 
 #define ProgMemString(s) ProgMem<char>(PSTR(s))
 
@@ -98,26 +108,41 @@ public:
 };
 
 template <typename T>
-class ProgMem<T,ext::enable_if_t<ext::is_integral<T>::value>>
-	: public ProgMem_Base<T,ProgMem<T>>
-{
+class ProgMem<T,ext::enable_if_t<
+	ext::is_integral<T>::value && sizeof(T) == 1
+>> : public ProgMem_Base<T,ProgMem<T>> {
 public:
 	using ProgMem_Base<T,ProgMem<T>>::ProgMem_Base;
 
 	[[gnu::pure,nodiscard,gnu::always_inline]]
 	inline T operator[](int index) const {
-		// This will be optimised to a single path at compile-time
-		if(sizeof(T) == 1) {
-			return pgm_read_byte_near(this->p + index);
-		} else if(sizeof(T) == 2) {
-			return pgm_read_word_near(this->p + index);
-		} else if(sizeof(T) == 4) {
-			return pgm_read_dword_near(this->p + index);
-		} else {
-			T target;
-			memcpy_P(&target, this->p + index, sizeof(T));
-			return target;
-		}
+		return T(pgm_read_byte_near(this->p + index));
+	}
+};
+
+template <typename T>
+class ProgMem<T,ext::enable_if_t<
+	ext::is_integral<T>::value && sizeof(T) == 2
+>> : public ProgMem_Base<T,ProgMem<T>> {
+public:
+	using ProgMem_Base<T,ProgMem<T>>::ProgMem_Base;
+
+	[[gnu::pure,nodiscard,gnu::always_inline]]
+	inline T operator[](int index) const {
+		return T(pgm_read_word_near(this->p + index));
+	}
+};
+
+template <typename T>
+class ProgMem<T,ext::enable_if_t<
+	ext::is_integral<T>::value && sizeof(T) == 4
+>> : public ProgMem_Base<T,ProgMem<T>> {
+public:
+	using ProgMem_Base<T,ProgMem<T>>::ProgMem_Base;
+
+	[[gnu::pure,nodiscard,gnu::always_inline]]
+	inline T operator[](int index) const {
+		return T(pgm_read_dword_near(this->p + index));
 	}
 };
 

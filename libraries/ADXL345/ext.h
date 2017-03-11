@@ -121,6 +121,6 @@ namespace ext {
 		KnownT flattened_value;
 		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
 	};
-};
+}
 
 #endif

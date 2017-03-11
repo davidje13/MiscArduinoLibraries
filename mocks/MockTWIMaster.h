@@ -161,4 +161,6 @@ TWIMaster TWIMaster::Mock::implementation(void) {
 	return TWIMaster(this);
 }
 
+#include "EndMocks.h"
+
 #endif

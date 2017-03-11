@@ -11,4 +11,6 @@ MOCK void cli(void) {
 	SREG = 0;
 }
 
+#include "EndMocks.h"
+
 #endif

@@ -164,12 +164,18 @@ BOOST_DATA_TEST_CASE(render_bitmap_tiny,
 
 	Bitmask18<8,8> bitmask;
 
-	bitmask.render_bitmap(bmp, nullptr, x, y, 4, 2, 4, BlendMode::ON);
+	bitmask.render_bitmap(bmp, nullptr,
+		int16_t(x), int16_t(y), 4, 2, 4,
+		BlendMode::ON
+	);
 	for(int i = 0; i < 8; ++ i) {
 		BOOST_CHECK_EQUAL(bitmask.raw()[i], uint8_t(checkA[i+9-x] >> (12 - y)));
 	}
 	bitmask.clear(BlendMode::ON);
-	bitmask.render_bitmap(bmp, nullptr, x, y, 4, 2, 4, BlendMode::ON);
+	bitmask.render_bitmap(bmp, nullptr,
+		int16_t(x), int16_t(y), 4, 2, 4,
+		BlendMode::ON
+	);
 	for(int i = 0; i < 8; ++ i) {
 		BOOST_CHECK_EQUAL(bitmask.raw()[i], uint8_t(checkB[i+9-x] >> (12 - y)));
 	}
@@ -200,8 +206,14 @@ BOOST_DATA_TEST_CASE(fill_ellipse_tiny_horizontal,
 	// https://svn.boost.org/trac/boost/ticket/11889
 	for(int w = 0; w < 12; ++ w) {
 		Bitmask18<16,16> bitmask;
-		bitmask.fill_ellipse(x, y, w, t, BlendMode::XOR, PATTERN_ON);
-		bitmask.fill_rect(x, y, w, t, BlendMode::XOR, PATTERN_ON);
+		bitmask.fill_ellipse(
+			int16_t(x), int16_t(y), int16_t(w), int16_t(t),
+			BlendMode::XOR, PATTERN_ON
+		);
+		bitmask.fill_rect(
+			int16_t(x), int16_t(y), int16_t(w), int16_t(t),
+			BlendMode::XOR, PATTERN_ON
+		);
 		for(int i = 0; i < 32; ++ i) {
 			BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x00);
 		}
@@ -216,8 +228,14 @@ BOOST_DATA_TEST_CASE(fill_ellipse_tiny_vertical,
 ) {
 	for(int w = 0; w < 12; ++ w) {
 		Bitmask18<16,16> bitmask;
-		bitmask.fill_ellipse(x, y, t, w, BlendMode::XOR, PATTERN_ON);
-		bitmask.fill_rect(x, y, t, w, BlendMode::XOR, PATTERN_ON);
+		bitmask.fill_ellipse(
+			int16_t(x), int16_t(y), int16_t(t), int16_t(w),
+			BlendMode::XOR, PATTERN_ON
+		);
+		bitmask.fill_rect(
+			int16_t(x), int16_t(y), int16_t(t), int16_t(w),
+			BlendMode::XOR, PATTERN_ON
+		);
 		for(int i = 0; i < 32; ++ i) {
 			BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x00);
 		}
@@ -234,7 +252,10 @@ BOOST_DATA_TEST_CASE(fill_ellipse_narrow_horizontal,
 
 	int x = 2;
 	Bitmask18<16,16> bitmask;
-	bitmask.fill_ellipse(x, 5, w, 3, BlendMode::XOR, PATTERN_ON);
+	bitmask.fill_ellipse(
+		int16_t(x), 5, int16_t(w), 3,
+		BlendMode::XOR, PATTERN_ON
+	);
 	int i = 0;
 	for(; i < x; ++ i) {
 		BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x00);
@@ -276,8 +297,14 @@ BOOST_DATA_TEST_CASE(outline_ellipse_tiny_horizontal,
 ) {
 	for(int w = 0; w < 12; ++ w) {
 		Bitmask18<16,16> bitmask;
-		bitmask.outline_ellipse(x, y, w, t, 1, BlendMode::XOR, PATTERN_ON);
-		bitmask.fill_rect(x, y, w, t, BlendMode::XOR, PATTERN_ON);
+		bitmask.outline_ellipse(
+			int16_t(x), int16_t(y), int16_t(w), int16_t(t),
+			1, BlendMode::XOR, PATTERN_ON
+		);
+		bitmask.fill_rect(
+			int16_t(x), int16_t(y), int16_t(w), int16_t(t),
+			BlendMode::XOR, PATTERN_ON
+		);
 		for(int i = 0; i < 32; ++ i) {
 			BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x00);
 		}
@@ -292,8 +319,14 @@ BOOST_DATA_TEST_CASE(outline_ellipse_tiny_vertical,
 ) {
 	for(int w = 0; w < 12; ++ w) {
 		Bitmask18<16,16> bitmask;
-		bitmask.outline_ellipse(x, y, t, w, 1, BlendMode::XOR, PATTERN_ON);
-		bitmask.fill_rect(x, y, t, w, BlendMode::XOR, PATTERN_ON);
+		bitmask.outline_ellipse(
+			int16_t(x), int16_t(y), int16_t(t), int16_t(w),
+			1, BlendMode::XOR, PATTERN_ON
+		);
+		bitmask.fill_rect(
+			int16_t(x), int16_t(y), int16_t(t), int16_t(w),
+			BlendMode::XOR, PATTERN_ON
+		);
 		for(int i = 0; i < 32; ++ i) {
 			BOOST_CHECK_EQUAL(bitmask.raw()[i], 0x00);
 		}

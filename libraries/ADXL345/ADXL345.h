@@ -311,9 +311,9 @@ class ADXL345_impl : public ADXL345 {
 			return reading();
 		}
 		return reading(
-			(data[1] << 8) | data[0],
-			(data[3] << 8) | data[2],
-			(data[5] << 8) | data[4]
+			int16_t((data[1] << 8) | data[0]),
+			int16_t((data[3] << 8) | data[2]),
+			int16_t((data[5] << 8) | data[4])
 		);
 		// Note: should be at least 5us between readings when using FIFO
 		// (not a realistic concern here; sending the register address on I2C
@@ -714,7 +714,7 @@ public:
 			output = grab_reading();
 			return true;
 		}
-		uint16_t t0 = micros();
+		uint16_t t0 = uint16_t(micros());
 		while(true) {
 			if(checkIntStatus(Interrupt::DATA_READY)) {
 				output = grab_reading();

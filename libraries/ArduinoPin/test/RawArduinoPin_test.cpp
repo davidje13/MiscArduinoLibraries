@@ -3,11 +3,11 @@
 #include <MockSREG.h>
 #include "MockArduinoPin.h"
 
-#define digitalPinToTimer(x) (((x) == 2) ? 9 : NOT_ON_TIMER)
-#define digitalPinToInterrupt(x) (((x) == 5) ? 3 : NOT_AN_INTERRUPT)
+#define digitalPinToTimer(x) (uint8_t(((x) == 2) ? 9 : NOT_ON_TIMER))
+#define digitalPinToInterrupt(x) (uint8_t(((x) == 5) ? 3 : NOT_AN_INTERRUPT))
 
-#define digitalPinToPort(x) ((x) + 12)
-#define digitalPinToBitMask(x) (1 << ((x) % 8))
+#define digitalPinToPort(x) (uint8_t((x) + 12))
+#define digitalPinToBitMask(x) (uint8_t(1 << ((x) % 8)))
 
 static void voidFunc(void) {
 }

@@ -11,4 +11,6 @@ MOCK uint32_t micros(void) {
 	return microsReading[microsCallCount++];
 }
 
+#include "EndMocks.h"
+
 #endif

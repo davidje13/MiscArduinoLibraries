@@ -58,12 +58,12 @@ static inline int8_t cos8(uint8_t theta) {
 
 [[gnu::const,nodiscard,gnu::always_inline]]
 static inline int16_t sin8_fine(uint8_t theta) {
-	return sin16(theta << 8) / 256;
+	return sin16(uint16_t(theta << 8)) / 256;
 }
 
 [[gnu::const,nodiscard,gnu::always_inline]]
 static inline int16_t cos8_fine(uint8_t theta) {
-	return cos16(theta << 8) / 256;
+	return cos16(uint16_t(theta << 8)) / 256;
 }
 
 [[gnu::const,nodiscard,gnu::always_inline]]
@@ -78,12 +78,12 @@ static inline int16_t cos8_mult_shift(uint8_t theta, uint8_t radius, uint8_t shi
 
 [[gnu::const,nodiscard,gnu::always_inline]]
 static inline int16_t sin16_mult_shift(uint16_t theta, uint16_t radius, uint8_t shift) {
-	return (radius * uint32_t(sin16(theta))) / (32768 >> shift);
+	return int16_t((radius * uint32_t(sin16(theta))) / (32768 >> shift));
 }
 
 [[gnu::const,nodiscard,gnu::always_inline]]
 static inline int16_t cos16_mult_shift(uint16_t theta, uint16_t radius, uint8_t shift) {
-	return (radius * uint32_t(cos16(theta))) / (32768 >> shift);
+	return int16_t((radius * uint32_t(cos16(theta))) / (32768 >> shift));
 }
 
 #endif

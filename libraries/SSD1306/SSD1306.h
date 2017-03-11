@@ -161,7 +161,7 @@ private:
 		end_communication();
 	}
 
-	void set_precharge_periods(int phase1, int phase2) {
+	void set_precharge_periods(uint8_t phase1, uint8_t phase2) {
 		// 1 <= phase1 <= 15 (default = 2)
 		// 1 <= phase2 <= 15 (default = 2)
 		begin_communication();
@@ -193,7 +193,7 @@ private:
 		end_communication();
 	}
 
-	void set_display_frequency(int freq, int divide) {
+	void set_display_frequency(uint8_t freq, uint8_t divide) {
 		// 0 <= freq <= 15 (higher = higher frequency)
 		// 0 => ~250-300kHz, 15 => ~500-600kHz, non-linear interpolation
 		// 1 <= divide <= 16
@@ -290,7 +290,7 @@ private:
 	[[gnu::noinline]] // Inlining slows down the common full-screen case
 	void send_raw_b(
 		T data, // nullable
-		int step,
+		int16_t step,
 		uint8_t w,
 		uint8_t h,
 		uint8_t hPage,
@@ -318,7 +318,7 @@ private:
 	[[gnu::always_inline]]
 	inline void send_raw(
 		T data, // nullable
-		int step,
+		int16_t step,
 		uint8_t x = 0,
 		uint8_t yPage = 0,
 		uint8_t w = DISP_WIDTH,
@@ -458,13 +458,13 @@ public:
 		end_communication();
 	}
 
-	void set_vertical_offset(int offset) {
+	void set_vertical_offset(int16_t offset) {
 		// Pans (with modulo) the rendered image
-		uint8_t shift = ext::posmod(offset, int(height()));
+		uint8_t shift = ext::posmod(offset, int16_t(height()));
 		transfer_wrapped(DISPLAY_START_LINE | shift);
 	}
 
-	void set_vertical_offset_b(int offset) {
+	void set_vertical_offset_b(int16_t offset) {
 		// Pans (with modulo) the source image from RAM
 		// This is the same as set_vertical_offset UNLESS the MUX ratio has
 		// been reduced, in which case this will maintain the "off" bar at the
@@ -472,7 +472,7 @@ public:
 		// bar with the image.
 
 		// This one applies even if the display is set to set_fs_white = true
-		uint8_t shift = ext::posmod(offset, int(height()));
+		uint8_t shift = ext::posmod(offset, int16_t(height()));
 		begin_communication();
 		spiComm.transfer(SET_DISPLAY_OFFSET);
 		spiComm.transfer(shift);
@@ -508,7 +508,7 @@ public:
 		int8_t xPos = 0, // point where 0,0 of the UNCLIPPED
 		int8_t yPos = 0  // bitmask would appear
 	) {
-		int step = bitmask.raw_step();
+		int16_t step = bitmask.raw_step();
 		uint8_t y0 = yPos + y;
 		uint8_t hPage = ((y0 + h + 7) >> 3) - (y0 >> 3);
 		uint8_t yShift = yPos & 7;
@@ -535,9 +535,9 @@ public:
 	}
 
 	void marquee(
-		int frame_freq,
-		int x_speed,
-		int y_speed = 0,
+		uint16_t frame_freq,
+		int8_t x_speed,
+		int16_t y_speed = 0,
 		uint8_t horizontal_top_page = 0,
 		uint8_t horizontal_base_page = DISP_HEIGHT_BYTES - 1,
 		uint8_t vertical_top = 0,
@@ -557,7 +557,7 @@ public:
 		uint8_t v_height = vertical_base - vertical_top;
 		uint8_t v_wrap = ((v_height <= 0)
 			? 0
-			: ext::posmod(y_speed, int(v_height))
+			: ext::posmod(y_speed, int16_t(v_height))
 		);
 
 		uint8_t frame_freq_value;

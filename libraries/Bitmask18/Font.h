@@ -36,7 +36,7 @@ class Font {
 	uint8_t asciiStart;
 	uint8_t asciiEnd;
 	uint8_t layoutMode;
-	uint16_t step;
+	int16_t step;
 	BlendMode mode;
 
 	[[gnu::pure,nodiscard,gnu::always_inline]]
@@ -106,7 +106,7 @@ public:
 		case 0x00:
 			return data[char_pos(c)];
 		case 0x01:
-			return step;
+			return uint8_t(step);
 		case 0x02:
 			return data[0];
 		default:
@@ -129,12 +129,12 @@ public:
 
 		uint16_t w = 0;
 		uint8_t c;
-		for(T p = message; (c = p[0]) != '\0'; p = p + 1) {
+		for(T p = message; (c = uint8_t(p[0])) != 0; p = p + 1) {
 			if(char_supported(c)) {
 				w += measure(c) + spacing();
 			}
 		}
-		return w - (w > 0 ? spacing() : 0);
+		return uint16_t(w - (w > 0 ? spacing() : 0));
 	}
 
 	[[gnu::pure,nodiscard,gnu::always_inline]]
@@ -153,12 +153,17 @@ public:
 	}
 
 	[[gnu::pure,nodiscard]]
-	inline uint16_t next_tabstop(uint16_t x) const {
+	inline int16_t next_tabstop(int16_t x) const {
 		return (x / tabsize + 1) * tabsize;
 	}
 
 	template <typename Bitmask>
-	uint8_t render(Bitmask &bitmask, uint8_t c, int x, int y) const {
+	uint8_t render(
+		Bitmask &bitmask,
+		uint8_t c,
+		int16_t x,
+		int16_t y
+	) const {
 		if(!char_supported(c)) {
 			return 0;
 		}
@@ -177,7 +182,7 @@ public:
 			break;
 		case 0x02:
 			p = l * w;
-			p = (p / step) * step * ((h + 7) >> 3) + (p % step);
+			p = uint16_t((p / step) * step * ((h + 7) >> 3) + (p % step));
 			break;
 		default:
 			__builtin_unreachable();
@@ -192,24 +197,34 @@ public:
 
 	template <typename Bitmask>
 	[[gnu::always_inline]]
-	inline uint8_t render(Bitmask &bitmask, char c, int x, int y) const {
+	inline uint8_t render(
+		Bitmask &bitmask,
+		char c,
+		int16_t x,
+		int16_t y
+	) const {
 		return render(bitmask, uint8_t(c), x, y);
 	}
 
 	template <typename Bitmask, typename T>
-	uint8_t render(Bitmask &bitmask, T message, int x, int y) const {
+	uint16_t render(
+		Bitmask &bitmask,
+		T message,
+		int16_t x,
+		int16_t y
+	) const {
 		if(!message) {
 			return 0;
 		}
 
 		uint16_t w = 0;
 		uint8_t c;
-		for(T p = message; (c = p[0]) != '\0'; p = p + 1) {
+		for(T p = message; (c = uint8_t(p[0])) != 0; p = p + 1) {
 			if(char_supported(c)) {
 				w += render(bitmask, c, x + w, y) + spacing();
 			}
 		}
-		return w - (w > 0 ? spacing() : 0);
+		return uint16_t(w - (w > 0 ? spacing() : 0));
 	}
 };
 

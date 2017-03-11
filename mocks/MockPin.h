@@ -129,4 +129,6 @@ Pin Pin::Mock::implementation(void) {
 	return Pin(this);
 }
 
+#include "EndMocks.h"
+
 #endif

@@ -55,11 +55,21 @@ if [[ "$MODE" == "local-test" ]]; then
 		TESTNAME="$2";
 	fi;
 
+	EXTRA_PEDANTIC='
+		-Weverything
+		-Wno-c++98-compat -Wno-c++98-compat-pedantic
+		-Wno-disabled-macro-expansion
+		-Wno-global-constructors
+	';
+
 	mkdir -p "$SCRIPTDIR/out";
 	find "$LIB" -path '*/test/*.cpp' -exec \
 		g++ --std=c++11 -isystem"$BOOSTDIR" \
 		-fno-rtti \
-		-Wall -Wextra --pedantic \
+		-Wall -Wextra -Weffc++ -Wpedantic \
+		-Wconversion -Wsign-conversion \
+		-Wold-style-cast -Wmissing-variable-declarations \
+		-Warray-bounds-pointer-arithmetic -Wundefined-reinterpret-cast \
 		-I "$SCRIPTDIR/libraries" \
 		-I "$SCRIPTDIR/mocks" \
 		-o "$SCRIPTDIR/out/test-$TESTNAME" \

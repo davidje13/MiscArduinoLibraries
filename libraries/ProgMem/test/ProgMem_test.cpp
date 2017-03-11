@@ -28,13 +28,13 @@ BOOST_AUTO_TEST_CASE(indexing) {
 }
 
 BOOST_AUTO_TEST_CASE(addition) {
-	BOOST_CHECK_EQUAL((ProgMem<char>(data) + 1).raw(), data + 1);
-	BOOST_CHECK_EQUAL((ProgMem<char>(data) + (-1)).raw(), data - 1);
+	BOOST_CHECK_EQUAL((ProgMem<char>(data + 1) + 1).raw(), data + 2);
+	BOOST_CHECK_EQUAL((ProgMem<char>(data + 1) + (-1)).raw(), data);
 }
 
 BOOST_AUTO_TEST_CASE(addition_assignment) {
-	BOOST_CHECK_EQUAL((ProgMem<char>(data) += 1).raw(), data + 1);
-	BOOST_CHECK_EQUAL((ProgMem<char>(data) += (-1)).raw(), data - 1);
+	BOOST_CHECK_EQUAL((ProgMem<char>(data + 1) += 1).raw(), data + 2);
+	BOOST_CHECK_EQUAL((ProgMem<char>(data + 1) += (-1)).raw(), data);
 }
 
 BOOST_AUTO_TEST_CASE(wrapping) {
@@ -99,18 +99,27 @@ BOOST_AUTO_TEST_CASE(type_complex) {
 	BOOST_CHECK_EQUAL(MakeProgMem(complex_data)[0].b, 7);
 }
 
-float fptr_a = 1.0f;
-float fptr_b = 2.0f;
-static PROGMEM float *const float_pointer_data[] = {&fptr_a, &fptr_b};
+static const float fptr_a = 1.0f;
+static const float fptr_b = 2.0f;
+static PROGMEM const float *const float_pointer_data[] = {&fptr_a, &fptr_b};
 
 BOOST_AUTO_TEST_CASE(type_float_ptr) {
 	BOOST_CHECK_EQUAL(MakeProgMem(float_pointer_data)[0], &fptr_a);
 	BOOST_CHECK_EQUAL(MakeProgMem(float_pointer_data)[0][0], 1.0f);
 }
 
-char cptr_a = 'j';
-char cptr_b = 'w';
-static PROGMEM char *const char_pointer_data[] = {&cptr_a, &cptr_b};
+static float fmptr_a = 1.0f;
+static float fmptr_b = 2.0f;
+static PROGMEM float *const malleable_float_pointer_data[] = {&fmptr_a, &fmptr_b};
+
+BOOST_AUTO_TEST_CASE(type_float_ptr_malleable) {
+	MakeProgMem(malleable_float_pointer_data)[0][0] = 1.5f;
+	BOOST_CHECK_EQUAL(MakeProgMem(malleable_float_pointer_data)[0][0], 1.5f);
+}
+
+static const char cptr_a = 'j';
+static const char cptr_b = 'w';
+static PROGMEM const char *const char_pointer_data[] = {&cptr_a, &cptr_b};
 
 BOOST_AUTO_TEST_CASE(type_char_ptr) {
 	BOOST_CHECK_EQUAL(MakeProgMem(char_pointer_data)[0], &cptr_a);

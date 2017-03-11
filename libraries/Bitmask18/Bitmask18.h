@@ -40,7 +40,7 @@ class Bitmask18 {
 	uint8_t buffer[WIDTH * HEIGHT_BYTES];
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static constexpr inline bool in_bounds(int x, int y) {
+	static constexpr inline bool in_bounds(int16_t x, int16_t y) {
 		return x >= 0 && y >= 0 && x < WIDTH && y < HEIGHT;
 	}
 
@@ -56,8 +56,8 @@ class Bitmask18 {
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
 	static constexpr inline bool check_tl(
-		int x0, int y0,
-		int x1, int y1
+		int16_t x0, int16_t y0,
+		int16_t x1, int16_t y1
 	) {
 		return y1 > y0 || (y1 == y0 && x1 < x0);
 	}
@@ -65,17 +65,17 @@ class Bitmask18 {
 	template <typename T>
 	[[gnu::pure,gnu::always_inline,gnu::nonnull]]
 	static inline uint8_t read_shifted(T r0, T r1, uint8_t x, uint8_t shift) {
-		return ((r0[x] >> (8 - shift)) | (r1[x] << shift));
+		return uint8_t((r0[x] >> (8 - shift)) | (r1[x] << shift));
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
 	static constexpr inline uint8_t precalc_block_A(uint8_t mask, BlendMode m) {
-		return ~((int(m) >> 1) * mask);
+		return ~uint8_t((uint8_t(m) >> 1) * mask);
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
 	static constexpr inline uint8_t precalc_block_B(uint8_t mask, BlendMode m) {
-		return (int(m) & 1) * mask;
+		return uint8_t((uint8_t(m) & 1) * mask);
 	}
 
 	inline void set_pixel_block_fast(
@@ -128,7 +128,7 @@ class Bitmask18 {
 	void render_bitmap_b(
 		T data,
 		T maskImg,
-		int x, int y, int w, int h, int step,
+		int16_t x, int16_t y, int16_t w, int16_t h, int16_t step,
 		BlendMode m
 	) {
 		if(!data && !maskImg) {
@@ -136,7 +136,7 @@ class Bitmask18 {
 			return;
 		}
 
-		int s = (step == 0) ? w : step;
+		int16_t s = (step == 0) ? w : step;
 
 		if(w <= 0 || h <= 0 || x + w <= 0 || y + h <= 0 || x >= WIDTH || y >= HEIGHT) {
 			return;
@@ -146,8 +146,8 @@ class Bitmask18 {
 		T bm = maskImg;
 
 		uint8_t x0;
-		uint8_t x1 = ext::min2(x + w, int(WIDTH));
-		uint8_t y1 = ext::min2(y + h, int(HEIGHT));
+		uint8_t x1 = uint8_t(ext::min2(int16_t(x + w), int16_t(WIDTH)));
+		uint8_t y1 = uint8_t(ext::min2(int16_t(y + h), int16_t(HEIGHT)));
 		uint8_t shift = y & 7;
 
 		if(x < 0) {
@@ -155,7 +155,7 @@ class Bitmask18 {
 			bm = safe_subdata(bm, -x);
 			x0 = 0;
 		} else {
-			x0 = x;
+			x0 = uint8_t(x);
 		}
 		uint8_t ww = x1 - x0;
 		uint8_t yBlock1 = y1 / 8;
@@ -163,15 +163,15 @@ class Bitmask18 {
 		uint8_t yBlock;
 
 		if(y < 0) {
-			int adjust = ((7 - y) / 8) * step;
+			int16_t adjust = ((7 - y) / 8) * step;
 			bd = safe_subdata(bd, adjust);
 			bm = safe_subdata(bm, adjust);
 			yBlock0 = 0;
 			yBlock = 0;
 		} else {
-			yBlock0 = y / 8;
+			yBlock0 = uint8_t(y / 8);
 
-			uint8_t mask = 0xFF << shift;
+			uint8_t mask = uint8_t(0xFF << shift);
 			if(yBlock0 == yBlock1) {
 				mask ^= 0xFF << (y1 & 7);
 			}
@@ -190,7 +190,7 @@ class Bitmask18 {
 		}
 
 		for(; yBlock != yBlock1; ++ yBlock) {
-			int locn = (yBlock - yBlock0) * s;
+			int16_t locn = (yBlock - yBlock0) * s;
 			render_image_row(
 				safe_subdata(bd, locn - s),
 				safe_subdata(bm, locn - s),
@@ -201,8 +201,8 @@ class Bitmask18 {
 		}
 
 		if(y1 & 7) {
-			uint8_t mask = ~(0xFF << (y1 & 7));
-			int locn = (yBlock - yBlock0) * s;
+			uint8_t mask = ~uint8_t(0xFF << (y1 & 7));
+			int16_t locn = (yBlock - yBlock0) * s;
 			// On the Arduino, this check isn't strictly needed, since it
 			// doesn't care about invalid memory reads and the data will get
 			// masked out anyway, but it's not a costly operation so it's here
@@ -312,32 +312,37 @@ public:
 		}
 	}
 
-	inline void pixel_on(int x, int y) {
+	inline void pixel_on(int16_t x, int16_t y) {
 		if(in_bounds(x, y)) {
-			pixel_on_fast(x, y);
+			pixel_on_fast(uint8_t(x), uint8_t(y));
 		}
 	}
 
-	inline void pixel_off(int x, int y) {
+	inline void pixel_off(int16_t x, int16_t y) {
 		if(in_bounds(x, y)) {
-			pixel_off_fast(x, y);
+			pixel_off_fast(uint8_t(x), uint8_t(y));
 		}
 	}
 
-	inline void pixel_toggle(int x, int y) {
+	inline void pixel_toggle(int16_t x, int16_t y) {
 		if(in_bounds(x, y)) {
-			pixel_toggle_fast(x, y);
+			pixel_toggle_fast(uint8_t(x), uint8_t(y));
 		}
 	}
 
-	inline void set_pixel(int x, int y, BlendMode m, Pattern p = PATTERN_ON) {
+	inline void set_pixel(
+		int16_t x,
+		int16_t y,
+		BlendMode m,
+		Pattern p = PATTERN_ON
+	) {
 		if(in_bounds(x, y)) {
-			set_pixel_fast(x, y, m, p);
+			set_pixel_fast(uint8_t(x), uint8_t(y), m, p);
 		}
 	}
 
 	[[gnu::pure,nodiscard]]
-	inline bool get_pixel(int x, int y) const {
+	inline bool get_pixel(int16_t x, int16_t y) const {
 		if(!in_bounds(x, y)) {
 			return false;
 		}
@@ -355,23 +360,26 @@ public:
 		uint8_t yBlock0 = y0 >> 3;
 		uint8_t yBlock1 = y1 >> 3;
 		if(yBlock0 == yBlock1) {
-			uint8_t mask = (0xFF << (y0 & 7)) ^ (0xFF << (y1 & 7));
+			uint8_t mask = (
+				uint8_t(0xFF << (y0 & 7)) ^
+				uint8_t(0xFF << (y1 & 7))
+			);
 			set_pixel_blocks_fast(x0, w, yBlock0, mask, m, p);
 			return;
 		}
 
-		set_pixel_blocks_fast(x0, w, yBlock0, 0xFF << (y0 & 7), m, p);
+		set_pixel_blocks_fast(x0, w, yBlock0, uint8_t(0xFF << (y0 & 7)), m, p);
 		for(uint8_t yBlock = yBlock0 + 1; yBlock != yBlock1; ++ yBlock) {
 			set_pixel_blocks_fast(x0, w, yBlock, 0xFF, m, p);
 		}
 		if(y1 & 7) {
-			set_pixel_blocks_fast(x0, w, yBlock1, ~(0xFF << (y1 & 7)), m, p);
+			set_pixel_blocks_fast(x0, w, yBlock1, ~uint8_t(0xFF << (y1 & 7)), m, p);
 		}
 	}
 
 	void fill_rect(
-		int x, int y,
-		int w, int h,
+		int16_t x, int16_t y,
+		int16_t w, int16_t h,
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON
 	) {
@@ -380,23 +388,25 @@ public:
 		}
 
 		fill_rect_fast(
-			ext::max2(x, 0),              ext::max2(y, 0),
-			ext::min2(x + w, int(WIDTH)), ext::min2(y + h, int(HEIGHT)),
+			uint8_t(ext::max2(x, int16_t(0))),
+			uint8_t(ext::max2(y, int16_t(0))),
+			uint8_t(ext::min2(int16_t(x + w), int16_t(WIDTH))),
+			uint8_t(ext::min2(int16_t(y + h), int16_t(HEIGHT))),
 			m, p
 		);
 	}
 
 	void outline_rect(
-		int x, int y,
-		int w, int h,
-		int thickness = 1,
+		int16_t x, int16_t y,
+		int16_t w, int16_t h,
+		uint8_t thickness = 1,
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON
 	) {
 		if(w <= 0 || h <= 0 || thickness <= 0) {
 			return;
 		}
-		int t2 = thickness * 2;
+		int16_t t2 = thickness * 2;
 		if(w <= t2 || h <= t2) {
 			fill_rect(x, y, w, h, m, p);
 			return;
@@ -410,39 +420,39 @@ public:
 
 	[[gnu::always_inline]]
 	inline void hline(
-		int x0,
-		int y,
-		int x1,
+		int16_t x0,
+		int16_t y,
+		int16_t x1,
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON
 	) {
-		int l = ext::min2(x0, x1);
-		int r = x0 + x1 - l + 1;
+		int16_t l = ext::min2(x0, x1);
+		int16_t r = x0 + x1 - l + 1;
 		fill_rect(l, y, r - l, 1, m, p);
 	}
 
 	[[gnu::always_inline]]
 	inline void vline(
-		int x,
-		int y0,
-		int y1,
+		int16_t x,
+		int16_t y0,
+		int16_t y1,
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON
 	) {
-		int t = ext::min2(y0, y1);
-		int b = y0 + y1 - t + 1;
+		int16_t t = ext::min2(y0, y1);
+		int16_t b = y0 + y1 - t + 1;
 		fill_rect(x, t, 1, b - t, m, p);
 	}
 
 	void line(
-		int x0, int y0,
-		int x1, int y1,
+		int16_t x0, int16_t y0,
+		int16_t x1, int16_t y1,
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON,
 		uint8_t shift = 0
 	) {
-		int lowx = ext::min2(x0, x1);
-		int lowy = ext::min2(y0, y1);
+		int16_t lowx = ext::min2(x0, x1);
+		int16_t lowy = ext::min2(y0, y1);
 
 		if(
 			(x0 + x1 - lowx) < 0 ||
@@ -455,28 +465,34 @@ public:
 
 		// Bresenham's line algorithm
 
-		int dx = x1 - x0;
-		int dy = y1 - y0;
-		int dA;
-		int dB;
-		int a;
-		int b;
-		int lA;
-		int lB;
+		int16_t dx = x1 - x0;
+		int16_t dy = y1 - y0;
+		int16_t dA;
+		int16_t dB;
+		int16_t a;
+		int16_t b;
+		int16_t lA;
+		int16_t lB;
 		bool yDominant = abs(dy) > abs(dx);
 		if(yDominant) {
 			dA = dy;
 			dB = dx;
 			a = lowy;
 			b = ((dA < 0) ? x1 : x0);
-			lA = ext::min2(((y0 + y1 - lowy) >> shift) + 1, int(HEIGHT));
+			lA = ext::min2(
+				int16_t(((y0 + y1 - lowy) >> shift) + 1),
+				int16_t(HEIGHT)
+			);
 			lB = WIDTH;
 		} else {
 			dA = dx;
 			dB = dy;
 			a = lowx;
 			b = ((dA < 0) ? y1 : y0);
-			lA = ext::min2(((x0 + x1 - lowx) >> shift) + 1, int(WIDTH));
+			lA = ext::min2(
+				int16_t(((x0 + x1 - lowx) >> shift) + 1),
+				int16_t(WIDTH)
+			);
 			lB = HEIGHT;
 		}
 		if(dA < 0) {
@@ -484,9 +500,9 @@ public:
 			dB = -dB;
 		}
 
-		int D = dA * ((dB < 0) ? 1 : -1);
+		int16_t D = dA * ((dB < 0) ? 1 : -1);
 		if(shift > 0) {
-			int mask = (1 << shift) - 1;
+			int16_t mask = int16_t((1 << shift) - 1);
 			D += (dB - dA
 				+ (((b & mask) * dA) >> (shift - 1))
 				- (((a & mask) * dB) >> (shift - 1))
@@ -547,8 +563,8 @@ public:
 	}
 
 	void fill_ellipse(
-		int x, int y,
-		int w, int h,
+		int16_t x, int16_t y,
+		int16_t w, int16_t h,
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON
 	) {
@@ -577,13 +593,13 @@ public:
 		fill_rect(cx, y, 1 + wodd, h, m, p);
 
 		uint16_t X = 0;
-		uint16_t Y = H >> 1;
+		uint16_t Y = uint16_t(H >> 1);
 		int32_t xc = H * int32_t(H);
 		int32_t yc = W * int32_t(W) * (1 - H);
 		int32_t ww2 = W * int32_t(W) * 2;
 		int32_t hh2 = H * int32_t(H) * 2;
 		int32_t error = 0;
-		uint16_t xlim = W >> 1;
+		uint16_t xlim = uint16_t(W >> 1);
 
 		while(true) {
 			++ X;
@@ -596,8 +612,8 @@ public:
 					break;
 				}
 			}
-			fill_rect(cx - X, cy - Y, 1, Y * 2 + yinc, m, p);
-			fill_rect(cx + X + wodd, cy - Y, 1, Y * 2 + yinc, m, p);
+			fill_rect(cx - X, cy - Y, 1, int16_t(Y * 2 + yinc), m, p);
+			fill_rect(cx + X + wodd, cy - Y, 1, int16_t(Y * 2 + yinc), m, p);
 			if(X == xlim) {
 				return;
 			}
@@ -609,8 +625,8 @@ public:
 			error += yc;
 			yc += ww2;
 			if(error * 2 - xc < 0) {
-				fill_rect(cx - X, cy - Y, 1, Y * 2 + yinc, m, p);
-				fill_rect(cx + X + wodd, cy - Y, 1, Y * 2 + yinc, m, p);
+				fill_rect(cx - X, cy - Y, 1, int16_t(Y * 2 + yinc), m, p);
+				fill_rect(cx + X + wodd, cy - Y, 1, int16_t(Y * 2 + yinc), m, p);
 				++ X;
 				error += (xc += hh2);
 			}
@@ -618,9 +634,9 @@ public:
 	}
 
 	void outline_ellipse(
-		int x, int y,
-		int w, int h,
-		int thickness = 1,
+		int16_t x, int16_t y,
+		int16_t w, int16_t h,
+		int16_t thickness = 1,
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON
 	) {
@@ -633,7 +649,7 @@ public:
 			return;
 		}
 
-		int t2 = thickness * 2;
+		int16_t t2 = thickness * 2;
 		if(w <= t2 || h <= t2) {
 			fill_ellipse(x, y, w, h, m, p);
 			return;
@@ -659,13 +675,13 @@ public:
 		}
 
 		uint16_t X = 0;
-		uint16_t Y = H >> 1;
+		uint16_t Y = uint16_t(H >> 1);
 		int32_t xc = H * int32_t(H);
 		int32_t yc = W * int32_t(W) * (1 - H);
 		int32_t ww2 = W * int32_t(W) * 2;
 		int32_t hh2 = H * int32_t(H) * 2;
 		int32_t error = 0;
-		uint16_t xlim = W >> 1;
+		uint16_t xlim = uint16_t(W >> 1);
 
 		while(true) {
 			++ X;
@@ -679,8 +695,8 @@ public:
 				}
 			}
 			if(X == xlim) {
-				fill_rect(cx - X, cy - Y, 1, Y * 2 + yodd + 1, m, p);
-				fill_rect(cx + X + wodd, cy - Y, 1, Y * 2 + yodd + 1, m, p);
+				fill_rect(cx - X, cy - Y, 1, int16_t(Y * 2 + yodd + 1), m, p);
+				fill_rect(cx + X + wodd, cy - Y, 1, int16_t(Y * 2 + yodd + 1), m, p);
 				return;
 			}
 			set_pixel(cx - X, cy - Y, m, p);
@@ -715,18 +731,18 @@ public:
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
 	static constexpr inline bool is_ccw_triangle(
-		int x0, int y0,
-		int x1, int y1,
-		int x2, int y2
+		int16_t x0, int16_t y0,
+		int16_t x1, int16_t y1,
+		int16_t x2, int16_t y2
 	) {
 		// TODO: integer overflow issues
 		return (x1 - x0) * (y2 - y0) > (y1 - y0) * (x2 - x0);
 	}
 
 	void outline_triangle(
-		int x0, int y0,
-		int x1, int y1,
-		int x2, int y2,
+		int16_t x0, int16_t y0,
+		int16_t x1, int16_t y1,
+		int16_t x2, int16_t y2,
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON,
 		uint8_t shift = 0
@@ -742,9 +758,9 @@ public:
 	}
 
 	void outline_cw_triangle(
-		int x0, int y0,
-		int x1, int y1,
-		int x2, int y2,
+		int16_t x0, int16_t y0,
+		int16_t x1, int16_t y1,
+		int16_t x2, int16_t y2,
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON,
 		uint8_t shift = 0
@@ -755,9 +771,9 @@ public:
 	}
 
 	void outline_ccw_triangle(
-		int x0, int y0,
-		int x1, int y1,
-		int x2, int y2,
+		int16_t x0, int16_t y0,
+		int16_t x1, int16_t y1,
+		int16_t x2, int16_t y2,
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON,
 		uint8_t shift = 0
@@ -768,9 +784,9 @@ public:
 	}
 
 	void fill_ccw_triangle(
-		int x0, int y0,
-		int x1, int y1,
-		int x2, int y2,
+		int16_t x0, int16_t y0,
+		int16_t x1, int16_t y1,
+		int16_t x2, int16_t y2,
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON,
 		uint8_t shift = 0
@@ -783,35 +799,35 @@ public:
 			return;
 		}
 
-		int minx = ext::max2(ext::min3(x0, x1, x2), 0);
-		int miny = ext::max2(ext::min3(y0, y1, y2), 0);
-		int maxx = ext::min2(ext::max3(x0, x1, x2), (WIDTH << shift) - 1);
-		int maxy = ext::min2(ext::max3(y0, y1, y2), (HEIGHT << shift) - 1);
+		int16_t minx = ext::max2(ext::min3(x0, x1, x2), int16_t(0));
+		int16_t miny = ext::max2(ext::min3(y0, y1, y2), int16_t(0));
+		int16_t maxx = ext::min2(ext::max3(x0, x1, x2), int16_t((WIDTH << shift) - 1));
+		int16_t maxy = ext::min2(ext::max3(y0, y1, y2), int16_t((HEIGHT << shift) - 1));
 		if(maxx < minx || maxy < miny) {
 			return;
 		}
 
-		int yL = (miny >> shift) >> 3;
-		int yH = ((maxy >> shift) >> 3) + 1;
-		int xL = minx >> shift;
-		int xH = (maxx >> shift) + 1;
+		int16_t yL = (miny >> shift) >> 3;
+		int16_t yH = ((maxy >> shift) >> 3) + 1;
+		int16_t xL = minx >> shift;
+		int16_t xH = (maxx >> shift) + 1;
 
-		int sA01 = y1 - y0;
-		int sB01 = x0 - x1;
-		int sA12 = y2 - y1;
-		int sB12 = x1 - x2;
-		int sA20 = y0 - y2;
-		int sB20 = x2 - x0;
+		int16_t sA01 = y1 - y0;
+		int16_t sB01 = x0 - x1;
+		int16_t sA12 = y2 - y1;
+		int16_t sB12 = x1 - x2;
+		int16_t sA20 = y0 - y2;
+		int16_t sB20 = x2 - x0;
 
-		int b01 = check_tl(x0, y0, x1, y1) ? -1 : 0;
-		int b12 = check_tl(x1, y1, x2, y2) ? -1 : 0;
-		int b20 = check_tl(x2, y2, x0, y0) ? -1 : 0;
+		int16_t b01 = check_tl(x0, y0, x1, y1) ? -1 : 0;
+		int16_t b12 = check_tl(x1, y1, x2, y2) ? -1 : 0;
+		int16_t b20 = check_tl(x2, y2, x0, y0) ? -1 : 0;
 
-		int px = (xL << shift) + (1 << shift) / 2;
-		int py = ((yL << 3) << shift) + (1 << shift) / 2;
-		int e010 = sA01 * px + sB01 * py + (y0 * x1) - (x0 * y1) + b01;
-		int e120 = sA12 * px + sB12 * py + (y1 * x2) - (x1 * y2) + b12;
-		int e200 = sA20 * px + sB20 * py + (y2 * x0) - (x2 * y0) + b20;
+		int16_t px = int16_t((xL << shift) + (1 << shift) / 2);
+		int16_t py = int16_t(((yL << 3) << shift) + (1 << shift) / 2);
+		int16_t e010 = sA01 * px + sB01 * py + (y0 * x1) - (x0 * y1) + b01;
+		int16_t e120 = sA12 * px + sB12 * py + (y1 * x2) - (x1 * y2) + b12;
+		int16_t e200 = sA20 * px + sB20 * py + (y2 * x0) - (x2 * y0) + b20;
 
 		sA01 <<= shift;
 		sA12 <<= shift;
@@ -824,22 +840,22 @@ public:
 		e120 -= sA12 + sB12;
 		e200 -= sA20 + sB20;
 
-		for(int x = xL; x < xH; ++ x) {
-			int e01 = (e010 += sA01);
-			int e12 = (e120 += sA12);
-			int e20 = (e200 += sA20);
-			for(int y = yL; y < yH; ++ y) {
+		for(int16_t x = xL; x < xH; ++ x) {
+			int16_t e01 = (e010 += sA01);
+			int16_t e12 = (e120 += sA12);
+			int16_t e20 = (e200 += sA20);
+			for(int16_t y = yL; y < yH; ++ y) {
 				// Manually unrolled loop, since at Arduino's default -Os,
 				// the compiler won't unroll it for us, and this is a hot loop.
 				uint8_t mask
-				      = (((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 0;
-				mask |= (((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 1;
-				mask |= (((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 2;
-				mask |= (((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 3;
-				mask |= (((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 4;
-				mask |= (((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 5;
-				mask |= (((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 6;
-				mask |= (((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 7;
+				      = uint8_t((((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 0);
+				mask |= uint8_t((((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 1);
+				mask |= uint8_t((((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 2);
+				mask |= uint8_t((((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 3);
+				mask |= uint8_t((((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 4);
+				mask |= uint8_t((((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 5);
+				mask |= uint8_t((((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 6);
+				mask |= uint8_t((((e01 += sB01) & (e12 += sB12) & (e20 += sB20)) < 0) << 7);
 				set_pixel_block_fast(x, y, mask, m, p);
 			}
 		}
@@ -847,9 +863,9 @@ public:
 
 	[[gnu::always_inline]]
 	inline void fill_cw_triangle(
-		int x0, int y0,
-		int x1, int y1,
-		int x2, int y2,
+		int16_t x0, int16_t y0,
+		int16_t x1, int16_t y1,
+		int16_t x2, int16_t y2,
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON,
 		uint8_t shift = 0
@@ -858,9 +874,9 @@ public:
 	}
 
 	inline void fill_triangle(
-		int x0, int y0,
-		int x1, int y1,
-		int x2, int y2,
+		int16_t x0, int16_t y0,
+		int16_t x1, int16_t y1,
+		int16_t x2, int16_t y2,
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON,
 		uint8_t shift = 0
@@ -884,7 +900,7 @@ public:
 	void render_bitmap(
 		const uint8_t *data, // nullable
 		const uint8_t *maskImg, // nullable
-		int x, int y, int w, int h, int step = 0,
+		int16_t x, int16_t y, int16_t w, int16_t h, int16_t step = 0,
 		BlendMode m = BlendMode::ON
 	) {
 		render_bitmap_b(data, maskImg, x, y, w, h, step, m);
@@ -893,7 +909,7 @@ public:
 	void render_bitmap(
 		ProgMem<uint8_t> data, // nullable
 		ProgMem<uint8_t> maskImg, // nullable
-		int x, int y, int w, int h, int step = 0,
+		int16_t x, int16_t y, int16_t w, int16_t h, int16_t step = 0,
 		BlendMode m = BlendMode::ON
 	) {
 		render_bitmap_b(data, maskImg, x, y, w, h, step, m);

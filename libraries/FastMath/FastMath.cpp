@@ -58,9 +58,9 @@ int16_t sin16(uint16_t theta) {
 
 	mx += b;
 	if(theta & 0x8000) {
-		return -mx;
+		return -int16_t(mx);
 	} else {
-		return mx;
+		return int16_t(mx);
 	}
 }
 
@@ -119,8 +119,8 @@ int8_t sin8(uint8_t theta) {
 
 	mx += b;
 	if(theta & 0x80) {
-		return -mx;
+		return -int8_t(mx);
 	} else {
-		return mx;
+		return int8_t(mx);
 	}
 }

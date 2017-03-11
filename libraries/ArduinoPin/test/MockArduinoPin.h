@@ -70,4 +70,6 @@ MOCK void detachInterrupt(uint8_t interrupt) {
 	detachInterruptLastInt = interrupt;
 }
 
+#include <EndMocks.h>
+
 #endif

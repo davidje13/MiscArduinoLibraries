@@ -52,8 +52,8 @@ class FontRenderer {
 	}
 
 	[[gnu::pure,nodiscard]]
-	inline char latest_char(void) const {
-		return (wordlen == 0) ? '\0' : wordbuffer[wordlen-1];
+	inline uint8_t latest_char(void) const {
+		return (wordlen == 0) ? 0 : wordbuffer[wordlen-1];
 	}
 
 public:
@@ -115,7 +115,7 @@ public:
 		static PROGMEM const char WRAP_AFTER[] = ",:;?!)]}>/\\|%";
 		static PROGMEM const char WRAP_AFTER_EXCL_NUM[] = ".-";
 
-		int16_t cw = int16_t(f.measure(c)) + int16_t(f.spacing());
+		int16_t cw = f.measure(c) + f.spacing();
 
 		if(strchr_P(OPTIONAL_RENDER, c) != nullptr) {
 			end_section(f);
@@ -148,8 +148,10 @@ public:
 
 		if(
 			strchr_P(WRAP_BEFORE, c) != nullptr ||
-			// special case
-			(strchr_P(WRAP_AFTER_EXCL_NUM, latest_char()) != nullptr && (c < '0' || c > '9'))
+			( // special case
+				strchr_P(WRAP_AFTER_EXCL_NUM, latest_char()) != nullptr &&
+				(c < '0' || c > '9')
+			)
 		) {
 			end_section(f);
 		}
@@ -185,7 +187,7 @@ public:
 
 	template <typename Font>
 	void print(const Font &f, char c) {
-		print_part(f, c);
+		print_part(f, uint8_t(c));
 		end_section(f);
 	}
 
@@ -196,7 +198,7 @@ public:
 		}
 		char c;
 		for(const char *p = message; (c = p[0]) != '\0'; p = p + 1) {
-			print_part(f, c);
+			print_part(f, uint8_t(c));
 		}
 		end_section(f);
 	}
@@ -208,7 +210,7 @@ public:
 		}
 		char c;
 		for(ProgMem<char> p = message; (c = p[0]) != '\0'; p = p + 1) {
-			print_part(f, c);
+			print_part(f, uint8_t(c));
 		}
 		end_section(f);
 	}
@@ -225,7 +227,7 @@ public:
 		uint8_t lim = sizeof(buf) - 1;
 		memset(buf, '0', lim);
 		while(r > 0 && c < lim) {
-			buf[lim-c-1] = (r % 10) + '0';
+			buf[lim-c-1] = char((r % 10) + '0');
 			r /= 10;
 			++ c;
 		}
@@ -260,11 +262,11 @@ public:
 				uint8_t d = (r % base);
 				char digit;
 				if(d < 10) {
-					digit = d + '0';
+					digit = char(d + '0');
 				} else if(d < 36) {
-					digit = d + 'A' - 10;
+					digit = char(d + 'A' - 10);
 				} else {
-					digit = d + 'a' - 36;
+					digit = char(d + 'a' - 36);
 				}
 				buf[lim-c-1] = digit;
 				r /= base;
@@ -295,7 +297,7 @@ public:
 		}
 		print(f, '.');
 		r -= integer;
-		for(int i = 0; i < decimalPlaces; ++ i) {
+		for(int8_t i = 0; i < decimalPlaces; ++ i) {
 			r *= 10;
 		}
 		// TODO: add 0.5 for rounding (but needs integer part to be altered too)

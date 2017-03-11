@@ -19,13 +19,13 @@
 template <typename T> // T = ProgMem<uint8_t> / const uint8*
 class StaticBitmask18 {
 	T d;
-	int s;
+	int16_t s;
 	uint8_t w;
 	uint8_t h;
 
 public:
 	[[gnu::always_inline]]
-	inline StaticBitmask18(T data, uint8_t width, uint8_t height, int step)
+	inline StaticBitmask18(T data, uint8_t width, uint8_t height, int16_t step)
 		: d(data)
 		, s(step)
 		, w(width)
@@ -59,20 +59,20 @@ public:
 	}
 
 	[[gnu::pure,nodiscard,gnu::always_inline]]
-	inline int raw_step(void) const {
+	inline int16_t raw_step(void) const {
 		return s;
 	}
 };
 
 template <typename T>
 [[gnu::always_inline]]
-static inline StaticBitmask18<T> WrapStaticBitmask18(T data, uint8_t width, uint8_t height, int step) {
+static inline StaticBitmask18<T> MakeStaticBitmask18(T data, uint8_t width, uint8_t height, int16_t step) {
 	return StaticBitmask18<T>(data, width, height, step);
 }
 
 template <typename T>
 [[gnu::always_inline]]
-static inline StaticBitmask18<T> WrapStaticBitmask18(T data, uint8_t width, uint8_t height) {
+static inline StaticBitmask18<T> MakeStaticBitmask18(T data, uint8_t width, uint8_t height) {
 	return StaticBitmask18<T>(data, width, height);
 }
 
