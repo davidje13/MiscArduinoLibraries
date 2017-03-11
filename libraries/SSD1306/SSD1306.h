@@ -23,11 +23,6 @@
 #  define nodiscard gnu::warn_unused_result
 #endif
 
-[[gnu::const,nodiscard,gnu::always_inline]]
-static constexpr inline int posmod(int a, int b) {
-	return ((a % b) + b) % b;
-}
-
 class SolidFill {
 	const uint8_t v;
 
@@ -60,24 +55,11 @@ public:
 	}
 };
 
-template <
-	uint8_t DISP_WIDTH,
-	uint8_t DISP_HEIGHT,
-	typename SpiT,
-	typename CSPinT,
-	typename RSTPinT,
-	typename DCPinT,
-	uint8_t DISP_HEIGHT_BYTES = (DISP_HEIGHT + 7) / 8
->
 class SSD1306 {
-	// This class is a simplified version of boost's compressed_pair. It is used
-	// to allow empty structs to be stored without taking up any memory.
-	template <typename OptionalT, typename KnownT>
-	class Flattener : public OptionalT {
-	public:
-		KnownT flattened_value;
-		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
-	};
+protected:
+	SSD1306(void) = default;
+	SSD1306(const SSD1306&) = delete;
+	SSD1306(SSD1306&&) = default;
 
 	enum Command : uint8_t {
 		LOWER_COLUMN =             0x00, // Memory mode: page. values [00-0F]
@@ -147,6 +129,37 @@ class SSD1306 {
 //		V_UNKNOWN = 0x4
 	};
 
+	template <typename T>
+	[[gnu::pure,gnu::always_inline,gnu::nonnull]]
+	static inline uint8_t read_shifted(T r0, T r1, uint8_t x, uint8_t shift) {
+		return ((r0[x] >> (8 - shift)) | (r1[x] << shift));
+	}
+
+	[[gnu::const,nodiscard,gnu::always_inline]]
+	static constexpr inline int posmod(int a, int b) {
+		return ((a % b) + b) % b;
+	}
+
+	// This class is a simplified version of boost's compressed_pair. It is used
+	// to allow empty structs to be stored without taking up any memory.
+	template <typename OptionalT, typename KnownT>
+	class Flattener : public OptionalT {
+	public:
+		KnownT flattened_value;
+		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
+	};
+};
+
+template <
+	uint8_t DISP_WIDTH,
+	uint8_t DISP_HEIGHT,
+	typename SpiT,
+	typename CSPinT,
+	typename RSTPinT,
+	typename DCPinT,
+	uint8_t DISP_HEIGHT_BYTES = (DISP_HEIGHT + 7) / 8
+>
+class SSD1306_impl : public SSD1306 {
 	Flattener<SpiT,uint8_t> spiComm;
 #define spiNesting spiComm.flattened_value
 	Flattener<CSPinT,uint8_t> csPin;
@@ -185,12 +198,6 @@ public:
 	}
 
 private:
-	template <typename T>
-	[[gnu::pure,gnu::always_inline,gnu::nonnull]]
-	static inline uint8_t read_shifted(T r0, T r1, uint8_t x, uint8_t shift) {
-		return ((r0[x] >> (8 - shift)) | (r1[x] << shift));
-	}
-
 	[[gnu::always_inline]]
 	inline void transfer_wrapped(uint8_t data) {
 		begin_communication();
@@ -657,7 +664,7 @@ public:
 		}
 	}
 
-	SSD1306(SpiT spi, CSPinT cs, RSTPinT rst, DCPinT dc)
+	SSD1306_impl(SpiT spi, CSPinT cs, RSTPinT rst, DCPinT dc)
 		: spiComm(spi, 0) // spiNesting
 		, csPin(cs, 0) // curColStart
 		, rstPin(rst, 0) // curColEnd
@@ -681,7 +688,22 @@ public:
 		reset();
 	}
 
-	~SSD1306(void) {
+	SSD1306_impl(SSD1306_impl &&b)
+		: spiComm(static_cast<Flattener<SpiT,uint8_t>&&>(b.spiComm))
+		, csPin(static_cast<Flattener<CSPinT,uint8_t>&&>(b.csPin))
+		, rstPin(static_cast<Flattener<RSTPinT,uint8_t>&&>(b.rstPin))
+		, dcPin(static_cast<Flattener<DCPinT,uint8_t>&&>(b.dcPin))
+		, curPageStart(b.curPageStart)
+		, curPageEnd(b.curPageEnd)
+		, display_on(b.display_on)
+		, scrolling(b.scrolling)
+	{
+		// Prevent destructor of 'b' changing the device
+		b.display_on = false;
+		b.spiNesting = 0;
+	}
+
+	~SSD1306_impl(void) {
 		// Shutdown process should be:
 		// * DISPLAY_OFF
 		// * V_CC OFF
@@ -712,7 +734,7 @@ template <
 	typename DCPinT
 >
 [[gnu::always_inline]]
-inline SSD1306<
+inline SSD1306_impl<
 	DISP_WIDTH,
 	DISP_HEIGHT,
 	SpiT,
@@ -725,7 +747,7 @@ inline SSD1306<
 	RSTPinT rst,
 	DCPinT dc
 ) {
-	return SSD1306<
+	return SSD1306_impl<
 		DISP_WIDTH,
 		DISP_HEIGHT,
 		SpiT,

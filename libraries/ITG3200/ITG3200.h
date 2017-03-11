@@ -28,47 +28,7 @@
 // Recommended startup call (better accuracy):
 // gyroscope.set_clock_source_sync(ITG3200::ClockSource::X_GYRO);
 
-template <
-	typename TwiT,
-	typename IntPinT
->
 class ITG3200 {
-	// This class is a simplified version of boost's compressed_pair. It is used
-	// to allow empty structs to be stored without taking up any memory.
-	template <typename OptionalT, typename KnownT>
-	class Flattener : public OptionalT {
-	public:
-		KnownT flattened_value;
-		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
-	};
-
-	static const constexpr uint8_t I2C_ADDR = 0x68;
-
-	enum Register : uint8_t {
-		WHO_AM_I            = 0x00, // rw
-		// ...
-		SAMPLE_RATE_DIVIDER = 0x15, // rw
-		DLPF_FULL_SCALE     = 0x16, // rw, see Range, LowPassBandwidth
-		INTERRUPT_CONFIG    = 0x17, // rw
-		// ...
-		INTERRUPT_STATUS    = 0x1A,
-		TEMPERATURE_MSB     = 0x1B,
-		TEMPERATURE_LSB     = 0x1C,
-		GYRO_X_MSB          = 0x1D,
-		GYRO_X_LSB          = 0x1E,
-		GYRO_Y_MSB          = 0x1F,
-		GYRO_Y_LSB          = 0x20,
-		GYRO_Z_MSB          = 0x21,
-		GYRO_Z_LSB          = 0x22,
-		// ...
-		POWER_MANAGEMENT    = 0x3E, // rw
-	};
-
-	enum Range : uint8_t {
-		INITIAL = 0x00, // takes this value on reset, but this is not valid
-		R2000   = 0x18 // should be set to this before use (+/-2000deg/s)
-	};
-
 public:
 	enum class ConnectionStatus : uint8_t {
 		CONNECTED = 0,
@@ -118,7 +78,113 @@ public:
 		ACTIVE_HIGH_INACTIVE_OPEN = 0xC0
 	};
 
-private:
+	class reading {
+		int16_t xx;
+		int16_t yy;
+		int16_t zz;
+		int16_t temp;
+
+	public:
+		static const constexpr uint16_t RAW_DIVISOR = 8;
+		static const constexpr uint16_t RAW_MULTIPLIER = 115;
+
+		[[gnu::always_inline]]
+		reading(void) : xx(0), yy(0), zz(0), temp(0x7FFF) {}
+
+		[[gnu::always_inline]]
+		reading(int16_t xv, int16_t yv, int16_t zv, int16_t tv)
+			: xx(xv)
+			, yy(yv)
+			, zz(zv)
+			, temp(tv)
+		{}
+
+		[[gnu::pure,nodiscard,gnu::always_inline]]
+		bool is_valid(void) const {
+			return temp != 0x7FFF;
+		}
+
+		/**
+		 * = deg/s * 14.375 = deg/s * 115 / 8
+		 * actual scale factor = +/- 6%
+		 * accuracy over temperature changes = 10%
+		 */
+		[[gnu::pure,nodiscard,gnu::always_inline]]
+		int16_t raw_x(void) const {
+			return xx;
+		}
+
+		[[gnu::pure,nodiscard,gnu::always_inline]]
+		int16_t raw_y(void) const {
+			return yy;
+		}
+
+		[[gnu::pure,nodiscard,gnu::always_inline]]
+		int16_t raw_z(void) const {
+			return zz;
+		}
+
+		/**
+		 * accuracy = +/- 1 deg C
+		 */
+		[[gnu::pure,nodiscard,gnu::always_inline]]
+		int32_t temperature_millicelsius(void) const {
+			return ((int32_t(temp) + 23000) * 1000) / 280;
+		}
+
+		[[gnu::pure,nodiscard,gnu::always_inline]]
+		int16_t raw_temperature(void) const {
+			return temp;
+		}
+	};
+
+protected:
+	ITG3200(void) = default;
+	ITG3200(const ITG3200&) = delete;
+	ITG3200(ITG3200&&) = default;
+
+	enum Register : uint8_t {
+		WHO_AM_I            = 0x00, // rw
+		// ...
+		SAMPLE_RATE_DIVIDER = 0x15, // rw
+		DLPF_FULL_SCALE     = 0x16, // rw, see Range, LowPassBandwidth
+		INTERRUPT_CONFIG    = 0x17, // rw
+		// ...
+		INTERRUPT_STATUS    = 0x1A,
+		TEMPERATURE_MSB     = 0x1B,
+		TEMPERATURE_LSB     = 0x1C,
+		GYRO_X_MSB          = 0x1D,
+		GYRO_X_LSB          = 0x1E,
+		GYRO_Y_MSB          = 0x1F,
+		GYRO_Y_LSB          = 0x20,
+		GYRO_Z_MSB          = 0x21,
+		GYRO_Z_LSB          = 0x22,
+		// ...
+		POWER_MANAGEMENT    = 0x3E, // rw
+	};
+
+	enum Range : uint8_t {
+		INITIAL = 0x00, // takes this value on reset, but this is not valid
+		R2000   = 0x18 // should be set to this before use (+/-2000deg/s)
+	};
+
+	// This class is a simplified version of boost's compressed_pair. It is used
+	// to allow empty structs to be stored without taking up any memory.
+	template <typename OptionalT, typename KnownT>
+	class Flattener : public OptionalT {
+	public:
+		KnownT flattened_value;
+		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
+	};
+};
+
+template <
+	typename TwiT,
+	typename IntPinT
+>
+class ITG3200_impl : public ITG3200 {
+	static const constexpr uint8_t I2C_ADDR = 0x68;
+
 	struct FlattenedAddrRange {
 		bool addrLSB : 4;
 		bool hasSetRange : 4;
@@ -223,68 +289,6 @@ private:
 		return cs;
 	}
 
-public:
-	class reading {
-		int16_t xx;
-		int16_t yy;
-		int16_t zz;
-		int16_t temp;
-
-	public:
-		static const constexpr uint16_t RAW_DIVISOR = 8;
-		static const constexpr uint16_t RAW_MULTIPLIER = 115;
-
-		[[gnu::always_inline]]
-		reading(void) : xx(0), yy(0), zz(0), temp(0x7FFF) {}
-
-		[[gnu::always_inline]]
-		reading(int16_t xv, int16_t yv, int16_t zv, int16_t tv)
-			: xx(xv)
-			, yy(yv)
-			, zz(zv)
-			, temp(tv)
-		{}
-
-		[[gnu::pure,nodiscard,gnu::always_inline]]
-		bool is_valid(void) const {
-			return temp != 0x7FFF;
-		}
-
-		/**
-		 * = deg/s * 14.375 = deg/s * 115 / 8
-		 * actual scale factor = +/- 6%
-		 * accuracy over temperature changes = 10%
-		 */
-		[[gnu::pure,nodiscard,gnu::always_inline]]
-		int16_t raw_x(void) const {
-			return xx;
-		}
-
-		[[gnu::pure,nodiscard,gnu::always_inline]]
-		int16_t raw_y(void) const {
-			return yy;
-		}
-
-		[[gnu::pure,nodiscard,gnu::always_inline]]
-		int16_t raw_z(void) const {
-			return zz;
-		}
-
-		/**
-		 * accuracy = +/- 1 deg C
-		 */
-		[[gnu::pure,nodiscard,gnu::always_inline]]
-		int32_t temperature_millicelsius(void) const {
-			return ((int32_t(temp) + 23000) * 1000) / 280;
-		}
-
-		[[gnu::pure,nodiscard,gnu::always_inline]]
-		int16_t raw_temperature(void) const {
-			return temp;
-		}
-	};
-
-private:
 	[[nodiscard,gnu::always_inline]]
 	static reading make_reading(const uint8_t *buffer) {
 		return reading(
@@ -296,7 +300,6 @@ private:
 	}
 
 public:
-
 	ConnectionStatus connection_status(void) {
 		uint8_t regID;
 		auto err = read(WHO_AM_I, &regID, 1, 10000);
@@ -469,7 +472,7 @@ public:
 		set_filter_bandwidth(LowPassBandwidth::L256_HZ);
 	}
 
-	ITG3200(TwiT twi, IntPinT interrupt, bool AD0)
+	ITG3200_impl(TwiT twi, IntPinT interrupt, bool AD0)
 		: intPin(interrupt, 0x00) // powerCache - assume default
 		, twiComm(twi, FlattenedAddrRange(AD0, false)) // addrLSB, hasSetRange
 	{
@@ -479,7 +482,9 @@ public:
 		}
 	}
 
-	~ITG3200(void) {
+	ITG3200_impl(ITG3200_impl&&) = default;
+
+	~ITG3200_impl(void) {
 	}
 
 #undef powerCache
@@ -492,12 +497,12 @@ template <
 	typename IntPinT
 >
 [[gnu::always_inline]]
-inline ITG3200<TwiT, IntPinT> MakeITG3200(
+inline ITG3200_impl<TwiT, IntPinT> MakeITG3200(
 	TwiT twi,
 	IntPinT interrupt, // optional (use VoidPin to omit)
 	bool AD0 = false
 ) {
-	return ITG3200<TwiT, IntPinT>(
+	return ITG3200_impl<TwiT, IntPinT>(
 		twi,
 		interrupt,
 		AD0

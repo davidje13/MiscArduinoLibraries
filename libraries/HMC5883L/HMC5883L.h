@@ -23,20 +23,7 @@
 #  define nodiscard gnu::warn_unused_result
 #endif
 
-template <
-	typename TwiT,
-	typename DRDYPinT
->
 class HMC5883L {
-	// This class is a simplified version of boost's compressed_pair. It is used
-	// to allow empty structs to be stored without taking up any memory.
-	template <typename OptionalT, typename KnownT>
-	class Flattener : public OptionalT {
-	public:
-		KnownT flattened_value;
-		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
-	};
-
 public:
 	enum class ConnectionStatus : uint8_t {
 		CONNECTED = 0,
@@ -234,7 +221,64 @@ public:
 		}
 	};
 
-private:
+	class calibrator {
+	public:
+		class calibration {
+		public:
+			uint16_t x;
+			uint16_t y;
+			uint16_t z;
+
+			calibration(void) : x(1), y(1), z(1) {}
+
+			calibration(uint16_t xx, uint16_t yy, uint16_t zz)
+				: x(xx)
+				, y(yy)
+				, z(zz)
+			{}
+		};
+
+	private:
+		calibration truth;
+		calibration current;
+		bool bias;
+
+	public:
+		calibrator(void) : truth(), current(), bias(true) {}
+
+		[[gnu::pure,nodiscard,gnu::always_inline]]
+		bool is_positive_bias(void) const {
+			return bias;
+		}
+
+		void set_truth(const calibration &c, bool positive_bias) {
+			truth = c;
+			current = truth;
+			bias = positive_bias;
+		}
+
+		void recalibrate(const calibration &c) {
+			current = c;
+		}
+
+		void decalibrate(void) {
+			current = truth;
+		}
+
+		void apply(reading &r) const {
+			r.set(
+				(r.x() * int32_t(truth.x)) / current.x,
+				(r.y() * int32_t(truth.y)) / current.y,
+				(r.z() * int32_t(truth.z)) / current.z
+			);
+		}
+	};
+
+protected:
+	HMC5883L(void) = default;
+	HMC5883L(const HMC5883L&) = delete;
+	HMC5883L(HMC5883L&&) = default;
+
 	enum TestMode : uint8_t {
 		NO_BIAS       = 0x00, // Default
 		POSITIVE_BIAS = 0x01, // Applies ~+1.1Ga bias for testing purposes
@@ -278,8 +322,24 @@ private:
 		POLLING_INT_GOT_DATA
 	};
 
+	// This class is a simplified version of boost's compressed_pair. It is used
+	// to allow empty structs to be stored without taking up any memory.
+	template <typename OptionalT, typename KnownT>
+	class Flattener : public OptionalT {
+	public:
+		KnownT flattened_value;
+		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
+	};
+};
+
+template <
+	typename TwiT,
+	typename DRDYPinT
+>
+class HMC5883L_impl : public HMC5883L {
+private:
 	static const constexpr uint8_t CONFA_RATE_MASK = 0x1C;
-	static HMC5883L<TwiT, DRDYPinT> *interruptTarget;
+	static HMC5883L_impl<TwiT, DRDYPinT> *interruptTarget;
 
 	static bool test_ok(int32_t value, int32_t gain) {
 		if(value * gain_value(Gain::G390) > (575 * gain)) {
@@ -474,59 +534,6 @@ private:
 	}
 
 public:
-	class calibrator {
-	public:
-		class calibration {
-		public:
-			uint16_t x;
-			uint16_t y;
-			uint16_t z;
-
-			calibration(void) : x(1), y(1), z(1) {}
-
-			calibration(uint16_t xx, uint16_t yy, uint16_t zz)
-				: x(xx)
-				, y(yy)
-				, z(zz)
-			{}
-		};
-
-	private:
-		calibration truth;
-		calibration current;
-		bool bias;
-
-	public:
-		calibrator(void) : truth(), current(), bias(true) {}
-
-		[[gnu::pure,nodiscard,gnu::always_inline]]
-		bool is_positive_bias(void) const {
-			return bias;
-		}
-
-		void set_truth(const calibration &c, bool positive_bias) {
-			truth = c;
-			current = truth;
-			bias = positive_bias;
-		}
-
-		void recalibrate(const calibration &c) {
-			current = c;
-		}
-
-		void decalibrate(void) {
-			current = truth;
-		}
-
-		void apply(reading &r) const {
-			r.set(
-				(r.x() * int32_t(truth.x)) / current.x,
-				(r.y() * int32_t(truth.y)) / current.y,
-				(r.z() * int32_t(truth.z)) / current.z
-			);
-		}
-	};
-
 	ConnectionStatus connection_status(void) {
 		auto err = set_register(IDENTITY_A);
 		if(err != TwiT::Error::SUCCESS) {
@@ -739,7 +746,7 @@ public:
 		return record_calibration(c, positive_bias);
 	}
 
-	HMC5883L(TwiT twi, DRDYPinT drdy)
+	HMC5883L_impl(TwiT twi, DRDYPinT drdy)
 		: state(ReqState::NONE)
 		, twiComm(twi, Gain::G1090) // gainCache - Assume default
 		, drdyPin(
@@ -758,7 +765,21 @@ public:
 		drdyPin.set_input();
 	}
 
-	~HMC5883L(void) {
+	HMC5883L_impl(HMC5883L_impl &&b)
+		: state(b.state)
+		, twiComm(static_cast<Flattener<TwiT,Gain>&&>(b.twiComm))
+		, drdyPin(static_cast<Flattener<DRDYPinT,uint8_t>&&>(b.drdyPin))
+		, currentRegister(b.currentRegister)
+		, singleSample(b.singleSample)
+		, rapidSamples(b.rapidSamples)
+		, gainChanged(b.gainChanged)
+		, confASent(b.confASent)
+	{
+		// Prevent destructor of 'b' changing the device
+		state = ReqState::NONE;
+	}
+
+	~HMC5883L_impl(void) {
 		stop();
 	}
 
@@ -770,18 +791,18 @@ template <
 	typename TwiT,
 	typename DRDYPinT
 >
-HMC5883L<TwiT, DRDYPinT> *HMC5883L<TwiT, DRDYPinT>::interruptTarget = nullptr;
+HMC5883L_impl<TwiT, DRDYPinT> *HMC5883L_impl<TwiT, DRDYPinT>::interruptTarget = nullptr;
 
 template <
 	typename TwiT,
 	typename DRDYPinT
 >
 [[gnu::always_inline]]
-inline HMC5883L<TwiT, DRDYPinT> MakeHMC5883L(
+inline HMC5883L_impl<TwiT, DRDYPinT> MakeHMC5883L(
 	TwiT twi,
 	DRDYPinT drdy // optional (use VoidPin to omit)
 ) {
-	return HMC5883L<TwiT, DRDYPinT>(
+	return HMC5883L_impl<TwiT, DRDYPinT>(
 		twi,
 		drdy
 	);

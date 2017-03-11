@@ -6,8 +6,6 @@
 
 #include "../ADXL345.h"
 
-typedef ADXL345<TWIMaster, Pin, Pin> Base;
-
 BOOST_AUTO_TEST_SUITE(ADXL345_test)
 
 BOOST_AUTO_TEST_CASE(connection_status_checks_id) {
@@ -22,7 +20,10 @@ BOOST_AUTO_TEST_CASE(connection_status_checks_id) {
 		Pin::Mock().implementation(),
 		true
 	);
-	BOOST_CHECK_EQUAL(uint8_t(o.connection_status()), uint8_t(Base::ConnectionStatus::CONNECTED));
+	BOOST_CHECK_EQUAL(
+		uint8_t(o.connection_status()),
+		uint8_t(ADXL345::ConnectionStatus::CONNECTED)
+	);
 
 	BOOST_CHECK_EQUAL(mockTWI.send_last_address, 0x53);
 	BOOST_CHECK_EQUAL(mockTWI.send_last_hz, 400000);
