@@ -14,19 +14,7 @@
 #ifndef GYROACCUMULATOR_H_INCLUDED
 #define GYROACCUMULATOR_H_INCLUDED
 
-// If the newer nodiscard attribute is available, use it
-#ifdef __has_cpp_attribute
-#  if !__has_cpp_attribute(nodiscard)
-#    define nodiscard gnu::warn_unused_result
-#  endif
-#else
-#  define nodiscard gnu::warn_unused_result
-#endif
-
-template <typename T>
-static T posmod(T a, T b) {
-	return ((a % b) + b) % b;
-}
+#include "ext.h"
 
 template <typename Reading>
 class GyroAccumulator {
@@ -106,9 +94,9 @@ public:
 			ey %= Reading::RAW_MULTIPLIER;
 			z += ez / Reading::RAW_MULTIPLIER;
 			ez %= Reading::RAW_MULTIPLIER;
-			x = posmod(x, 360000);
-			y = posmod(y, 360000);
-			z = posmod(z, 360000);
+			x = ext::posmod(x, 360000);
+			y = ext::posmod(y, 360000);
+			z = ext::posmod(z, 360000);
 		}
 	}
 

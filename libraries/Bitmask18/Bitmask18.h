@@ -29,14 +29,7 @@
 #  include <ProgMem/ProgMem.h>
 #endif
 
-// If the newer nodiscard attribute is available, use it
-#ifdef __has_cpp_attribute
-#  if !__has_cpp_attribute(nodiscard)
-#    define nodiscard gnu::warn_unused_result
-#  endif
-#else
-#  define nodiscard gnu::warn_unused_result
-#endif
+#include "ext.h"
 
 template <
 	uint8_t WIDTH,
@@ -45,22 +38,6 @@ template <
 >
 class Bitmask18 {
 	uint8_t buffer[WIDTH * HEIGHT_BYTES];
-
-	template <typename T>
-	[[gnu::const,nodiscard,gnu::always_inline]]
-	static constexpr inline T max2(T a, T b) { return (a < b) ? b : a; }
-
-	template <typename T>
-	[[gnu::const,nodiscard,gnu::always_inline]]
-	static constexpr inline T min2(T a, T b) { return (a < b) ? a : b; }
-
-	template <typename T>
-	[[gnu::const,nodiscard,gnu::always_inline]]
-	static constexpr inline T max3(T a, T b, T c) { return max2(max2(a, b), c); }
-
-	template <typename T>
-	[[gnu::const,nodiscard,gnu::always_inline]]
-	static constexpr inline T min3(T a, T b, T c) { return min2(min2(a, b), c); }
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
 	static constexpr inline bool in_bounds(int x, int y) {
@@ -169,8 +146,8 @@ class Bitmask18 {
 		T bm = maskImg;
 
 		uint8_t x0;
-		uint8_t x1 = min2(x + w, int(WIDTH));
-		uint8_t y1 = min2(y + h, int(HEIGHT));
+		uint8_t x1 = ext::min2(x + w, int(WIDTH));
+		uint8_t y1 = ext::min2(y + h, int(HEIGHT));
 		uint8_t shift = y & 7;
 
 		if(x < 0) {
@@ -403,8 +380,8 @@ public:
 		}
 
 		fill_rect_fast(
-			max2(x, 0),              max2(y, 0),
-			min2(x + w, int(WIDTH)), min2(y + h, int(HEIGHT)),
+			ext::max2(x, 0),              ext::max2(y, 0),
+			ext::min2(x + w, int(WIDTH)), ext::min2(y + h, int(HEIGHT)),
 			m, p
 		);
 	}
@@ -439,7 +416,7 @@ public:
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON
 	) {
-		int l = min2(x0, x1);
+		int l = ext::min2(x0, x1);
 		int r = x0 + x1 - l + 1;
 		fill_rect(l, y, r - l, 1, m, p);
 	}
@@ -452,7 +429,7 @@ public:
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON
 	) {
-		int t = min2(y0, y1);
+		int t = ext::min2(y0, y1);
 		int b = y0 + y1 - t + 1;
 		fill_rect(x, t, 1, b - t, m, p);
 	}
@@ -464,8 +441,8 @@ public:
 		Pattern p = PATTERN_ON,
 		uint8_t shift = 0
 	) {
-		int lowx = min2(x0, x1);
-		int lowy = min2(y0, y1);
+		int lowx = ext::min2(x0, x1);
+		int lowy = ext::min2(y0, y1);
 
 		if(
 			(x0 + x1 - lowx) < 0 ||
@@ -492,14 +469,14 @@ public:
 			dB = dx;
 			a = lowy;
 			b = ((dA < 0) ? x1 : x0);
-			lA = min2(((y0 + y1 - lowy) >> shift) + 1, int(HEIGHT));
+			lA = ext::min2(((y0 + y1 - lowy) >> shift) + 1, int(HEIGHT));
 			lB = WIDTH;
 		} else {
 			dA = dx;
 			dB = dy;
 			a = lowx;
 			b = ((dA < 0) ? y1 : y0);
-			lA = min2(((x0 + x1 - lowx) >> shift) + 1, int(WIDTH));
+			lA = ext::min2(((x0 + x1 - lowx) >> shift) + 1, int(WIDTH));
 			lB = HEIGHT;
 		}
 		if(dA < 0) {
@@ -806,10 +783,10 @@ public:
 			return;
 		}
 
-		int minx = max2(min3(x0, x1, x2), 0);
-		int miny = max2(min3(y0, y1, y2), 0);
-		int maxx = min2(max3(x0, x1, x2), (WIDTH << shift) - 1);
-		int maxy = min2(max3(y0, y1, y2), (HEIGHT << shift) - 1);
+		int minx = ext::max2(ext::min3(x0, x1, x2), 0);
+		int miny = ext::max2(ext::min3(y0, y1, y2), 0);
+		int maxx = ext::min2(ext::max3(x0, x1, x2), (WIDTH << shift) - 1);
+		int maxy = ext::min2(ext::max3(y0, y1, y2), (HEIGHT << shift) - 1);
 		if(maxx < minx || maxy < miny) {
 			return;
 		}

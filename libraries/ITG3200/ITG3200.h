@@ -14,14 +14,7 @@
 #ifndef ITG3200_H_INCLUDED
 #define ITG3200_H_INCLUDED
 
-// If the newer nodiscard attribute is available, use it
-#ifdef __has_cpp_attribute
-#  if !__has_cpp_attribute(nodiscard)
-#    define nodiscard gnu::warn_unused_result
-#  endif
-#else
-#  define nodiscard gnu::warn_unused_result
-#endif
+#include "ext.h"
 
 // Startup time ~20ms, +50ms for zero point to stabilise
 
@@ -167,15 +160,6 @@ protected:
 		INITIAL = 0x00, // takes this value on reset, but this is not valid
 		R2000   = 0x18 // should be set to this before use (+/-2000deg/s)
 	};
-
-	// This class is a simplified version of boost's compressed_pair. It is used
-	// to allow empty structs to be stored without taking up any memory.
-	template <typename OptionalT, typename KnownT>
-	class Flattener : public OptionalT {
-	public:
-		KnownT flattened_value;
-		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
-	};
 };
 
 template <
@@ -195,9 +179,9 @@ class ITG3200_impl : public ITG3200 {
 		{}
 	};
 
-	Flattener<IntPinT,uint8_t> intPin; // TODO: actually use this if available
+	ext::Flattener<IntPinT,uint8_t> intPin; // TODO: actually use this if available
 #define powerCache intPin.flattened_value
-	Flattener<TwiT,FlattenedAddrRange> twiComm;
+	ext::Flattener<TwiT,FlattenedAddrRange> twiComm;
 #define addrLSB twiComm.flattened_value.addrLSB
 #define hasSetRange twiComm.flattened_value.hasSetRange
 

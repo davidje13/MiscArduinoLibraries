@@ -14,46 +14,9 @@
 #ifndef SSD1306_H_INCLUDED
 #define SSD1306_H_INCLUDED
 
-// If the newer nodiscard attribute is available, use it
-#ifdef __has_cpp_attribute
-#  if !__has_cpp_attribute(nodiscard)
-#    define nodiscard gnu::warn_unused_result
-#  endif
-#else
-#  define nodiscard gnu::warn_unused_result
-#endif
+#include "SolidFill.h"
 
-class SolidFill {
-	const uint8_t v;
-
-public:
-	[[gnu::always_inline]]
-	inline SolidFill(void) : v(0) {}
-
-	[[gnu::always_inline]]
-	inline explicit SolidFill(uint8_t value) : v(value) {}
-
-	[[gnu::always_inline]]
-	inline SolidFill(bool value) : v(value ? 0xFF : 0x00) {}
-
-	[[gnu::always_inline]]
-	inline SolidFill(const SolidFill&) = default;
-
-	[[gnu::pure,nodiscard,gnu::always_inline]]
-	inline uint8_t operator[](int) const {
-		return v;
-	}
-
-	[[gnu::const,nodiscard,gnu::always_inline]]
-	inline operator bool(void) const {
-		return true;
-	}
-
-	[[gnu::const,nodiscard,gnu::always_inline]]
-	inline SolidFill operator+(int) const {
-		return *this;
-	}
-};
+#include "ext.h"
 
 class SSD1306 {
 protected:
@@ -134,20 +97,6 @@ protected:
 	static inline uint8_t read_shifted(T r0, T r1, uint8_t x, uint8_t shift) {
 		return ((r0[x] >> (8 - shift)) | (r1[x] << shift));
 	}
-
-	[[gnu::const,nodiscard,gnu::always_inline]]
-	static constexpr inline int posmod(int a, int b) {
-		return ((a % b) + b) % b;
-	}
-
-	// This class is a simplified version of boost's compressed_pair. It is used
-	// to allow empty structs to be stored without taking up any memory.
-	template <typename OptionalT, typename KnownT>
-	class Flattener : public OptionalT {
-	public:
-		KnownT flattened_value;
-		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
-	};
 };
 
 template <
@@ -160,13 +109,13 @@ template <
 	uint8_t DISP_HEIGHT_BYTES = (DISP_HEIGHT + 7) / 8
 >
 class SSD1306_impl : public SSD1306 {
-	Flattener<SpiT,uint8_t> spiComm;
+	ext::Flattener<SpiT,uint8_t> spiComm;
 #define spiNesting spiComm.flattened_value
-	Flattener<CSPinT,uint8_t> csPin;
+	ext::Flattener<CSPinT,uint8_t> csPin;
 #define curColStart csPin.flattened_value
-	Flattener<RSTPinT,uint8_t> rstPin;
+	ext::Flattener<RSTPinT,uint8_t> rstPin;
 #define curColEnd rstPin.flattened_value
-	Flattener<DCPinT,uint8_t> dcPin;
+	ext::Flattener<DCPinT,uint8_t> dcPin;
 #define framerate dcPin.flattened_value
 	uint8_t curPageStart : 4;
 	uint8_t curPageEnd   : 4;
@@ -511,7 +460,7 @@ public:
 
 	void set_vertical_offset(int offset) {
 		// Pans (with modulo) the rendered image
-		uint8_t shift = posmod(offset, height());
+		uint8_t shift = ext::posmod(offset, int(height()));
 		transfer_wrapped(DISPLAY_START_LINE | shift);
 	}
 
@@ -523,7 +472,7 @@ public:
 		// bar with the image.
 
 		// This one applies even if the display is set to set_fs_white = true
-		uint8_t shift = posmod(offset, height());
+		uint8_t shift = ext::posmod(offset, int(height()));
 		begin_communication();
 		spiComm.transfer(SET_DISPLAY_OFFSET);
 		spiComm.transfer(shift);
@@ -569,7 +518,7 @@ public:
 			step,
 			xPos + x,
 			y0 >> 3,
-			w, min(bitmask.height(), hh),
+			w, ext::min2(bitmask.height(), hh),
 			hPage,
 			yShift
 		);
@@ -606,7 +555,10 @@ public:
 		// within its horizontal_*_page, then the vertical within vertical_*)
 
 		uint8_t v_height = vertical_base - vertical_top;
-		uint8_t v_wrap = (v_height <= 0) ? 0 : posmod(y_speed, v_height);
+		uint8_t v_wrap = ((v_height <= 0)
+			? 0
+			: ext::posmod(y_speed, int(v_height))
+		);
 
 		uint8_t frame_freq_value;
 		switch(frame_freq) {
@@ -689,10 +641,10 @@ public:
 	}
 
 	SSD1306_impl(SSD1306_impl &&b)
-		: spiComm(static_cast<Flattener<SpiT,uint8_t>&&>(b.spiComm))
-		, csPin(static_cast<Flattener<CSPinT,uint8_t>&&>(b.csPin))
-		, rstPin(static_cast<Flattener<RSTPinT,uint8_t>&&>(b.rstPin))
-		, dcPin(static_cast<Flattener<DCPinT,uint8_t>&&>(b.dcPin))
+		: spiComm(static_cast<ext::Flattener<SpiT,uint8_t>&&>(b.spiComm))
+		, csPin(static_cast<ext::Flattener<CSPinT,uint8_t>&&>(b.csPin))
+		, rstPin(static_cast<ext::Flattener<RSTPinT,uint8_t>&&>(b.rstPin))
+		, dcPin(static_cast<ext::Flattener<DCPinT,uint8_t>&&>(b.dcPin))
 		, curPageStart(b.curPageStart)
 		, curPageEnd(b.curPageEnd)
 		, display_on(b.display_on)

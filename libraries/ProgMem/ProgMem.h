@@ -33,34 +33,9 @@
 #  define pgm_read_ptr_near(x) (*(void* const*)(x))
 #endif
 
-// If the newer nodiscard attribute is available, use it
-#ifdef __has_cpp_attribute
-#  if !__has_cpp_attribute(nodiscard)
-#    define nodiscard gnu::warn_unused_result
-#  endif
-#else
-#  define nodiscard gnu::warn_unused_result
-#endif
+#include "ext.h"
 
 #define ProgMemString(s) ProgMem<char>(PSTR(s))
-
-// Thanks, http://en.cppreference.com/w/cpp/types/enable_if
-template<bool B, typename T = void> struct enable_if {};
-template<typename T> struct enable_if<true, T> { typedef T type; };
-template<bool B, typename T = void> using enable_if_t = typename enable_if<B,T>::type;
-
-// Thanks, http://en.cppreference.com/w/cpp/types/is_same
-template<typename T, typename U> struct is_same { static constexpr bool value = false; };
-template<typename T> struct is_same<T, T> { static constexpr bool value = true; };
-
-template<typename T> struct is_integral { static constexpr bool value = false; };
-template<> struct is_integral<char> { static constexpr bool value = true; };
-template<> struct is_integral<uint8_t> { static constexpr bool value = true; };
-template<> struct is_integral<int8_t> { static constexpr bool value = true; };
-template<> struct is_integral<uint16_t> { static constexpr bool value = true; };
-template<> struct is_integral<int16_t> { static constexpr bool value = true; };
-template<> struct is_integral<uint32_t> { static constexpr bool value = true; };
-template<> struct is_integral<int32_t> { static constexpr bool value = true; };
 
 // This class achieves 0 overhead in code size and execution time compared to
 // storing the pointer and calling pgm_read_* directly, while allowing the type
@@ -123,7 +98,9 @@ public:
 };
 
 template <typename T>
-class ProgMem<T,enable_if_t<is_integral<T>::value>> : public ProgMem_Base<T,ProgMem<T>> {
+class ProgMem<T,ext::enable_if_t<ext::is_integral<T>::value>>
+	: public ProgMem_Base<T,ProgMem<T>>
+{
 public:
 	using ProgMem_Base<T,ProgMem<T>>::ProgMem_Base;
 

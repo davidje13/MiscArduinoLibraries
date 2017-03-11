@@ -14,14 +14,7 @@
 #ifndef HMC5883L_H_INCLUDED
 #define HMC5883L_H_INCLUDED
 
-// If the newer nodiscard attribute is available, use it
-#ifdef __has_cpp_attribute
-#  if !__has_cpp_attribute(nodiscard)
-#    define nodiscard gnu::warn_unused_result
-#  endif
-#else
-#  define nodiscard gnu::warn_unused_result
-#endif
+#include "ext.h"
 
 class HMC5883L {
 public:
@@ -321,15 +314,6 @@ protected:
 		POLLING_INT,
 		POLLING_INT_GOT_DATA
 	};
-
-	// This class is a simplified version of boost's compressed_pair. It is used
-	// to allow empty structs to be stored without taking up any memory.
-	template <typename OptionalT, typename KnownT>
-	class Flattener : public OptionalT {
-	public:
-		KnownT flattened_value;
-		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
-	};
 };
 
 template <
@@ -352,9 +336,9 @@ private:
 	}
 
 	volatile ReqState state;
-	Flattener<TwiT,Gain> twiComm;
+	ext::Flattener<TwiT,Gain> twiComm;
 #define gainCache twiComm.flattened_value
-	Flattener<DRDYPinT, uint8_t> drdyPin;
+	ext::Flattener<DRDYPinT, uint8_t> drdyPin;
 #define confACache drdyPin.flattened_value
 	uint8_t currentRegister : 4;
 	bool singleSample : 1;
@@ -767,8 +751,8 @@ public:
 
 	HMC5883L_impl(HMC5883L_impl &&b)
 		: state(b.state)
-		, twiComm(static_cast<Flattener<TwiT,Gain>&&>(b.twiComm))
-		, drdyPin(static_cast<Flattener<DRDYPinT,uint8_t>&&>(b.drdyPin))
+		, twiComm(static_cast<ext::Flattener<TwiT,Gain>&&>(b.twiComm))
+		, drdyPin(static_cast<ext::Flattener<DRDYPinT,uint8_t>&&>(b.drdyPin))
 		, currentRegister(b.currentRegister)
 		, singleSample(b.singleSample)
 		, rapidSamples(b.rapidSamples)

@@ -21,14 +21,7 @@
 #  include <ProgMem/ProgMem.h>
 #endif
 
-// If the newer nodiscard attribute is available, use it
-#ifdef __has_cpp_attribute
-#  if !__has_cpp_attribute(nodiscard)
-#    define nodiscard gnu::warn_unused_result
-#  endif
-#else
-#  define nodiscard gnu::warn_unused_result
-#endif
+#include "ext.h"
 
 #define FONT_HEADER_SIZE 5
 

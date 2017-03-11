@@ -20,14 +20,7 @@
 #  include <cstdint>
 #endif
 
-// If the newer nodiscard attribute is available, use it
-#ifdef __has_cpp_attribute
-#  if !__has_cpp_attribute(nodiscard)
-#    define nodiscard gnu::warn_unused_result
-#  endif
-#else
-#  define nodiscard gnu::warn_unused_result
-#endif
+#include "ext.h"
 
 /**
  * Fast 16-bit approximation of sin(x). This approximation never varies more

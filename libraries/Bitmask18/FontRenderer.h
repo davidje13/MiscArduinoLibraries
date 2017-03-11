@@ -19,14 +19,7 @@
 #  include <ProgMem/ProgMem.h>
 #endif
 
-// If the newer nodiscard attribute is available, use it
-#ifdef __has_cpp_attribute
-#  if !__has_cpp_attribute(nodiscard)
-#    define nodiscard gnu::warn_unused_result
-#  endif
-#else
-#  define nodiscard gnu::warn_unused_result
-#endif
+#include "ext.h"
 
 template <typename Bitmask>
 class FontRenderer {
@@ -43,22 +36,17 @@ class FontRenderer {
 	int16_t wordw;
 	bool softhyphen;
 
-	template <typename T>
-	[[gnu::const,nodiscard,gnu::always_inline]]
-	static constexpr inline T max2(T a, T b) { return (a < b) ? b : a; }
-
-	template <typename T>
-	[[gnu::const,nodiscard,gnu::always_inline]]
-	static constexpr inline T min2(T a, T b) { return (a < b) ? a : b; }
-
 	template <typename Font>
 	void dump(const Font &f, uint8_t lim) {
 		for(uint8_t i = 0; i < lim; ++ i) {
-			uint16_t cw = (f.render(*tgt, wordbuffer[i], cx, cy + yShift) + f.spacing());
+			uint16_t cw = (
+				f.render(*tgt, wordbuffer[i], cx, cy + yShift) +
+				f.spacing()
+			);
 			cx += cw;
 			wordw -= cw;
 		}
-		lnHeight = max2(lnHeight, int16_t(f.line_height()));
+		lnHeight = ext::max2(lnHeight, int16_t(f.line_height()));
 		wordlen -= lim;
 		memcpy(wordbuffer, &wordbuffer[lim], wordlen);
 	}
@@ -138,7 +126,7 @@ public:
 			} else {
 				next = cx + cw;
 			}
-			next = min2(next, xlim);
+			next = ext::min2(next, xlim);
 			if(cx + cw <= next) {
 				f.render(*tgt, c, cx, cy);
 			}
@@ -149,7 +137,7 @@ public:
 				break;
 			case '\n':
 				cx = x;
-				cy += max2(lnHeight, int16_t(f.line_height()));
+				cy += ext::max2(lnHeight, int16_t(f.line_height()));
 				lnHeight = 0;
 				break;
 			default:
@@ -241,13 +229,18 @@ public:
 			r /= 10;
 			++ c;
 		}
-		c = min2(max2(c, minDigits), lim);
+		c = ext::min2(ext::max2(c, minDigits), lim);
 		buf[lim] = '\0';
 		print(f, &buf[lim-c]);
 	}
 
 	template <typename Font, typename T>
-	void print_number_base(const Font &f, T n, uint8_t base, uint8_t minDigits = 1) {
+	void print_number_base(
+		const Font &f,
+		T n,
+		uint8_t base,
+		uint8_t minDigits = 1
+	) {
 		T r = n;
 		if(r < 0) {
 			print_part(f, '-');
@@ -277,7 +270,7 @@ public:
 				r /= base;
 				++ c;
 			}
-			c = min2(max2(c, minDigits), lim);
+			c = ext::min2(ext::max2(c, minDigits), lim);
 			buf[lim] = '\0';
 			print(f, &buf[lim-c]);
 		}

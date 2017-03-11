@@ -14,14 +14,7 @@
 #ifndef ARDUINOANALOGPIN_H_INCLUDED
 #define ARDUINOANALOGPIN_H_INCLUDED
 
-// If the newer nodiscard attribute is available, use it
-#ifdef __has_cpp_attribute
-#  if !__has_cpp_attribute(nodiscard)
-#    define nodiscard gnu::warn_unused_result
-#  endif
-#else
-#  define nodiscard gnu::warn_unused_result
-#endif
+#include "ext.h"
 
 class ArduinoAnalogPin {
 	uint8_t p;

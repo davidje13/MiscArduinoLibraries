@@ -14,6 +14,7 @@ fi;
 SOURCE="$SCRIPTDIR/wrapper/Main.ino";
 SRCDIR="$SCRIPTDIR/demos/$DEMO";
 LIBDIR="$SCRIPTDIR/libraries";
+SHAREDIR="$SCRIPTDIR/shared";
 OUTPUT="$(cd "$SRCDIR" && pwd)/out"; # must be absolute (bug in arduino-builder)
 BOOSTDIR="/opt/local/include";
 
@@ -32,12 +33,13 @@ if [[ "$1" == "--local-test" ]]; then
 fi;
 
 # Invoke all generator scripts
-find "$LIBDIR" -iname '*.gen.sh' -type f | while read LN; do
+find "$LIBDIR" "$SRCDIR" -iname '*.gen.sh' -type f | while read LN; do
 	"$LN";
 done;
 
-find "$SRCDIR" -iname '*.gen.sh' -type f | while read LN; do
-	"$LN";
+# Copy all shared header files to each library
+for D in "$LIBDIR"/*/; do
+	cp "$SHAREDIR"/*'.h' "$D";
 done;
 
 if [[ "$MODE" == "preprocess" ]]; then

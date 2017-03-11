@@ -14,14 +14,7 @@
 #ifndef ADXL345_H_INCLUDED
 #define ADXL345_H_INCLUDED
 
-// If the newer nodiscard attribute is available, use it
-#ifdef __has_cpp_attribute
-#  if !__has_cpp_attribute(nodiscard)
-#    define nodiscard gnu::warn_unused_result
-#  endif
-#else
-#  define nodiscard gnu::warn_unused_result
-#endif
+#include "ext.h"
 
 class ADXL345 {
 public:
@@ -200,19 +193,6 @@ protected:
 		PCTL_AUTO_SLEEP = 0x10,
 		PCTL_LINK       = 0x20
 	};
-
-	template <typename T>
-	[[gnu::const,nodiscard,gnu::always_inline]]
-	static constexpr inline T min2(T a, T b) { return (a < b) ? a : b; }
-
-	// This class is a simplified version of boost's compressed_pair. It is used
-	// to allow empty structs to be stored without taking up any memory.
-	template <typename OptionalT, typename KnownT>
-	class Flattener : public OptionalT {
-	public:
-		KnownT flattened_value;
-		Flattener(OptionalT b, KnownT v) : OptionalT(b), flattened_value(v) {}
-	};
 };
 
 template <
@@ -222,11 +202,11 @@ template <
 >
 class ADXL345_impl : public ADXL345 {
 	uint8_t actTapStatus; // unused 0x80 is commandeered for activity status
-	Flattener<Int1PinT,uint8_t> int1Pin;
+	ext::Flattener<Int1PinT,uint8_t> int1Pin;
 #define intStatus int1Pin.flattened_value
-	Flattener<Int2PinT,uint8_t> int2Pin;
+	ext::Flattener<Int2PinT,uint8_t> int2Pin;
 #define intEnable int2Pin.flattened_value
-	Flattener<TwiT,uint8_t> twiComm;
+	ext::Flattener<TwiT,uint8_t> twiComm;
 #define intMap twiComm.flattened_value
 	uint8_t power; // unused 0x80 is commandeered for interrupts low config
 	// also 0x40 is commandeered for alternative address config
@@ -582,18 +562,24 @@ public:
 	}
 
 	void configure_fifo(uint8_t samples) {
-		set_register(FIFO_CONTROL, 0x40 | min2(samples, uint8_t(31)));
+		set_register(FIFO_CONTROL,
+			0x40 |
+			ext::min2(samples, uint8_t(31))
+		);
 	}
 
 	void configure_fifo_stream(uint8_t watermarkTriggerPoint) {
-		set_register(FIFO_CONTROL, 0x80 | min2(watermarkTriggerPoint, uint8_t(31)));
+		set_register(FIFO_CONTROL,
+			0x80 |
+			ext::min2(watermarkTriggerPoint, uint8_t(31))
+		);
 	}
 
 	void configure_fifo_trigger(InterruptPin pin, uint8_t samplesBefore) {
 		set_register(FIFO_CONTROL,
 			0xC0 |
 			((pin == InterruptPin::INTERRUPT2) ? 0x20 : 0x00) |
-			min2(samplesBefore, uint8_t(31))
+			ext::min2(samplesBefore, uint8_t(31))
 		);
 	}
 
@@ -755,7 +741,7 @@ public:
 		if(onlyIfTriggered && !(fifoSize & 0x80)) {
 			return 0;
 		}
-		fifoSize = min2(uint8_t((fifoSize & 0x3F) + 1), maxReadings);
+		fifoSize = ext::min2(uint8_t((fifoSize & 0x3F) + 1), maxReadings);
 
 		for(uint8_t i = 0; i < fifoSize; ++ i) {
 			output[i] = grab_reading();
@@ -873,9 +859,9 @@ public:
 
 	ADXL345_impl(ADXL345_impl &&b)
 		: actTapStatus(b.actTapStatus)
-		, int1Pin(static_cast<Flattener<Int1PinT,uint8_t>&&>(b.int1Pin))
-		, int2Pin(static_cast<Flattener<Int2PinT,uint8_t>&&>(b.int2Pin))
-		, twiComm(static_cast<Flattener<TwiT,uint8_t>&&>(b.twiComm))
+		, int1Pin(static_cast<ext::Flattener<Int1PinT,uint8_t>&&>(b.int1Pin))
+		, int2Pin(static_cast<ext::Flattener<Int2PinT,uint8_t>&&>(b.int2Pin))
+		, twiComm(static_cast<ext::Flattener<TwiT,uint8_t>&&>(b.twiComm))
 		, power(b.power)
 	{
 		// Prevent destructor of 'b' changing the device

@@ -14,14 +14,7 @@
 #ifndef STATICBITMASK18_H_INCLUDED
 #define STATICBITMASK18_H_INCLUDED
 
-// If the newer nodiscard attribute is available, use it
-#ifdef __has_cpp_attribute
-#  if !__has_cpp_attribute(nodiscard)
-#    define nodiscard gnu::warn_unused_result
-#  endif
-#else
-#  define nodiscard gnu::warn_unused_result
-#endif
+#include "ext.h"
 
 template <typename T> // T = ProgMem<uint8_t> / const uint8*
 class StaticBitmask18 {
