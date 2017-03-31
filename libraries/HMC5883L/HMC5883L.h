@@ -272,6 +272,9 @@ protected:
 	HMC5883L(const HMC5883L&) = delete;
 	HMC5883L(HMC5883L&&) = default;
 
+	HMC5883L &operator=(const HMC5883L&) = delete;
+	HMC5883L &operator=(HMC5883L&&) = delete;
+
 	enum TestMode : uint8_t {
 		NO_BIAS       = 0x00, // Default
 		POSITIVE_BIAS = 0x01, // Applies ~+1.1Ga bias for testing purposes

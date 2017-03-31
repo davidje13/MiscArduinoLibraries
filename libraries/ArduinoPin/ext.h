@@ -20,7 +20,7 @@
 
 // If the newer nodiscard attribute is available, use it
 #ifdef __has_cpp_attribute
-#  if !__has_cpp_attribute(nodiscard)
+#  if !__has_cpp_attribute(nodiscard) || __cplusplus < 201406
 #    define nodiscard gnu::warn_unused_result
 #  endif
 #else

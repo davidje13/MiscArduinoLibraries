@@ -136,6 +136,9 @@ protected:
 	ITG3200(const ITG3200&) = delete;
 	ITG3200(ITG3200&&) = default;
 
+	ITG3200 &operator=(const ITG3200&) = delete;
+	ITG3200 &operator=(ITG3200&&) = delete;
+
 	enum Register : uint8_t {
 		WHO_AM_I            = 0x00, // rw
 		// ...

@@ -24,6 +24,9 @@ protected:
 	SSD1306(const SSD1306&) = delete;
 	SSD1306(SSD1306&&) = default;
 
+	SSD1306 &operator=(const SSD1306&) = delete;
+	SSD1306 &operator=(SSD1306&&) = delete;
+
 	enum Command : uint8_t {
 		LOWER_COLUMN =             0x00, // Memory mode: page. values [00-0F]
 		HIGHER_COLUMN =            0x10, // Memory mode: page. values [10-1F]

@@ -135,6 +135,9 @@ protected:
 	ADXL345(const ADXL345&) = delete;
 	ADXL345(ADXL345&&) = default;
 
+	ADXL345 &operator=(const ADXL345&) = delete;
+	ADXL345 &operator=(ADXL345&&) = delete;
+
 	enum Register : uint8_t {
 		DEVID                 = 0x00,
 		// ...
