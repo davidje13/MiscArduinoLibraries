@@ -16,7 +16,7 @@ SRCDIR="$SCRIPTDIR/demos/$DEMO";
 LIBDIR="$SCRIPTDIR/libraries";
 SHAREDIR="$SCRIPTDIR/shared";
 OUTPUT="$(cd "$SRCDIR" && pwd)/out"; # must be absolute (bug in arduino-builder)
-BOOSTDIR="/opt/local/include";
+BOOSTDIR="/usr/local/include";
 
 MODE="upload";
 
@@ -74,6 +74,7 @@ if [[ "$MODE" == "local-test" ]]; then
 		-I "$SCRIPTDIR/mocks" \
 		-o "$SCRIPTDIR/out/test-$TESTNAME" \
 		"$SCRIPTDIR/test.cpp" \
+		"$SCRIPTDIR/mocks/"*".cpp" \
 		{} +;
 
 	"./out/test-$TESTNAME" \
@@ -118,8 +119,14 @@ if [[ -x "$BUILDER" ]]; then
 		-build-path "$OUTPUT" \
 		"$SOURCE";
 
-	set -- "$OUTPUT"/*.ino.with_bootloader.hex;
+	if [[ "$WITH_BOOTLOADER" == "true" ]]; then
+		EXTENSION="ino.with_bootloader.hex";
+	else
+		EXTENSION="ino.hex";
+	fi;
+	set -- "$OUTPUT"/*."$EXTENSION";
 	FLASHFILE="$1";
+
 	if [[ "$MODE" == "upload" ]]; then
 		if [[ ! -f "$FLASHFILE" || ! -x "$UPLOADER" ]]; then
 			echo "Cannot upload $FLASHFILE to device at $COMPORT." >&2;

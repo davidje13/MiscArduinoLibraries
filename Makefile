@@ -17,12 +17,17 @@ ITG3200 :
 ADXL345 :
 	@ ./compile.sh --upload ADXL345
 
+.PHONY : RotaryEncoder
+RotaryEncoder :
+	@ ./compile.sh --upload RotaryEncoder
+
 .PHONY : check
 check :
 	@ ./compile.sh --check SSD1306
 	@ ./compile.sh --check HMC5883L
 	@ ./compile.sh --check ITG3200
 	@ ./compile.sh --check ADXL345
+	@ ./compile.sh --check RotaryEncoder
 
 .PHONY : preprocess
 preprocess :

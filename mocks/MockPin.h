@@ -3,6 +3,8 @@
 
 #include "BaseMock.h"
 
+#include <cstdint>
+
 class Pin {
 public:
 	class Mock {
@@ -124,10 +126,6 @@ public:
 		++ mock->remove_interrupt_call_count;
 	}
 };
-
-Pin Pin::Mock::implementation(void) {
-	return Pin(this);
-}
 
 #include "EndMocks.h"
 

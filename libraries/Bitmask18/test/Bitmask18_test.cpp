@@ -200,18 +200,18 @@ BOOST_DATA_TEST_CASE(fill_ellipse_tiny_horizontal,
 	boost::unit_test::data::xrange(-3, 3, 1) *
 	boost::unit_test::data::xrange(-1, 3, 1) *
 	boost::unit_test::data::xrange(0, 3, 1),
-	x, y, t
+	x, y, thickness
 ) {
 	// Bug in Boost Test < 1.61.0: only supports up to 3 data dimensions
 	// https://svn.boost.org/trac/boost/ticket/11889
 	for(int w = 0; w < 12; ++ w) {
 		Bitmask18<16,16> bitmask;
 		bitmask.fill_ellipse(
-			int16_t(x), int16_t(y), int16_t(w), int16_t(t),
+			int16_t(x), int16_t(y), int16_t(w), int16_t(thickness),
 			BlendMode::XOR, PATTERN_ON
 		);
 		bitmask.fill_rect(
-			int16_t(x), int16_t(y), int16_t(w), int16_t(t),
+			int16_t(x), int16_t(y), int16_t(w), int16_t(thickness),
 			BlendMode::XOR, PATTERN_ON
 		);
 		for(int i = 0; i < 32; ++ i) {
@@ -224,16 +224,16 @@ BOOST_DATA_TEST_CASE(fill_ellipse_tiny_vertical,
 	boost::unit_test::data::xrange(-3, 3, 1) *
 	boost::unit_test::data::xrange(-1, 3, 1) *
 	boost::unit_test::data::xrange(0, 3, 1),
-	x, y, t
+	x, y, thickness
 ) {
 	for(int w = 0; w < 12; ++ w) {
 		Bitmask18<16,16> bitmask;
 		bitmask.fill_ellipse(
-			int16_t(x), int16_t(y), int16_t(t), int16_t(w),
+			int16_t(x), int16_t(y), int16_t(thickness), int16_t(w),
 			BlendMode::XOR, PATTERN_ON
 		);
 		bitmask.fill_rect(
-			int16_t(x), int16_t(y), int16_t(t), int16_t(w),
+			int16_t(x), int16_t(y), int16_t(thickness), int16_t(w),
 			BlendMode::XOR, PATTERN_ON
 		);
 		for(int i = 0; i < 32; ++ i) {
@@ -293,16 +293,16 @@ BOOST_DATA_TEST_CASE(outline_ellipse_tiny_horizontal,
 	boost::unit_test::data::xrange(-3, 3, 1) *
 	boost::unit_test::data::xrange(-1, 3, 1) *
 	boost::unit_test::data::xrange(0, 3, 1),
-	x, y, t
+	x, y, thickness
 ) {
 	for(int w = 0; w < 12; ++ w) {
 		Bitmask18<16,16> bitmask;
 		bitmask.outline_ellipse(
-			int16_t(x), int16_t(y), int16_t(w), int16_t(t),
+			int16_t(x), int16_t(y), int16_t(w), int16_t(thickness),
 			1, BlendMode::XOR, PATTERN_ON
 		);
 		bitmask.fill_rect(
-			int16_t(x), int16_t(y), int16_t(w), int16_t(t),
+			int16_t(x), int16_t(y), int16_t(w), int16_t(thickness),
 			BlendMode::XOR, PATTERN_ON
 		);
 		for(int i = 0; i < 32; ++ i) {
@@ -315,16 +315,16 @@ BOOST_DATA_TEST_CASE(outline_ellipse_tiny_vertical,
 	boost::unit_test::data::xrange(-3, 3, 1) *
 	boost::unit_test::data::xrange(-1, 3, 1) *
 	boost::unit_test::data::xrange(0, 3, 1),
-	x, y, t
+	x, y, thickness
 ) {
 	for(int w = 0; w < 12; ++ w) {
 		Bitmask18<16,16> bitmask;
 		bitmask.outline_ellipse(
-			int16_t(x), int16_t(y), int16_t(t), int16_t(w),
+			int16_t(x), int16_t(y), int16_t(thickness), int16_t(w),
 			1, BlendMode::XOR, PATTERN_ON
 		);
 		bitmask.fill_rect(
-			int16_t(x), int16_t(y), int16_t(t), int16_t(w),
+			int16_t(x), int16_t(y), int16_t(thickness), int16_t(w),
 			BlendMode::XOR, PATTERN_ON
 		);
 		for(int i = 0; i < 32; ++ i) {
