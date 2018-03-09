@@ -14,6 +14,16 @@
 #define FALLING 35
 #define CHANGE 37
 
+#define digitalPinToTimer(x) (uint8_t(((x) == 2) ? 9 : NOT_ON_TIMER))
+#define digitalPinToInterrupt(x) (uint8_t(((x) == 5) ? 3 : NOT_AN_INTERRUPT))
+
+#define digitalPinToPort(x) (uint8_t((x) + 12))
+#define digitalPinToBitMask(x) (uint8_t(1 << ((x) % 8)))
+
+static uint32_t pulseIn(int, int, uint32_t = 1000000) {
+	return 0;
+}
+
 static uint8_t portOutputRegisterValues[256] = {};
 static uint8_t portModeRegisterValues[256] = {};
 #define portOutputRegister(x) (portOutputRegisterValues + (x % 256))

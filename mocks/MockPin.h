@@ -25,6 +25,10 @@ public:
 		uint16_t read_analog_return_value = 0;
 		uint32_t read_analog_range_last_range = 0;
 		uint32_t read_analog_range_return_value = 0;
+		uint32_t measure_high_pulse_return_value = 0;
+		uint32_t measure_high_pulse_last_timeout = 0;
+		uint32_t measure_low_pulse_return_value = 0;
+		uint32_t measure_low_pulse_last_timeout = 0;
 		bool read_digital_return_value = false;
 		void (*set_interrupt_on_low_last_func)(void) = nullptr;
 		void (*set_interrupt_on_rising_last_func)(void) = nullptr;
@@ -96,6 +100,16 @@ public:
 	uint32_t read_analog(uint32_t range) const {
 		mock->read_analog_range_last_range = range;
 		return mock->read_analog_range_return_value;
+	}
+
+	uint32_t measure_high_pulse(uint32_t timeout = 1000000) const {
+		mock->measure_high_pulse_last_timeout = timeout;
+		return mock->measure_high_pulse_return_value;
+	}
+
+	uint32_t measure_low_pulse(uint32_t timeout = 1000000) const {
+		mock->measure_low_pulse_last_timeout = timeout;
+		return mock->measure_low_pulse_return_value;
 	}
 
 	bool read_digital(void) const {

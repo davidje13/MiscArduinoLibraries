@@ -59,7 +59,7 @@ void demoPatternSwatch(
 template <typename Display>
 void demoSwatches(Display &display) {
 	Bitmask18<display.width(),display.height()> bitmask;
-	
+
 	const static PROGMEM PatternDetails samples[] = {
 		{BlendMode::ON, PATTERN_ON},
 		{BlendMode::ON, PATTERN_ON},

@@ -57,6 +57,18 @@ public:
 	}
 
 	[[gnu::always_inline]]
+	inline void high_fast(void) {
+	}
+
+	[[gnu::always_inline]]
+	inline void low_fast(void) {
+	}
+
+	[[gnu::always_inline]]
+	inline void set_fast(uint8_t) {
+	}
+
+	[[gnu::always_inline]]
 	inline void pwm(uint8_t) {
 	}
 
@@ -83,6 +95,16 @@ public:
 		return false;
 	}
 
+	[[nodiscard,gnu::always_inline]]
+	inline uint32_t measure_high_pulse(uint32_t = 0) const {
+		return 0;
+	}
+
+	[[nodiscard,gnu::always_inline]]
+	inline uint32_t measure_low_pulse(uint32_t = 0) const {
+		return 0;
+	}
+
 	[[gnu::always_inline]]
 	inline void set_interrupt_on_low(void (*)(void)) {
 	}
@@ -105,6 +127,11 @@ public:
 
 	[[gnu::always_inline]]
 	inline void remove_interrupt(void) {
+	}
+
+	[[nodiscard,gnu::always_inline]]
+	inline VoidPin fast(void) {
+		return *this;
 	}
 };
 

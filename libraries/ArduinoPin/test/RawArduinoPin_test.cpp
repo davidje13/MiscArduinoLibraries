@@ -1,13 +1,9 @@
 #include <boost/test/unit_test.hpp>
 
-#include <MockSREG.h>
 #include "MockArduinoPin.h"
+#include <MockSREG.h>
 
-#define digitalPinToTimer(x) (uint8_t(((x) == 2) ? 9 : NOT_ON_TIMER))
-#define digitalPinToInterrupt(x) (uint8_t(((x) == 5) ? 3 : NOT_AN_INTERRUPT))
-
-#define digitalPinToPort(x) (uint8_t((x) + 12))
-#define digitalPinToBitMask(x) (uint8_t(1 << ((x) % 8)))
+#include "../ArduinoPin.h"
 
 static void voidFunc(void) {
 }
@@ -108,6 +104,16 @@ BOOST_AUTO_TEST_CASE(low_fast_clears_output_register_bit_without_cli) {
 	portOutputRegisterValues[digitalPinToPort(5)] = 0x31;
 	RawArduinoPin(5).low_fast();
 	BOOST_CHECK_EQUAL(portOutputRegisterValues[digitalPinToPort(5)], 0x11);
+	BOOST_CHECK_EQUAL(cliCallCount, 0);
+}
+
+BOOST_AUTO_TEST_CASE(set_fast_sets_output_register_bit_without_cli) {
+	cliCallCount = 0;
+	portOutputRegisterValues[digitalPinToPort(4)] = 0x02;
+	RawArduinoPin(4).set_fast(1);
+	BOOST_CHECK_EQUAL(portOutputRegisterValues[digitalPinToPort(4)], 0x12);
+	RawArduinoPin(4).set_fast(0);
+	BOOST_CHECK_EQUAL(portOutputRegisterValues[digitalPinToPort(4)], 0x02);
 	BOOST_CHECK_EQUAL(cliCallCount, 0);
 }
 

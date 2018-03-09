@@ -15,55 +15,65 @@
  *
  * A -- D* (any available pin; set below)
  * B -- D* (any available pin; set below)
- * D13 is used to output status (via built-in LED)
+ * ? -- D* (attach a button to any available pin; set below)
  */
 
 #include <RotaryEncoder.h>
 #include <ArduinoPin.h>
+#include <74HC595.h>
+#include <LCDMatrix88.h>
+#include <Bitmask18.h>
 
 // These can be set to any available pin, but it is recommended to use pins
 // which can have interrupts set
 #define ROT_PIN_A FixedArduinoPin<2>()
 #define ROT_PIN_B FixedArduinoPin<3>()
-#define OUT_PIN   FixedArduinoPin<13>()
+
+// This can be any available pin
+#define TOGGLE_PIN FixedArduinoPin<4>()
+
+#define LCD_PIN_ST_CP FixedArduinoPin<7>()
+#define LCD_PIN_SH_CP FixedArduinoPin<8>()
+#define LCD_PIN_DS    FixedArduinoPin<9>()
 
 #define SCALE 4
-#define INITIAL_SPEED 5
-#define MIN_SPEED 0
-#define MAX_SPEED 20
-#define TARGET 1000
 
 void setup(void) {
-	OUT_PIN.set_output();
-	OUT_PIN.low();
+	auto lcd = MakeLCDMatrix88(Make74HC595(
+		LCD_PIN_ST_CP,
+		LCD_PIN_SH_CP,
+		LCD_PIN_DS
+	));
+	Bitmask18<lcd.width(),lcd.height()> bitmask;
+
+	bool toggleState = false;
+	TOGGLE_PIN.set_input();
 
 	auto encoder = MakeInterruptRotaryEncoder(ROT_PIN_A, ROT_PIN_B);
 
-	int raw = INITIAL_SPEED * SCALE + ((encoder.fraction() + 2) % SCALE);
-	int lastTm = millis();
-	int progress = 0;
-	int state = 0;
+	int raw = (encoder.fraction() + 2) % SCALE;
 
 	while(true) {
 		raw += encoder.delta();
-		if(raw < MIN_SPEED * SCALE) {
-			raw = MIN_SPEED * SCALE;
-		} else if(raw > MAX_SPEED * SCALE) {
-			raw = MAX_SPEED * SCALE;
+		raw = (raw + (65 * SCALE)) % (65 * SCALE);
+		uint8_t pos = raw / SCALE - 1;
+		if(pos == 0xFF) {
+			lcd.send(bitmask);
+			continue;
 		}
-		int speed = raw / SCALE;
 
-		int tm = millis();
-		progress += (tm - lastTm) * speed;
-		lastTm = tm;
-		if(progress >= TARGET) {
-			progress -= TARGET;
-			state = !state;
-			if(state) {
-				OUT_PIN.high();
-			} else {
-				OUT_PIN.low();
+		uint8_t x = pos & 7;
+		uint8_t y = pos / 8;
+
+		bool toggle = TOGGLE_PIN.read_digital();
+		if(toggle != toggleState) {
+			toggleState = toggle;
+			if(!toggle) {
+				bitmask.pixel_toggle(x, y);
 			}
 		}
+		bitmask.outline_rect(x - 1, y - 1, 3, 3, 1, BlendMode::XOR);
+		lcd.send(bitmask);
+		bitmask.outline_rect(x - 1, y - 1, 3, 3, 1, BlendMode::XOR);
 	}
 }

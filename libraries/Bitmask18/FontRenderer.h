@@ -21,6 +21,8 @@
 
 #include "ext.h"
 
+#define INF_WIDTH 0x7FFF
+
 template <typename Bitmask>
 class FontRenderer {
 	Bitmask *tgt;
@@ -62,12 +64,12 @@ public:
 		Bitmask *target,
 		int16_t xPos,
 		int16_t yPos,
-		uint16_t width,
+		uint16_t width = INF_WIDTH,
 		int16_t indent = 0
 	)
 		: tgt(target)
 		, x(xPos)
-		, xlim(xPos + width)
+		, xlim((width == INF_WIDTH) ? INF_WIDTH : (xPos + width))
 		, cx(xPos + indent)
 		, cy(yPos)
 		, lnHeight(0)
@@ -77,9 +79,14 @@ public:
 		, wordw(0)
 	{}
 
-	void move(int16_t xPos, int16_t yPos, uint16_t width, int16_t indent = 0) {
+	void move(
+		int16_t xPos,
+		int16_t yPos,
+		uint16_t width = INF_WIDTH,
+		int16_t indent = 0
+	) {
 		x = xPos;
-		xlim = xPos + width;
+		xlim = (width == INF_WIDTH) ? INF_WIDTH : (xPos + width);
 		cx = xPos + indent;
 		cy = yPos;
 	}
@@ -311,10 +318,12 @@ FontRenderer<Bitmask> MakeFontRenderer(
 	Bitmask *target,
 	int16_t xPos,
 	int16_t yPos,
-	uint16_t width,
+	uint16_t width = INF_WIDTH,
 	int16_t indent = 0
 ) {
 	return FontRenderer<Bitmask>(target, xPos, yPos, width, indent);
 }
+
+#undef INF_WIDTH
 
 #endif

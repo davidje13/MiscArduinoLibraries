@@ -17,6 +17,14 @@ ITG3200 :
 ADXL345 :
 	@ ./compile.sh --upload ADXL345
 
+.PHONY : HCSR04
+HCSR04 :
+	@ ./compile.sh --upload HCSR04
+
+.PHONY : LCDMatrix88
+LCDMatrix88 :
+	@ ./compile.sh --upload LCDMatrix88
+
 .PHONY : RotaryEncoder
 RotaryEncoder :
 	@ ./compile.sh --upload RotaryEncoder
@@ -27,6 +35,8 @@ check :
 	@ ./compile.sh --check HMC5883L
 	@ ./compile.sh --check ITG3200
 	@ ./compile.sh --check ADXL345
+	@ ./compile.sh --check HCSR04
+	@ ./compile.sh --check LCDMatrix88
 	@ ./compile.sh --check RotaryEncoder
 
 .PHONY : preprocess

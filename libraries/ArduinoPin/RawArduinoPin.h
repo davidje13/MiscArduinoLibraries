@@ -97,6 +97,11 @@ public:
 	}
 
 	[[gnu::always_inline]]
+	inline void set_fast(uint8_t high) {
+		*outvar = ((*outvar) & ~pinmask) | (pinmask * high);
+	}
+
+	[[gnu::always_inline]]
 	inline void set_input(bool pullup = false) {
 		volatile uint8_t *mode = portModeRegister(digitalPinToPort(p));
 
@@ -135,6 +140,16 @@ public:
 		return read_digital() ? (range - 1) : 0;
 	}
 
+	[[nodiscard,gnu::always_inline]]
+	inline uint32_t measure_high_pulse(uint32_t timeout = 1000000) const {
+		return pulseIn(p, HIGH, timeout);
+	}
+
+	[[nodiscard,gnu::always_inline]]
+	inline uint32_t measure_low_pulse(uint32_t timeout = 1000000) const {
+		return pulseIn(p, LOW, timeout);
+	}
+
 	[[gnu::always_inline]]
 	inline void set_interrupt_on_low(void (*callback)(void)) {
 		attachInterrupt(digitalPinToInterrupt(p), callback, LOW);
@@ -166,6 +181,11 @@ public:
 	[[gnu::always_inline]]
 	inline void remove_interrupt(void) {
 		detachInterrupt(digitalPinToInterrupt(p));
+	}
+
+	[[nodiscard,gnu::always_inline]]
+	inline RawArduinoPin fast(void) {
+		return *this;
 	}
 };
 

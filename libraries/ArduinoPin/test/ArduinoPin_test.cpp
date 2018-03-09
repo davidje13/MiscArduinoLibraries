@@ -1,17 +1,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "MockArduinoPin.h"
+#include <MockSREG.h>
 
-#define digitalPinToTimer(x) (uint8_t(((x) == 2) ? 9 : NOT_ON_TIMER))
-#define digitalPinToInterrupt(x) (uint8_t(((x) == 5) ? 3 : NOT_AN_INTERRUPT))
+#include "../ArduinoPin.h"
 
 static void voidFunc(void) {
 }
 
 template <int v>
 struct ConstExprChecker { static constexpr bool value(void) { return true; } };
-
-#include "../ArduinoPin.h"
 
 BOOST_AUTO_TEST_SUITE(ArduinoPin_test)
 
