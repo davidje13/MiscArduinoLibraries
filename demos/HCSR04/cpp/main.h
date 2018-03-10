@@ -14,8 +14,8 @@
  * Hardware connections:
  *
  *  VCC -- 5V
- * TRIG -- D12 (any available pin; set below)
- * ECHO -- D2  (any interrupt-enabled pin; set below)
+ * TRIG -- D* (any available pin; set below)
+ * ECHO -- D* (any interrupt-enabled pin; set below)
  *  GND -- GND
  */
 
@@ -25,7 +25,7 @@
 #include <LCDMatrix88.h>
 #include <Bitmask18.h>
 
-#define TRIG_PIN FixedArduinoPin<12>()
+#define TRIG_PIN FixedArduinoPin<5>()
 #define ECHO_PIN FixedArduinoPin<2>()
 
 #define LCD_PIN_ST_CP FixedArduinoPin<7>()

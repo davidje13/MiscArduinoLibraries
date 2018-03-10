@@ -129,7 +129,7 @@ public:
 	inline void remove_interrupt(void) {
 	}
 
-	[[nodiscard,gnu::always_inline]]
+	[[gnu::always_inline]]
 	inline VoidPin fast(void) {
 		return *this;
 	}

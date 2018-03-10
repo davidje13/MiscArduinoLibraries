@@ -61,7 +61,7 @@ public:
 
 		const uint8_t *vs = static_cast<const uint8_t*>(values);
 		for(uint8_t b = 0; b < (n / 8); ++ b) {
-			uint8_t v = msb ? vs[b] : vs[(n + 7) / 8 - 1 - b];
+			uint8_t v = vs[b];
 			cli();
 			for(uint8_t i = 0; i < 8; ++ i) {
 				fastClock.low_fast();
@@ -80,7 +80,7 @@ public:
 			SREG = oldSREG;
 		}
 		if(n & 7) {
-			uint8_t v = msb ? vs[n / 8] : vs[0];
+			uint8_t v = vs[n / 8];
 			cli();
 			for(uint8_t i = 0; i < (n & 7); ++ i) {
 				fastClock.low_fast();
@@ -107,10 +107,22 @@ public:
 		return send<n, true>(values);
 	}
 
+	template <uint8_t bytes>
+	[[gnu::always_inline]]
+	inline void send_msb(const uint8_t (&values)[bytes]) {
+		return send<bytes * 8, true>(values);
+	}
+
 	template <uint8_t n>
 	[[gnu::always_inline]]
 	inline void send_lsb(const void *values) {
 		return send<n, false>(values);
+	}
+
+	template <uint8_t bytes>
+	[[gnu::always_inline]]
+	inline void send_lsb(const uint8_t (&values)[bytes]) {
+		return send<bytes * 8, false>(values);
 	}
 
 	[[gnu::always_inline]]
@@ -180,8 +192,8 @@ public:
 	[[gnu::always_inline]]
 	inline void send16_lsb(uint16_t v) {
 		uint8_t vs[] = {
-			uint8_t(v >> 8),
-			uint8_t(v)
+			uint8_t(v),
+			uint8_t(v >> 8)
 		};
 		send<16, false>(vs);
 	}
@@ -195,9 +207,9 @@ public:
 	[[gnu::always_inline]]
 	inline void send24_lsb(uint32_t v) {
 		uint8_t vs[] = {
-			uint8_t(v >> 16),
+			uint8_t(v),
 			uint8_t(v >> 8),
-			uint8_t(v)
+			uint8_t(v >> 16)
 		};
 		send<24, false>(vs);
 	}
@@ -211,12 +223,140 @@ public:
 	[[gnu::always_inline]]
 	inline void send32_lsb(uint32_t v) {
 		uint8_t vs[] = {
-			uint8_t(v >> 24),
-			uint8_t(v >> 16),
+			uint8_t(v),
 			uint8_t(v >> 8),
-			uint8_t(v)
+			uint8_t(v >> 16),
+			uint8_t(v >> 24)
 		};
 		send<32, false>(vs);
+	}
+
+	template <uint8_t n, bool msb = true>
+	void read(void *values) {
+		dataPin.set_input(true);
+
+		auto fastLatch = latchPin.fast();
+		auto fastData = dataPin.fast();
+		auto fastClock = clockPin.fast();
+
+		uint8_t oldSREG = SREG;
+
+		cli();
+		fastLatch.low_fast();
+
+		const uint8_t *vs = static_cast<const uint8_t*>(values);
+		for(uint8_t b = 0; b < (n / 8); ++ b) {
+			uint8_t *v = &vs[b];
+			cli();
+			for(uint8_t i = 0; i < 8; ++ i) {
+				if(msb) {
+					v <<= 1;
+				} else {
+					v >>= 1;
+				}
+				fastClock.low_fast();
+				v |= fastData.read_digital() * (msb ? 0x01 : 0x80);
+				fastClock.high_fast();
+			}
+			SREG = oldSREG;
+		}
+		if(n & 7) {
+			uint8_t *v = &vs[n / 8];
+			cli();
+			for(uint8_t i = 0; i < (n & 7); ++ i) {
+				if(msb) {
+					v <<= 1;
+				} else {
+					v >>= 1;
+				}
+				fastClock.low_fast();
+				v |= fastData.read_digital() * (msb ? 0x01 : 0x80);
+				fastClock.high_fast();
+			}
+			SREG = oldSREG;
+		}
+		fastLatch.high();
+
+		dataPin.set_output();
+		dataPin.low();
+	}
+
+	template <uint8_t n>
+	[[gnu::always_inline]]
+	inline void read_msb(void *values) {
+		return read<n, true>(values);
+	}
+
+	template <uint8_t n>
+	[[gnu::always_inline]]
+	inline void read_lsb(void *values) {
+		return read<n, false>(values);
+	}
+
+	[[gnu::always_inline]]
+	inline uint8_t read8_msb(void) {
+		uint8_t v;
+		read<8, true>(&v);
+		return v;
+	}
+
+	[[gnu::always_inline]]
+	inline uint8_t read8_lsb(void) {
+		uint8_t v;
+		read<8, false>(&v);
+		return v;
+	}
+
+	[[gnu::always_inline]]
+	inline uint16_t read16_msb(void) {
+		uint8_t vs[2];
+		read<16, true>(vs);
+		return (vs[0] << 8) | vs[1];
+	}
+
+	[[gnu::always_inline]]
+	inline uint16_t read16_lsb(void) {
+		uint8_t vs[2];
+		read<16, false>(vs);
+		return vs[0] | (vs[1] << 8);
+	}
+
+	[[gnu::always_inline]]
+	inline uint32_t read24_msb(void) {
+		uint8_t vs[3];
+		read<24, true>(vs);
+		return (uint32_t(vs[0]) << 16) | (uint32_t(vs[1]) << 8) | vs[2];
+	}
+
+	[[gnu::always_inline]]
+	inline uint32_t read24_lsb(void) {
+		uint8_t vs[3];
+		read<24, false>(vs);
+		return vs[0] | (uint32_t(vs[1]) << 8) | (uint32_t(vs[2]) << 16);
+	}
+
+	[[gnu::always_inline]]
+	inline uint32_t read32_msb(void) {
+		uint8_t vs[4];
+		read<32, true>(vs);
+		return (
+			(uint32_t(vs[0]) << 24) |
+			(uint32_t(vs[1]) << 16) |
+			(uint32_t(vs[2]) << 8) |
+			vs[3]
+		);
+	}
+
+	[[gnu::always_inline]]
+	inline uint32_t read32_lsb(void) {
+		uint8_t vs[4];
+		read<32, false>(vs);
+		return (
+			vs[0] |
+			(uint32_t(vs[1]) << 8) |
+			(uint32_t(vs[2]) << 16) |
+			(uint32_t(vs[3]) << 24)
+		);
 	}
 
 	C74HC595_impl(LatchPinT stcp, ClockPinT shcp, DataPinT ds)
@@ -226,6 +366,7 @@ public:
 		clockPin.set_output();
 		dataPin.set_output();
 		latchPin.high();
+		clockPin.high();
 	}
 
 	C74HC595_impl(C74HC595_impl &&b)
