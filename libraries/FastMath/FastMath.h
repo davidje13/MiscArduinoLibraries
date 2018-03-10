@@ -41,7 +41,7 @@ int16_t sin16(uint16_t theta);
  *     sin8(angle) ~= sin(angle * 2 * PI / 256) * 128
  *
  * @param theta input angle from 0-255
- * @returns sin of theta, value between 0 to 255.
+ * @returns sin of theta, value between -127 to 127.
  */
 [[gnu::const,nodiscard]]
 int8_t sin8(uint8_t theta);

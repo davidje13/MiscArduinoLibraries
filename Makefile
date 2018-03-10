@@ -25,6 +25,10 @@ HCSR04 :
 TM1638 :
 	@ ./compile.sh --upload TM1638
 
+.PHONY : MY9221
+MY9221 :
+	@ ./compile.sh --upload MY9221
+
 .PHONY : LCDMatrix88
 LCDMatrix88 :
 	@ ./compile.sh --upload LCDMatrix88
@@ -41,6 +45,7 @@ check :
 	@ ./compile.sh --check ADXL345
 	@ ./compile.sh --check HCSR04
 	@ ./compile.sh --check TM1638
+	@ ./compile.sh --check MY9221
 	@ ./compile.sh --check LCDMatrix88
 	@ ./compile.sh --check RotaryEncoder
 
