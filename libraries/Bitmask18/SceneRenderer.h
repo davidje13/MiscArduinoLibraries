@@ -16,9 +16,14 @@
 
 #include <BlendMode.h>
 #include <Pattern.h>
-#include <ProgMem.h>
 #include <Vector.h>
 #include <alloca.h>
+
+#ifdef ARDUINO
+#  include <ProgMem.h>
+#else
+#  include <ProgMem/ProgMem.h>
+#endif
 
 #include "ext.h"
 

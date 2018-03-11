@@ -15,6 +15,12 @@
 #ifndef SEGMENT_DIGITS_H_INCLUDED
 #define SEGMENT_DIGITS_H_INCLUDED
 
+#ifdef ARDUINO
+#  include <ProgMem.h>
+#else
+#  include <ProgMem/ProgMem.h>
+#endif
+
 #include "ext.h"
 
 template <typename Target>
@@ -49,7 +55,9 @@ public:
 		);
 	}
 
-	uint8_t print(const char *message, uint8_t *target, uint8_t cap) const {
+private:
+	template <typename String>
+	uint8_t _print(String message, uint8_t *target, uint8_t cap) const {
 		uint8_t pos = 0;
 		uint8_t dot = _chr('.');
 		for(uint8_t i = 0; i < cap; ++ i) {
@@ -70,16 +78,49 @@ public:
 		return pos;
 	}
 
+public:
+	[[gnu::always_inline]]
+	inline uint8_t print(
+		const char *message,
+		uint8_t *target,
+		uint8_t cap
+	) const {
+		return _print(message, target, cap);
+	}
+
+	[[gnu::always_inline]]
+	inline uint8_t print(
+		ProgMem<char> message,
+		uint8_t *target,
+		uint8_t cap
+	) const {
+		return _print(message, target, cap);
+	}
+
 	template <int cap>
 	[[gnu::always_inline]]
 	inline uint8_t print(const char *message, uint8_t (&target)[cap]) const {
-		return print(message, target, cap);
+		return _print(message, target, cap);
+	}
+
+	template <int cap>
+	[[gnu::always_inline]]
+	inline uint8_t print(ProgMem<char> message, uint8_t (&target)[cap]) const {
+		return _print(message, target, cap);
 	}
 
 	[[nodiscard]]
 	uint8_t advance(const char *(&message)) const {
 		uint8_t result;
-		uint8_t skip = print(message, &result, 1);
+		uint8_t skip = _print(message, &result, 1);
+		message += skip;
+		return skip;
+	}
+
+	[[nodiscard]]
+	uint8_t advance(ProgMem<char> &message) const {
+		uint8_t result;
+		uint8_t skip = _print(message, &result, 1);
 		message += skip;
 		return skip;
 	}
@@ -87,7 +128,14 @@ public:
 	[[gnu::pure,nodiscard]]
 	uint8_t chr(const char *message) const {
 		uint8_t result;
-		print(message, &result, 1);
+		_print(message, &result, 1);
+		return result;
+	}
+
+	[[gnu::pure,nodiscard]]
+	uint8_t chr(ProgMem<char> message) const {
+		uint8_t result;
+		_print(message, &result, 1);
 		return result;
 	}
 

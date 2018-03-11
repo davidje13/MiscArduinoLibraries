@@ -16,8 +16,13 @@
 #ifndef LCDMATRIX88_H_INCLUDED
 #define LCDMATRIX88_H_INCLUDED
 
+#ifdef ARDUINO
+#  include <ProgMem.h>
+#else
+#  include <ProgMem/ProgMem.h>
+#endif
+
 #include "ext.h"
-#include <ProgMem.h>
 
 static PROGMEM const uint32_t FLICKER[] = {
 	0x00000000, //  0/32

@@ -37,6 +37,10 @@ LCDMatrix88 :
 RotaryEncoder :
 	@ ./compile.sh --upload RotaryEncoder
 
+.PHONY : IR
+IR :
+	@ ./compile.sh --upload IR
+
 .PHONY : check
 check :
 	@ ./compile.sh --check SSD1306
@@ -48,6 +52,7 @@ check :
 	@ ./compile.sh --check MY9221
 	@ ./compile.sh --check LCDMatrix88
 	@ ./compile.sh --check RotaryEncoder
+	@ ./compile.sh --check IR
 
 .PHONY : preprocess
 preprocess :

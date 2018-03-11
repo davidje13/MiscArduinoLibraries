@@ -23,11 +23,15 @@
 #include <TM1638.h>
 #include <SegmentDigits.h>
 #include <ArduinoPin.h>
+#include <ProgMem.h>
 
 // These can be set to any available pin
 #define DIO_PIN FixedArduinoPin<10>()
 #define CLK_PIN FixedArduinoPin<11>()
 #define STB_PIN FixedArduinoPin<12>()
+
+static PROGMEM const char MESSAGE[] =
+	"    this TM1638-controlled LED display is easy!";
 
 void setup(void) {
 	auto display = MakeTM1638(STB_PIN, CLK_PIN, DIO_PIN);
@@ -52,8 +56,8 @@ void setup(void) {
 		display.clear();
 		delay(300);
 
-		const char *message = "    this TM1638-controlled LED display is easy!";
-		const char *messagePos = message;
+		auto messagePos = MakeProgMem(MESSAGE);
+
 		do {
 			digits.print(messagePos, disp);
 			display.set_digits(disp);

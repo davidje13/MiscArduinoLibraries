@@ -87,9 +87,7 @@ class AsynchronousHCSR04_impl : public HCSR04 {
 	static AsynchronousHCSR04_impl<OutPinT, InPinT> *interruptTarget;
 
 	static void update_global(void) {
-		if(interruptTarget != nullptr) {
-			interruptTarget->update();
-		}
+		interruptTarget->update();
 	}
 
 	ext::Flattener<OutPinT,uint16_t> outPin;
@@ -98,7 +96,8 @@ class AsynchronousHCSR04_impl : public HCSR04 {
 #define lastMicros inPin.flattened_value
 	volatile uint8_t state;
 
-	void update(void) {
+	[[gnu::always_inline]]
+	inline void update(void) {
 		bool high = inPin.read_digital();
 
 		if(state == 1 && high) {
@@ -164,8 +163,8 @@ public:
 
 	~AsynchronousHCSR04_impl(void) {
 		if(state != 0xFF) {
-			interruptTarget = nullptr;
 			inPin.remove_interrupt();
+			interruptTarget = nullptr;
 		}
 	}
 

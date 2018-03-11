@@ -198,28 +198,30 @@ public:
 		end_section(f);
 	}
 
-	template <typename Font>
-	void print(const Font &f, const char *message) {
+private:
+	template <typename Font, typename String>
+	void _print(const Font &f, String message) {
 		if(!message) {
 			return;
 		}
 		char c;
-		for(const char *p = message; (c = p[0]) != '\0'; p = p + 1) {
+		for(String p = message; (c = p[0]) != '\0'; p += 1) {
 			print_part(f, uint8_t(c));
 		}
 		end_section(f);
 	}
 
+public:
 	template <typename Font>
-	void print(const Font &f, ProgMem<char> message) {
-		if(!message) {
-			return;
-		}
-		char c;
-		for(ProgMem<char> p = message; (c = p[0]) != '\0'; p = p + 1) {
-			print_part(f, uint8_t(c));
-		}
-		end_section(f);
+	[[gnu::always_inline]]
+	inline void print(const Font &f, const char *message) {
+		return _print(f, message);
+	}
+
+	template <typename Font>
+	[[gnu::always_inline]]
+	inline void print(const Font &f, ProgMem<char> message) {
+		return _print(f, message);
 	}
 
 	template <typename Font, typename T>

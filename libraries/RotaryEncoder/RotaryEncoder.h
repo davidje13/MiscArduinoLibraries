@@ -90,9 +90,7 @@ class InterruptRotaryEncoder_impl : public RotaryEncoder {
 	static InterruptRotaryEncoder_impl<APinT, BPinT, AccumT> *interruptTarget;
 
 	static void update_global(void) {
-		if(interruptTarget != nullptr) {
-			interruptTarget->update();
-		}
+		interruptTarget->update();
 	}
 
 	ext::Flattener<APinT,ext::Flattener<BPinT,volatile AccumT>> aPin;
@@ -106,7 +104,8 @@ class InterruptRotaryEncoder_impl : public RotaryEncoder {
 		);
 	}
 
-	void update(void) {
+	[[gnu::always_inline]]
+	inline void update(void) {
 		uint8_t state = get_state();
 		AccumT oldState = lastState; // remove volatility
 		int8_t dir = calculate_delta(uint8_t(oldState & 3), state);
@@ -147,9 +146,9 @@ public:
 
 		if(aPin.supports_interrupts() && bPin.supports_interrupts()) {
 			lastState |= FLAG_HAS_INTERRUPTS;
+			interruptTarget = this;
 			aPin.set_interrupt_on_change(&update_global);
 			bPin.set_interrupt_on_change(&update_global);
-			interruptTarget = this;
 		}
 	}
 
@@ -168,9 +167,9 @@ public:
 
 	~InterruptRotaryEncoder_impl(void) {
 		if(lastState & FLAG_HAS_INTERRUPTS) {
-			interruptTarget = nullptr;
 			aPin.remove_interrupt();
 			bPin.remove_interrupt();
+			interruptTarget = nullptr;
 		}
 	}
 

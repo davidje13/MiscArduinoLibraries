@@ -124,7 +124,7 @@ public:
 
 	[[nodiscard,gnu::always_inline]]
 	inline bool read_digital(void) const {
-		return ((*outvar) & pinmask) != 0;
+		return ((*portInputRegister(digitalPinToPort(p))) & pinmask) != 0;
 	}
 
 	[[nodiscard,gnu::always_inline]]
