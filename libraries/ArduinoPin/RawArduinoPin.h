@@ -64,29 +64,6 @@ public:
 	}
 
 	[[gnu::always_inline]]
-	inline void high(void) {
-		uint8_t oldSREG = SREG;
-		cli(); // Block interrupts
-		*outvar |= pinmask;
-		SREG = oldSREG; // Restore interrupts
-	}
-
-	[[gnu::always_inline]]
-	inline void low(void) {
-		uint8_t oldSREG = SREG;
-		cli();
-		*outvar &= ~pinmask;
-		SREG = oldSREG;
-	}
-
-	[[gnu::always_inline]]
-	inline void pwm(uint8_t value) {
-		// Too many hardware-specific cases for us to write our own; use the
-		// built-in method
-		analogWrite(p, value);
-	}
-
-	[[gnu::always_inline]]
 	inline void high_fast(void) {
 		*outvar |= pinmask;
 	}
@@ -102,12 +79,43 @@ public:
 	}
 
 	[[gnu::always_inline]]
+	inline void high(void) {
+		uint8_t oldSREG = SREG;
+		cli(); // Block interrupts
+		high_fast();
+		SREG = oldSREG; // Restore interrupts
+	}
+
+	[[gnu::always_inline]]
+	inline void low(void) {
+		uint8_t oldSREG = SREG;
+		cli();
+		low_fast();
+		SREG = oldSREG;
+	}
+
+	[[gnu::always_inline]]
+	inline void set(bool high) {
+		uint8_t oldSREG = SREG;
+		cli();
+		set_fast(high);
+		SREG = oldSREG;
+	}
+
+	[[gnu::always_inline]]
+	inline void pwm(uint8_t value) {
+		// Too many hardware-specific cases for us to write our own; use the
+		// built-in method
+		analogWrite(p, value);
+	}
+
+	[[gnu::always_inline]]
 	inline void set_input(bool pullup = false) {
 		volatile uint8_t *mode = portModeRegister(digitalPinToPort(p));
 
 		uint8_t oldSREG = SREG;
 		cli();
-		*outvar = ((*outvar) & ~pinmask) | (pinmask * pullup);
+		set_fast(pullup);
 		*mode = (*mode) & ~pinmask;
 		SREG = oldSREG;
 	}
@@ -181,6 +189,14 @@ public:
 	[[gnu::always_inline]]
 	inline void remove_interrupt(void) {
 		detachInterrupt(digitalPinToInterrupt(p));
+	}
+
+	[[gnu::always_inline]]
+	inline void begin_batch(void) {
+	}
+
+	[[gnu::always_inline]]
+	inline void send_batch(void) {
 	}
 
 	[[nodiscard,gnu::always_inline]]

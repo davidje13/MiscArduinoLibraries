@@ -25,8 +25,10 @@ static uint32_t pulseIn(int, int, uint32_t = 1000000) {
 }
 
 static uint8_t portOutputRegisterValues[256] = {};
+static uint8_t portInputRegisterValues[256] = {};
 static uint8_t portModeRegisterValues[256] = {};
 #define portOutputRegister(x) (portOutputRegisterValues + (x % 256))
+#define portInputRegister(x) (portInputRegisterValues + (x % 256))
 #define portModeRegister(x) (portModeRegisterValues + (x % 256))
 
 static uint8_t digitalReadLastPin = 0;

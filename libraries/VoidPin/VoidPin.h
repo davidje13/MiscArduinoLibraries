@@ -57,6 +57,10 @@ public:
 	}
 
 	[[gnu::always_inline]]
+	inline void set(bool) {
+	}
+
+	[[gnu::always_inline]]
 	inline void high_fast(void) {
 	}
 
@@ -127,6 +131,14 @@ public:
 
 	[[gnu::always_inline]]
 	inline void remove_interrupt(void) {
+	}
+
+	[[gnu::always_inline]]
+	inline void begin_batch(void) {
+	}
+
+	[[gnu::always_inline]]
+	inline void send_batch(void) {
 	}
 
 	[[gnu::always_inline]]

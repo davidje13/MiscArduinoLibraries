@@ -65,6 +65,11 @@ public:
 	}
 
 	[[gnu::always_inline]]
+	inline void set(bool high) {
+		digitalWrite(p, high ? HIGH : LOW);
+	}
+
+	[[gnu::always_inline]]
 	inline void pwm(uint8_t value) {
 		analogWrite(p, value);
 	}
@@ -138,6 +143,14 @@ public:
 	[[gnu::always_inline]]
 	inline void remove_interrupt(void) {
 		detachInterrupt(digitalPinToInterrupt(p));
+	}
+
+	[[gnu::always_inline]]
+	inline void begin_batch(void) {
+	}
+
+	[[gnu::always_inline]]
+	inline void send_batch(void) {
 	}
 
 	[[nodiscard,gnu::always_inline]]
@@ -191,6 +204,11 @@ public:
 	}
 
 	[[gnu::always_inline]]
+	inline void set(bool high) {
+		digitalWrite(p, high ? HIGH : LOW);
+	}
+
+	[[gnu::always_inline]]
 	inline void pwm(uint8_t value) {
 		analogWrite(p, value);
 	}
@@ -264,6 +282,14 @@ public:
 	[[gnu::always_inline]]
 	inline void remove_interrupt(void) {
 		detachInterrupt(digitalPinToInterrupt(p));
+	}
+
+	[[gnu::always_inline]]
+	inline void begin_batch(void) {
+	}
+
+	[[gnu::always_inline]]
+	inline void send_batch(void) {
 	}
 
 	[[nodiscard,gnu::always_inline]]

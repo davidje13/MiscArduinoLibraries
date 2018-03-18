@@ -171,17 +171,17 @@ BOOST_AUTO_TEST_CASE(set_output_disables_interrupts) {
 	BOOST_CHECK_EQUAL(SREG, 123);
 }
 
-BOOST_AUTO_TEST_CASE(read_digital_checks_output_bit) {
-	portOutputRegisterValues[digitalPinToPort(5)] = 0x31;
+BOOST_AUTO_TEST_CASE(read_digital_checks_input_bit) {
+	portInputRegisterValues[digitalPinToPort(5)] = 0x31;
 	BOOST_CHECK_EQUAL(RawArduinoPin(5).read_digital(), true);
-	portOutputRegisterValues[digitalPinToPort(5)] = 0x11;
+	portInputRegisterValues[digitalPinToPort(5)] = 0x11;
 	BOOST_CHECK_EQUAL(RawArduinoPin(5).read_digital(), false);
 }
 
-BOOST_AUTO_TEST_CASE(read_analog_checks_output_bit) {
-	portOutputRegisterValues[digitalPinToPort(5)] = 0x31;
+BOOST_AUTO_TEST_CASE(read_analog_checks_input_bit) {
+	portInputRegisterValues[digitalPinToPort(5)] = 0x31;
 	BOOST_CHECK_EQUAL(RawArduinoPin(5).read_analog(), 1023);
-	portOutputRegisterValues[digitalPinToPort(5)] = 0x11;
+	portInputRegisterValues[digitalPinToPort(5)] = 0x11;
 	BOOST_CHECK_EQUAL(RawArduinoPin(5).read_analog(), 0);
 }
 
@@ -190,10 +190,10 @@ BOOST_AUTO_TEST_CASE(read_analog_small_range_returns_0) {
 	BOOST_CHECK_EQUAL(RawArduinoPin(5).read_analog(1), 0);
 }
 
-BOOST_AUTO_TEST_CASE(read_analog_range_checks_output_bit) {
-	portOutputRegisterValues[digitalPinToPort(5)] = 0x31;
+BOOST_AUTO_TEST_CASE(read_analog_range_checks_input_bit) {
+	portInputRegisterValues[digitalPinToPort(5)] = 0x31;
 	BOOST_CHECK_EQUAL(RawArduinoPin(5).read_analog(10), 9);
-	portOutputRegisterValues[digitalPinToPort(5)] = 0x11;
+	portInputRegisterValues[digitalPinToPort(5)] = 0x11;
 	BOOST_CHECK_EQUAL(RawArduinoPin(5).read_analog(10), 0);
 }
 

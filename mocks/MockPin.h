@@ -29,6 +29,8 @@ public:
 		uint32_t measure_high_pulse_last_timeout = 0;
 		uint32_t measure_low_pulse_return_value = 0;
 		uint32_t measure_low_pulse_last_timeout = 0;
+		uint32_t begin_batch_call_count = 0;
+		uint32_t send_batch_call_count = 0;
 		bool read_digital_return_value = false;
 		void (*set_interrupt_on_low_last_func)(void) = nullptr;
 		void (*set_interrupt_on_rising_last_func)(void) = nullptr;
@@ -36,6 +38,10 @@ public:
 		void (*set_interrupt_on_change_last_func)(void) = nullptr;
 		void (*set_interrupt_on_high_last_func)(void) = nullptr;
 		uint8_t remove_interrupt_call_count = 0;
+
+		void reset(void) {
+			*this = Mock();
+		}
 
 		Pin implementation(void);
 	};
@@ -77,6 +83,14 @@ public:
 
 	void low(void) {
 		++ mock->low_call_count;
+	}
+
+	void set(bool high) {
+		if(high) {
+			++ mock->high_call_count;
+		} else {
+			++ mock->low_call_count;
+		}
 	}
 
 	void pwm(uint8_t value) {
@@ -138,6 +152,16 @@ public:
 
 	void remove_interrupt(void) {
 		++ mock->remove_interrupt_call_count;
+	}
+
+	[[gnu::always_inline]]
+	inline void begin_batch(void) {
+		++ mock->begin_batch_call_count;
+	}
+
+	[[gnu::always_inline]]
+	inline void send_batch(void) {
+		++ mock->send_batch_call_count;
 	}
 };
 

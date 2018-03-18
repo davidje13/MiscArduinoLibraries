@@ -64,12 +64,16 @@ public:
 			uint8_t v = vs[b];
 			cli();
 			for(uint8_t i = 0; i < 8; ++ i) {
+				// if clock & data are on the same bank,
+				// they can change simultaneously
+				fastClock.begin_batch();
 				fastClock.low_fast();
 				if(msb) {
 					fastData.set_fast(v >> 7);
 				} else {
 					fastData.set_fast(v & 1);
 				}
+				fastClock.send_batch();
 				fastClock.high_fast();
 				if(msb) {
 					v <<= 1;
@@ -83,12 +87,14 @@ public:
 			uint8_t v = vs[n / 8];
 			cli();
 			for(uint8_t i = 0; i < (n & 7); ++ i) {
+				fastClock.begin_batch();
 				fastClock.low_fast();
 				if(msb) {
 					fastData.set_fast(v >> 7);
 				} else {
 					fastData.set_fast(v & 1);
 				}
+				fastClock.send_batch();
 				fastClock.high_fast();
 				if(msb) {
 					v <<= 1;

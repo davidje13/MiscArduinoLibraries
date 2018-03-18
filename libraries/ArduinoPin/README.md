@@ -144,3 +144,39 @@ myFastPin.high_fast();
 myFastPin.low_fast();
 SREG = oldSREG; // Restore interrupts
 ```
+
+## Pin Banks
+
+Setting lots of pins is faster if they are all in the same bank. The
+ArduinoPinBank class abstracts this interaction.
+
+To use PinBank APIs with pins which are not in the same bank, see the
+PinBank fall-back library, but note that using ArduinoPinBank will be
+significantly faster.
+
+### Example
+
+```
+#include <ArduinoPinBank.h>
+
+// Available banks in Arduino are (MSB first):
+// - PD ( 7,  6,  5,  4,  3,  2, TX, RX)
+// - PB (C1, C2, 13, 12, 11, 10,  9,  8) - C* = crystal pins (unusable)
+// - PC (21, 20, A5, A4, A3, A2, A1, A0) - analogue input pins
+
+ArduinoPinBank<PD> bank; // Create an 8-pin bank pointing to Port D
+// ArduinoPinBank<PD, 2, 8> bank; // 6-pin bank for pins 2-7
+
+bank.set(0xC0); // Set to 11000000
+```
+
+There is also a raw version which has slightly better performance at
+the cost of RAM usage:
+
+```
+#include <RawArduinoPinBank.h>
+
+RawArduinoPinBank<PD> bank; // Create an 8-pin bank pointing to Port D
+
+bank.set(0xC0); // Set to 11000000
+```
