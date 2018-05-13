@@ -90,6 +90,11 @@ public:
 	}
 
 	[[nodiscard,gnu::always_inline]]
+	inline uint8_t get(void) const {
+		return digitalRead(p);
+	}
+
+	[[nodiscard,gnu::always_inline]]
 	inline int16_t read_analog(void) const {
 		return read_digital() ? 1023 : 0;
 	}
@@ -226,6 +231,11 @@ public:
 	[[nodiscard,gnu::always_inline]]
 	inline bool read_digital(void) const {
 		return digitalRead(p) != LOW;
+	}
+
+	[[nodiscard,gnu::always_inline]]
+	inline uint8_t get(void) const {
+		return digitalRead(p);
 	}
 
 	[[nodiscard,gnu::always_inline]]

@@ -100,6 +100,11 @@ public:
 	}
 
 	[[nodiscard,gnu::always_inline]]
+	inline uint8_t get(void) const {
+		return 0;
+	}
+
+	[[nodiscard,gnu::always_inline]]
 	inline uint32_t measure_high_pulse(uint32_t = 0) const {
 		return 0;
 	}

@@ -58,19 +58,24 @@ public:
 		// analog pins are always input
 	}
 
-	[[gnu::always_inline]]
+	[[nodiscard,gnu::always_inline]]
 	inline uint16_t read_analog(void) const {
 		return analogRead(p);
 	}
 
-	[[gnu::always_inline]]
+	[[nodiscard,gnu::always_inline]]
 	inline uint32_t read_analog(uint32_t range) const {
 		return (read_analog() * range) / 1024;
 	}
 
-	[[gnu::always_inline]]
+	[[nodiscard,gnu::always_inline]]
 	inline bool read_digital(void) const {
 		return read_analog() >= 512;
+	}
+
+	[[nodiscard,gnu::always_inline]]
+	inline uint8_t get(void) const {
+		return read_digital();
 	}
 };
 
@@ -112,19 +117,24 @@ public:
 		// analog pins are always input
 	}
 
-	[[gnu::always_inline]]
+	[[nodiscard,gnu::always_inline]]
 	inline uint16_t read_analog(void) const {
 		return analogRead(p);
 	}
 
-	[[gnu::always_inline]]
+	[[nodiscard,gnu::always_inline]]
 	inline uint32_t read_analog(uint32_t range) const {
 		return (read_analog() * range) / 1024;
 	}
 
-	[[gnu::always_inline]]
+	[[nodiscard,gnu::always_inline]]
 	inline bool read_digital(void) const {
 		return read_analog() >= 512;
+	}
+
+	[[nodiscard,gnu::always_inline]]
+	inline uint8_t get(void) const {
+		return read_digital();
 	}
 };
 

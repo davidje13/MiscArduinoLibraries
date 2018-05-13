@@ -130,6 +130,10 @@ public:
 		return mock->read_digital_return_value;
 	}
 
+	inline uint8_t get(void) const {
+		return read_digital();
+	}
+
 	void set_interrupt_on_low(void (*func)(void)) {
 		mock->set_interrupt_on_low_last_func = func;
 	}

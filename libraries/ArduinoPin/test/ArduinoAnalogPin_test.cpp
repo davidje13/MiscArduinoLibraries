@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(read_analog_calls_analogRead) {
 
 BOOST_AUTO_TEST_CASE(read_analog_range_calls_analogRead) {
 	analogReadReturnValue = 0;
-	ArduinoAnalogPin(102).read_analog(16);
+	(void) ArduinoAnalogPin(102).read_analog(16);
 	BOOST_CHECK_EQUAL(analogReadLastPin, 102);
 }
 
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(read_analog_calls_analogRead) {
 
 BOOST_AUTO_TEST_CASE(read_analog_range_calls_analogRead) {
 	analogReadReturnValue = 0;
-	FixedArduinoAnalogPin<102>().read_analog(16);
+	(void) FixedArduinoAnalogPin<102>().read_analog(16);
 	BOOST_CHECK_EQUAL(analogReadLastPin, 102);
 }
 

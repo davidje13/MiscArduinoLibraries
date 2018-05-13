@@ -19,6 +19,7 @@ where available.
 #include <VoidPin.h>
 #include <PinBank.h>
 
+// Pin bank is MSB (high-bit) first
 auto bank = MakePinBank(
 	ArduinoPin(2),
 	ArduinoPin(3),

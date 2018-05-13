@@ -21,6 +21,10 @@ ADXL345 :
 HCSR04 :
 	@ ./compile.sh --upload HCSR04
 
+.PHONY : HCSR04_LCD
+HCSR04_LCD :
+	@ ./compile.sh --upload HCSR04_LCD
+
 .PHONY : TM1638
 TM1638 :
 	@ ./compile.sh --upload TM1638
@@ -48,6 +52,7 @@ check :
 	@ ./compile.sh --check ITG3200
 	@ ./compile.sh --check ADXL345
 	@ ./compile.sh --check HCSR04
+	@ ./compile.sh --check HCSR04_LCD
 	@ ./compile.sh --check TM1638
 	@ ./compile.sh --check MY9221
 	@ ./compile.sh --check LCDMatrix88
