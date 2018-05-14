@@ -220,6 +220,7 @@ public:
 		send_part(0x33);
 
 		// We might have just completed a slow instruction, so wait for it
+		// (we cannot poll the busy flag here, just have to wait)
 		delayMicroseconds(1500);
 
 		// Send instruction 2nd and 3rd times

@@ -25,6 +25,10 @@
 #include <PinBank.h>
 #include <1602.h>
 
+// To use the TWI adapter, uncomment these two lines:
+//#include <ArduinoTWIMaster.h>
+//#include <PCF8574_1602.h>
+
 #define TRIG_PIN FixedArduinoPin<2>()
 #define ECHO_PIN FixedArduinoPin<3>()
 
@@ -42,12 +46,35 @@ void setup(void) {
 	STATUS.set_output();
 	STATUS.low();
 
+#ifdef PCF8574_1602_H_INCLUDED
+	bool isPCF8574A = true;
+	uint8_t address = 0x7;
+	auto pcf8504 = MakePCF8574(
+		ArduinoTWIMaster(),
+		VoidPin(),
+		isPCF8574A,
+		address
+	);
+	if(!pcf8504.connected()) {
+		// Failed to find device; flash the status LED to show the error
+		while(true) {
+			STATUS.high();
+			delay(500);
+			STATUS.low();
+			delay(500);
+		}
+	}
+
+	auto lcd = Make1602<16, 2>(pcf8504);
+#else
 	auto lcd = Make1602<16, 2>(
 		MakePinBank(LCD_DAT7, LCD_DAT6, LCD_DAT5, LCD_DAT4),
 		LCD_RS_PIN,
 		LCD_RW_PIN,
 		LCD_EN_PIN
 	);
+#endif
+
 	auto echo = MakeSynchronousHCSR04(TRIG_PIN, ECHO_PIN);
 	uint16_t averaged = 0;
 
