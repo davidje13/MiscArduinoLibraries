@@ -158,6 +158,11 @@ public:
 	inline void send_batch(void) {
 	}
 
+	[[gnu::always_inline,gnu::pure,nodiscard]]
+	inline uint8_t get_raw_pin(void) const {
+		return p;
+	}
+
 	[[nodiscard,gnu::always_inline]]
 	inline RawArduinoPin fast(void) {
 		return RawArduinoPin(p);
@@ -300,6 +305,11 @@ public:
 
 	[[gnu::always_inline]]
 	inline void send_batch(void) {
+	}
+
+	[[gnu::always_inline,gnu::pure,nodiscard]]
+	inline uint8_t get_raw_pin(void) const {
+		return p;
 	}
 
 	[[nodiscard,gnu::always_inline]]

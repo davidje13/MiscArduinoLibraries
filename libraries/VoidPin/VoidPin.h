@@ -146,6 +146,11 @@ public:
 	inline void send_batch(void) {
 	}
 
+	[[gnu::always_inline,gnu::pure,nodiscard]]
+	inline uint8_t get_raw_pin(void) const {
+		return 0;
+	}
+
 	[[gnu::always_inline]]
 	inline VoidPin fast(void) {
 		return *this;
