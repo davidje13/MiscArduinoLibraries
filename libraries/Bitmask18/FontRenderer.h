@@ -315,7 +315,7 @@ public:
 };
 
 template <typename Bitmask>
-[[gnu::nonnull]]
+[[gnu::nonnull,nodiscard]]
 FontRenderer<Bitmask> MakeFontRenderer(
 	Bitmask *target,
 	int16_t xPos,

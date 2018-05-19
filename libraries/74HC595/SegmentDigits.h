@@ -282,7 +282,7 @@ const uint8_t SegmentDigits<Target>::CHARS[] = {
 };
 
 template <typename Target>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline SegmentDigits<Target> MakeSegmentDigits(const Target&) {
 	return SegmentDigits<Target>();
 }

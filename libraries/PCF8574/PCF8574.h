@@ -181,7 +181,7 @@ template <
 	typename TwiT,
 	typename IntPinT
 >
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline PCF8574_impl<TwiT, IntPinT> MakePCF8574(
 	TwiT twi,
 	IntPinT interrupt, // optional (use VoidPin to omit)

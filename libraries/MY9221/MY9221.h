@@ -219,7 +219,7 @@ public:
 };
 
 template <typename ClockPinT, typename DataPinT>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline MY9221_impl<ClockPinT,DataPinT> MakeMY9221(ClockPinT dcki, DataPinT di) {
 	return MY9221_impl<ClockPinT, DataPinT>(dcki, di);
 }

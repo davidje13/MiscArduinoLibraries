@@ -230,13 +230,13 @@ public:
 };
 
 template <typename P1, typename P2>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline PinBank2<P1,P2> MakePinBank(P1 p1, P2 p2) {
 	return PinBank2<P1,P2>(p1, p2);
 }
 
 template <typename P1, typename P2, typename P3, typename P4>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline PinBank4<P1,P2,P3,P4> MakePinBank(P1 p1, P2 p2, P3 p3, P4 p4) {
 	return PinBank4<P1,P2,P3,P4>(p1, p2, p3, p4);
 }
@@ -245,7 +245,7 @@ template <
 	typename P1, typename P2, typename P3, typename P4,
 	typename P5, typename P6
 >
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline PinBank6<P1,P2,P3,P4,P5,P6> MakePinBank(
 	P1 p1, P2 p2, P3 p3, P4 p4,
 	P5 p5, P6 p6
@@ -257,7 +257,7 @@ template <
 	typename P1, typename P2, typename P3, typename P4,
 	typename P5, typename P6, typename P7, typename P8
 >
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline PinBank8<P1,P2,P3,P4,P5,P6,P7,P8> MakePinBank(
 	P1 p1, P2 p2, P3 p3, P4 p4,
 	P5 p5, P6 p6, P7 p7, P8 p8

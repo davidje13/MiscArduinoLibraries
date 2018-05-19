@@ -414,7 +414,7 @@ AsyncIRReceiver_impl<DataPinT,StorageT> *
 AsyncIRReceiver_impl<DataPinT,StorageT>::interruptTarget = nullptr;
 
 template <typename DataPinT, typename StorageT = IRCommand>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline SyncIRReceiver_impl<DataPinT,StorageT> MakeSynchronousIRReceiver(
 	DataPinT dat,
 	IRReceiver::Activation act = IRReceiver::Activation::ACTIVE_LOW
@@ -423,7 +423,7 @@ inline SyncIRReceiver_impl<DataPinT,StorageT> MakeSynchronousIRReceiver(
 }
 
 template <typename DataPinT, typename StorageT = IRCommand>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline AsyncIRReceiver_impl<DataPinT,StorageT> MakeAsynchronousIRReceiver(
 	DataPinT dat,
 	IRReceiver::Activation act = IRReceiver::Activation::ACTIVE_LOW

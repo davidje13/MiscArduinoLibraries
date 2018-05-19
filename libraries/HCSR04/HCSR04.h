@@ -177,7 +177,7 @@ AsynchronousHCSR04_impl<OutPinT, InPinT> *
 AsynchronousHCSR04_impl<OutPinT, InPinT>::interruptTarget = nullptr;
 
 template <typename OutPinT, typename InPinT>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline SynchronousHCSR04_impl<
 	OutPinT,
 	InPinT
@@ -186,7 +186,7 @@ inline SynchronousHCSR04_impl<
 }
 
 template <typename OutPinT, typename InPinT>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline AsynchronousHCSR04_impl<
 	OutPinT,
 	InPinT

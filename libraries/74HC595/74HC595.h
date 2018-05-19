@@ -388,7 +388,7 @@ public:
 };
 
 template <typename LatchPinT, typename ClockPinT, typename DataPinT>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline C74HC595_impl<
 	LatchPinT,
 	ClockPinT,

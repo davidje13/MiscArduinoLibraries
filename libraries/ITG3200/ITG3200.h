@@ -483,7 +483,7 @@ template <
 	typename TwiT,
 	typename IntPinT
 >
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline ITG3200_impl<TwiT, IntPinT> MakeITG3200(
 	TwiT twi,
 	IntPinT interrupt, // optional (use VoidPin to omit)

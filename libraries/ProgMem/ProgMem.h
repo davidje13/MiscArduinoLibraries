@@ -169,7 +169,7 @@ public:
 };
 
 template <typename T>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 static inline ProgMem<T> MakeProgMem(const T *ptr) {
 	return ProgMem<T>(ptr);
 }

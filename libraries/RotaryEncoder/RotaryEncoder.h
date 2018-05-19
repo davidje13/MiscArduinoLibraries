@@ -184,13 +184,13 @@ InterruptRotaryEncoder_impl<APinT, BPinT, AccumT> *
 InterruptRotaryEncoder_impl<APinT, BPinT, AccumT>::interruptTarget = nullptr;
 
 template <typename APinT, typename BPinT>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline RotaryEncoder_impl<APinT, BPinT> MakeRotaryEncoder(APinT a, BPinT b) {
 	return RotaryEncoder_impl<APinT, BPinT>(a, b);
 }
 
 template <typename APinT, typename BPinT, typename AccumT = int16_t>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline InterruptRotaryEncoder_impl<
 	APinT,
 	BPinT,

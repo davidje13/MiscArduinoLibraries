@@ -887,7 +887,7 @@ template <
 	typename Int1PinT,
 	typename Int2PinT
 >
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline ADXL345_impl<TwiT, Int1PinT, Int2PinT> MakeADXL345(
 	TwiT twi,
 	Int1PinT int1, // optional (use VoidPin to omit)

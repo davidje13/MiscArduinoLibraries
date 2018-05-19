@@ -688,7 +688,7 @@ template <
 	typename RSTPinT,
 	typename DCPinT
 >
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline SSD1306_impl<
 	DISP_WIDTH,
 	DISP_HEIGHT,

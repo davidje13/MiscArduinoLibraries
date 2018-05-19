@@ -247,7 +247,7 @@ public:
 };
 
 template <typename RegisterT>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline LCDMatrix88_impl<RegisterT> MakeLCDMatrix88(RegisterT &&reg) {
 	return LCDMatrix88_impl<RegisterT>(static_cast<RegisterT&&>(reg));
 }

@@ -377,7 +377,7 @@ public:
 };
 
 template <typename LatchPinT, typename ClockPinT, typename DataPinT>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline TM1638_impl<
 	LatchPinT,
 	ClockPinT,

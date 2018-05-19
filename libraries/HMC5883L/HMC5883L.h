@@ -784,7 +784,7 @@ template <
 	typename TwiT,
 	typename DRDYPinT
 >
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline HMC5883L_impl<TwiT, DRDYPinT> MakeHMC5883L(
 	TwiT twi,
 	DRDYPinT drdy // optional (use VoidPin to omit)

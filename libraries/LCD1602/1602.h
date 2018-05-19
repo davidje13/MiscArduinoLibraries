@@ -431,7 +431,7 @@ template <
 	typename RWPinT,
 	typename ENPinT
 >
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 inline LCD1602_impl<columns,lines,BankT,RSPinT,RWPinT,ENPinT> Make1602(
 	BankT bank,
 	RSPinT rs,

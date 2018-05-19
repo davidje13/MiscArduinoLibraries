@@ -65,13 +65,13 @@ public:
 };
 
 template <typename T>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 static inline StaticBitmask18<T> MakeStaticBitmask18(T data, uint8_t width, uint8_t height, int16_t step) {
 	return StaticBitmask18<T>(data, width, height, step);
 }
 
 template <typename T>
-[[gnu::always_inline]]
+[[gnu::always_inline,nodiscard]]
 static inline StaticBitmask18<T> MakeStaticBitmask18(T data, uint8_t width, uint8_t height) {
 	return StaticBitmask18<T>(data, width, height);
 }
