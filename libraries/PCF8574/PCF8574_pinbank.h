@@ -21,7 +21,7 @@ class PCF8574_pinbank {
 
 public:
 	PCF8574_pinbank(void) = delete;
-	PCF8574_pinbank(T *device, uint8_t start)
+	constexpr PCF8574_pinbank(T *device, uint8_t start)
 		: device(device)
 		, start(start)
 	{}
@@ -33,7 +33,7 @@ public:
 	PCF8574_pinbank &operator=(PCF8574_pinbank&&) = default;
 
 	[[gnu::always_inline]]
-	static inline constexpr uint8_t size(void) {
+	static constexpr inline uint8_t size(void) {
 		return sz;
 	}
 
@@ -91,7 +91,7 @@ class PCF8574_fixedpinbank {
 
 public:
 	PCF8574_fixedpinbank(void) = delete;
-	PCF8574_fixedpinbank(T *device)
+	constexpr PCF8574_fixedpinbank(T *device)
 		: device(device)
 	{}
 
@@ -102,7 +102,7 @@ public:
 	PCF8574_fixedpinbank &operator=(PCF8574_fixedpinbank&&) = default;
 
 	[[gnu::always_inline]]
-	static inline constexpr uint8_t size(void) {
+	static constexpr inline uint8_t size(void) {
 		return end - start;
 	}
 

@@ -39,7 +39,7 @@ public:
 	Pattern pattern;
 
 	[[gnu::always_inline]]
-	inline Material(RenderMode r, BlendMode b, Pattern p)
+	constexpr inline Material(RenderMode r, BlendMode b, Pattern p)
 		: render(r)
 		, blend(b)
 		, pattern(p)

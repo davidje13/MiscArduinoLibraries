@@ -77,12 +77,12 @@ class LCDMatrix88_impl : public LCDMatrix88 {
 
 public:
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr uint8_t width(void) {
+	static constexpr inline uint8_t width(void) {
 		return 8;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr uint8_t height(void) {
+	static constexpr inline uint8_t height(void) {
 		return 8;
 	}
 

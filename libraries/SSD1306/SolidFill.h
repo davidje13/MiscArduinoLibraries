@@ -21,13 +21,13 @@ class SolidFill {
 
 public:
 	[[gnu::always_inline]]
-	inline SolidFill(void) : v(0) {}
+	constexpr inline SolidFill(void) : v(0) {}
 
 	[[gnu::always_inline]]
-	inline explicit SolidFill(uint8_t value) : v(value) {}
+	explicit constexpr inline SolidFill(uint8_t value) : v(value) {}
 
 	[[gnu::always_inline]]
-	inline SolidFill(bool value) : v(value ? 0xFF : 0x00) {}
+	constexpr inline SolidFill(bool value) : v(value ? 0xFF : 0x00) {}
 
 	[[gnu::always_inline]]
 	inline SolidFill(const SolidFill&) = default;

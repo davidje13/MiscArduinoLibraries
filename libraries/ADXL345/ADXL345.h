@@ -85,10 +85,10 @@ public:
 
 	public:
 		[[gnu::always_inline]]
-		reading(void) : xx(0x7FFF), yy(0x7FFF), zz(0x7FFF) {}
+		constexpr reading(void) : xx(0x7FFF), yy(0x7FFF), zz(0x7FFF) {}
 
 		[[gnu::always_inline]]
-		reading(int16_t xv, int16_t yv, int16_t zv)
+		constexpr reading(int16_t xv, int16_t yv, int16_t zv)
 			: xx(xv)
 			, yy(yv)
 			, zz(zv)

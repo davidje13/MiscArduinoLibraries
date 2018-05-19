@@ -60,7 +60,7 @@ class FontRenderer {
 
 public:
 //	[[gnu::nonnull]] // causes false-positive in MakeFontRenderer
-	FontRenderer(
+	constexpr FontRenderer(
 		Bitmask *target,
 		int16_t xPos,
 		int16_t yPos,

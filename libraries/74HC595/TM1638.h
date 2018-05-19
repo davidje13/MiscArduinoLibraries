@@ -52,7 +52,7 @@ public:
 	};
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr uint8_t build_segment(
+	static constexpr inline uint8_t build_segment(
 		bool t, bool tl, bool tr, bool m, bool bl, bool br, bool b,
 		bool dot = false
 	) {

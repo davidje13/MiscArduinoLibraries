@@ -21,35 +21,35 @@ class ArduinoAnalogPin {
 
 public:
 	[[gnu::always_inline]]
-	inline ArduinoAnalogPin(uint8_t pin) : p(pin) {}
+	constexpr inline ArduinoAnalogPin(uint8_t pin) : p(pin) {}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool exists(void) {
+	static constexpr inline bool exists(void) {
 		return true;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_input(void) {
+	static constexpr inline bool supports_input(void) {
 		return true;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_analog_input(void) {
+	static constexpr inline bool supports_analog_input(void) {
 		return true;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_output(void) {
+	static constexpr inline bool supports_output(void) {
 		return false;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_pwm_output(void) {
+	static constexpr inline bool supports_pwm_output(void) {
 		return false;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_interrupts(void) {
+	static constexpr inline bool supports_interrupts(void) {
 		return false;
 	}
 
@@ -83,32 +83,32 @@ template <uint8_t p>
 class FixedArduinoAnalogPin {
 public:
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool exists(void) {
+	static constexpr inline bool exists(void) {
 		return true;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_input(void) {
+	static constexpr inline bool supports_input(void) {
 		return true;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_analog_input(void) {
+	static constexpr inline bool supports_analog_input(void) {
 		return true;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_output(void) {
+	static constexpr inline bool supports_output(void) {
 		return false;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_pwm_output(void) {
+	static constexpr inline bool supports_pwm_output(void) {
 		return false;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_interrupts(void) {
+	static constexpr inline bool supports_interrupts(void) {
 		return false;
 	}
 

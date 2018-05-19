@@ -28,7 +28,7 @@ class RawArduinoPinBank {
 
 public:
 	[[gnu::always_inline]]
-	static inline constexpr uint8_t size(void) {
+	static constexpr inline uint8_t size(void) {
 		return end - start;
 	}
 

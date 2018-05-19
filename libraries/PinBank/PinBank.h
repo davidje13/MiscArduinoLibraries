@@ -22,7 +22,7 @@ class PinBank2 : public P1 {
 
 public:
 	[[gnu::always_inline]]
-	static inline constexpr uint8_t size(void) {
+	static constexpr inline uint8_t size(void) {
 		return 2;
 	}
 
@@ -105,7 +105,7 @@ protected:
 
 public:
 	[[gnu::always_inline]]
-	static inline constexpr uint8_t size(void) {
+	static constexpr inline uint8_t size(void) {
 		return T1::size() + T2::size();
 	}
 

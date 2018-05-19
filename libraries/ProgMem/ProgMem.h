@@ -64,10 +64,10 @@ protected:
 
 public:
 	[[gnu::always_inline]]
-	inline ProgMem_Base(void) : p(nullptr) {}
+	constexpr inline ProgMem_Base(void) : p(nullptr) {}
 
 	[[gnu::always_inline]]
-	inline ProgMem_Base(const T *ptr) : p(ptr) {}
+	constexpr inline ProgMem_Base(const T *ptr) : p(ptr) {}
 
 	[[gnu::always_inline]]
 	inline ProgMem_Base(const ProgMem_Base<T,Me>&) = default;

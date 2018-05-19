@@ -20,7 +20,7 @@
 class HCSR04 {
 public:
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr uint16_t no_reflection(void) {
+	static constexpr inline uint16_t no_reflection(void) {
 		return 0xFFFF;
 	}
 
@@ -34,7 +34,7 @@ protected:
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr uint16_t max_duration(void) {
+	static constexpr inline uint16_t max_duration(void) {
 		// Output range is 150us - 25ms, or 38ms if no reflection
 		// -> 2.6cm - ~4m
 		return 26000;

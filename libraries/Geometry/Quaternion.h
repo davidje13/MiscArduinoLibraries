@@ -27,7 +27,7 @@
 
 template <typename T>
 struct quaternion : public vector4d<T> {
-	quaternion(void) : vector4d<T>(1, 0, 0, 0) {}
+	constexpr quaternion(void) : vector4d<T>(1, 0, 0, 0) {}
 
 	[[gnu::always_inline]]
 	inline quaternion(vector3d<T> axis, float angle, T norm = 1)

@@ -30,23 +30,23 @@ public:
 
 private:
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	inline constexpr uint8_t blank(void) const {
+	constexpr inline uint8_t blank(void) const {
 		return CHARS[0];
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	inline constexpr uint8_t _chr(char c) const {
+	constexpr inline uint8_t _chr(char c) const {
 		return CHARS[c - 0x20];
 	}
 
 public:
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	inline constexpr uint8_t chr(char c) const {
+	constexpr inline uint8_t chr(char c) const {
 		return (c < 0x20 || c > 0x7F) ? blank() : _chr(c);
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	inline constexpr uint8_t digit(uint8_t v) const {
+	constexpr inline uint8_t digit(uint8_t v) const {
 		return (
 			(v < 10) ? _chr(v + '0') :
 			(v < 36) ? _chr((v - 10) + 'a') :

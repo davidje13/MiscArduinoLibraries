@@ -21,7 +21,7 @@ struct vector2d {
 	T x;
 	T y;
 
-	vector2d(T xx, T yy) : x(xx), y(yy) {}
+	constexpr vector2d(T xx, T yy) : x(xx), y(yy) {}
 
 	void normalize(T norm = 1) {
 		T mult = norm / sqrt(x * x + y * y);
@@ -42,7 +42,7 @@ struct vector3d {
 	T y;
 	T z;
 
-	vector3d(T xx, T yy, T zz) : x(xx), y(yy), z(zz) {}
+	constexpr vector3d(T xx, T yy, T zz) : x(xx), y(yy), z(zz) {}
 
 	void normalize(T norm = 1) {
 		T mult = norm / sqrt(x * x + y * y + z * z);
@@ -59,7 +59,7 @@ struct vector4d {
 	T z;
 	T w;
 
-	vector4d(T xx, T yy, T zz, T ww) : x(xx), y(yy), z(zz), w(ww) {}
+	constexpr vector4d(T xx, T yy, T zz, T ww) : x(xx), y(yy), z(zz), w(ww) {}
 
 	void normalize(T norm = 1) {
 		T mult = norm / sqrt(x * x + y * y + z * z + w * w);

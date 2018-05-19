@@ -31,7 +31,7 @@ class GyroAccumulator {
 	bool calibrating;
 
 public:
-	GyroAccumulator(void)
+	constexpr GyroAccumulator(void)
 		: zx(0)
 		, zy(0)
 		, zz(0)

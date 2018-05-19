@@ -19,32 +19,32 @@
 class VoidPin {
 public:
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool exists(void) {
+	static constexpr inline bool exists(void) {
 		return false;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_input(void) {
+	static constexpr inline bool supports_input(void) {
 		return false;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_analog_input(void) {
+	static constexpr inline bool supports_analog_input(void) {
 		return false;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_output(void) {
+	static constexpr inline bool supports_output(void) {
 		return false;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_pwm_output(void) {
+	static constexpr inline bool supports_pwm_output(void) {
 		return false;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static inline constexpr bool supports_interrupts(void) {
+	static constexpr inline bool supports_interrupts(void) {
 		return false;
 	}
 
