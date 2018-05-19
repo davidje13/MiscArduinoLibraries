@@ -190,7 +190,7 @@ public:
 		en.low();
 		bank.send_batch();
 
-		delayMicroseconds(40000); // Wait 40ms for power on
+		ext::awaitBootMillis(40); // Wait 40ms for power on
 		handshake();
 	}
 
