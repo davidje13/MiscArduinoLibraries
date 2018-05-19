@@ -300,10 +300,15 @@ public:
 		send(value);
 	}
 
-	void print(const char *message) {
+	template <typename T> // T = ProgMem<uint8_t> / const uint8*
+	void print(T message) {
 		set_mode(DataState::DATA_WRITE);
-		for(const char *v = message; *v; ++ v) {
-			send(*v);
+		for(T v = message; ; v += 1) {
+			uint8_t c = v[0];
+			if(!c) {
+				break;
+			}
+			send(c);
 		}
 	}
 

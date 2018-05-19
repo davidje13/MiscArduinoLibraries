@@ -23,6 +23,7 @@
 #include <ArduinoPin.h>
 #include <VoidPin.h>
 #include <PinBank.h>
+#include <ProgMem.h>
 #include <1602.h>
 
 // To use the TWI adapter, uncomment these two lines:
@@ -79,7 +80,7 @@ void setup(void) {
 	uint16_t averaged = 0;
 
 	lcd.on();
-	lcd.print("Distance:");
+	lcd.print(ProgMemString("Distance:"));
 
 	while(true) {
 		STATUS.high();
@@ -97,7 +98,7 @@ void setup(void) {
 
 		lcd.set_cursor(0, 1);
 		lcd.print(averaged);
-		lcd.print("mm        ");
+		lcd.print(ProgMemString("mm        "));
 
 		while(uint16_t(millis()) - tm0 < 50);
 	}
