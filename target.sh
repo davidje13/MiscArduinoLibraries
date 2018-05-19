@@ -22,6 +22,19 @@ set -e;
 #UPLOADER_BAUDRATE="57600";
 
 
+## Pro/Pro Mini, ATmega328 16MHz 5V (matches 16MHz chip sold by HT)
+#BOARD="arduino:avr:pro:cpu=16MHzatmega328";
+#COMPORT="/dev/cu.usbserial-AM01P53Z";
+#WITH_BOOTLOADER=false;
+#
+## Most of these config values come from boards.txt for the chosen $BOARD
+#UPLOADER="$HWDIR/tools/avr/bin/avrdude";
+#UPLOADER_CONF="$HWDIR/tools/avr/etc/avrdude.conf";
+#UPLOADER_DEVICE="atmega328p";
+#UPLOADER_PROGRAMMER="arduino";
+#UPLOADER_BAUDRATE="115200";
+
+
 # Arduino Uno
 BOARD="arduino:avr:uno";
 COMPORT="/dev/cu.usbmodem1411";
