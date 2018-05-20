@@ -17,6 +17,51 @@
 #include "ext.h"
 #include <ProgMem.h>
 
+#define BARCODE_00 "\x80"
+#define HRI_U2 "\x80"
+#define HRI_A "\x01"
+#define HRI_B "\x02"
+#define HRI_C "\x03"
+#define HRI_D "\x04"
+#define HRI_E "\x05"
+#define HRI_F "\x06"
+#define HRI_G "\x07"
+#define HRI_H "\x08"
+#define HRI_I "\x09"
+#define HRI_J "\x0A"
+#define HRI_K "\x0B"
+#define HRI_L "\x0C"
+#define HRI_M "\x0D"
+#define HRI_N "\x0E"
+#define HRI_O "\x0F"
+#define HRI_P "\x10"
+#define HRI_Q "\x11"
+#define HRI_R "\x12"
+#define HRI_S "\x13"
+#define HRI_T "\x14"
+#define HRI_U "\x15"
+#define HRI_V "\x16"
+#define HRI_W "\x17"
+#define HRI_X "\x18"
+#define HRI_Y "\x19"
+#define HRI_Z "\x1A"
+#define HRI_A2 "\x1B"
+#define HRI_B2 "\x1C"
+#define HRI_C2 "\x1D"
+#define HRI_D2 "\x1E"
+#define HRI_E2 "\x1F"
+#define HRI_T2 "\x7F"
+
+#define CODE128_SHIFT "{S"
+#define CODE128_CODEA "{A"
+#define CODE128_CODEB "{B"
+#define CODE128_CODEC "{C"
+#define CODE128_FNC1 "{1"
+#define CODE128_FNC2 "{2"
+#define CODE128_FNC3 "{3"
+#define CODE128_FNC4 "{4"
+#define CODE128_BRACE "{{"
+
 class CSNA2 {
 public:
 	enum Status : uint8_t {
@@ -66,6 +111,20 @@ public:
 	enum class Pin : uint8_t {
 		DRAW_KICKOUT_2 = 0,
 		DRAW_KICKOUT_5 = 1
+	};
+
+	enum class Barcode : uint8_t {
+		UPCA           = 0x41,
+		UPCE           = 0x42,
+		JAN13          = 0x43,
+		EAN13          = 0x43,
+		JAN8           = 0x44,
+		EAN8           = 0x44,
+		CODE39_REGULAR = 0x45,
+		ITF            = 0x46,
+		CODABAR        = 0x47,
+		CODE93         = 0x48,
+		CODE128        = 0x49
 	};
 
 	static constexpr inline uint8_t dots_per_mm(void) {
@@ -166,6 +225,19 @@ class CSNA2_impl : public CSNA2 {
 		}
 	}
 
+	bool read1(uint8_t *target, uint16_t timeoutMillis) {
+		uint16_t tm0 = millis();
+		while(!serial.available()) {
+			if(uint16_t(millis() - tm0) > timeoutMillis) {
+				return false;
+			}
+		}
+
+		*target = serial.read();
+
+		return true;
+	}
+
 	bool read(uint8_t *target, uint16_t timeoutMillis) {
 		uint16_t tm0 = millis();
 		while(!serial.available()) {
@@ -230,6 +302,11 @@ public:
 		reset_linespacing();
 		set_character_spacing(0);
 		set_rot90(false);
+		set_justification(Justification::LEFT);
+		set_barcode_text(false, false);
+		set_barcode_height(80);
+		set_barcode_thickness(3);
+		set_margin_left(0);
 	}
 
 	[[gnu::always_inline]]
@@ -267,8 +344,8 @@ public:
 		serial.write(DC2);
 		serial.write('#');
 		serial.write(
-			min((max(density, 50) - 50) / 5, 0x1F) |
-			(min(delayQuarterMillis, 7) << 5)
+			ext::min2((ext::max2(density, uint8_t(50)) - 50) / 5, 0x1F) |
+			(ext::min2(delayQuarterMillis, uint8_t(7)) << 5)
 		);
 	}
 
@@ -341,7 +418,7 @@ public:
 	void set_command_timeout(uint16_t millisPerByte) {
 		serial.write(FS);
 		serial.write('t');
-		serial.write(uint8_t(max(millisPerByte / 10, 1)));
+		serial.write(ext::max2(uint8_t(millisPerByte / 10), uint8_t(1)));
 	}
 
 	void set_sleep_delay(uint16_t seconds) {
@@ -433,14 +510,14 @@ public:
 	inline void set_character_size(uint8_t width, uint8_t height) {
 		// width & height can be 1, 2, 3, 4, 5, 6, 7, 8
 		// Note that width takes effect per letter, but height is per line
-		width = max(1, min(8, width));
-		height = max(1, min(8, height));
+		width = ext::max2(uint8_t(1), ext::min2(uint8_t(8), width));
+		height = ext::max2(uint8_t(1), ext::min2(uint8_t(8), height));
 		size = ((width - 1) << 4) | (height - 1);
 		send_size();
 	}
 
 	inline void set_character_width(uint8_t width) {
-		width = max(1, min(8, width));
+		width = ext::max2(uint8_t(1), ext::min2(uint8_t(8), width));
 		size = (size & 0x0F) | ((width - 1) << 4);
 		if(width == 1) {
 			serial.write(ESC);
@@ -456,7 +533,7 @@ public:
 	}
 
 	inline void set_character_height(uint8_t height) {
-		height = max(1, min(8, height));
+		height = ext::max2(uint8_t(1), ext::min2(uint8_t(8), height));
 		size = (size & 0xF0) | (height - 1);
 		send_size();
 	}
@@ -639,8 +716,8 @@ public:
 		bool dblWidth = false,
 		bool dblHeight = false
 	) {
-		uint16_t wb = (min(bitmask.width(), widthDots) + 7) / 8;
-		uint16_t hb = min(bitmask.height(), 4095);
+		uint16_t wb = (ext::min2(bitmask.width(), widthDots) + 7) / 8;
+		uint16_t hb = ext::min2(bitmask.height(), uint16_t(4095));
 
 		set_command_timeout(10);
 		serial.write(GS);
@@ -663,8 +740,8 @@ public:
 
 	template <typename Bitmask>
 	void print_bitmask81msb_small(const Bitmask &bitmask) {
-		uint8_t wb = uint8_t((min(bitmask.width(), widthDots) + 7) / 8);
-		uint8_t hb = uint8_t(min(bitmask.height(), 255));
+		uint8_t wb = uint8_t((ext::min2(bitmask.width(), widthDots) + 7) / 8);
+		uint8_t hb = uint8_t(ext::min2(bitmask.height(), uint16_t(255)));
 
 		set_command_timeout(10);
 		serial.write(DC2);
@@ -729,9 +806,9 @@ public:
 		bool dblWidth = false,
 		bool dblHeight = false
 	) {
-		uint8_t wb = uint8_t((min(bitmask.width(), widthDots) + 7) / 8);
+		uint8_t wb = uint8_t((ext::min2(bitmask.width(), widthDots) + 7) / 8);
 		uint16_t hb = (bitmask.height() + 7) / 8;
-		uint8_t hp = uint8_t(min(hb, 255));
+		uint8_t hp = uint8_t(ext::min2(hb, uint16_t(255)));
 
 		// data sheet claims the following:
 //		if(hp > 48) {
@@ -787,6 +864,67 @@ public:
 		serial.write((dblWidth ? 1 : 0) | (dblHeight ? 2 : 0));
 	}
 
+	template <typename Bitmask>
+	bool print_bitmask18_lines(
+		const Bitmask &bitmask,
+		bool dblWidth = false,
+		bool tripleHeight = false
+	) {
+		// TODO: this doesn't work with large images. Why?
+		uint16_t wb = ext::min2(bitmask.width(), widthDots);
+		uint16_t hb = (bitmask.height() + 7) / 8;
+		uint8_t hp = tripleHeight ? 1 : 3;
+
+		bool check = false;//serial.can_listen();
+
+		set_command_timeout(10);
+
+		for(uint16_t y0 = 0; y0 < hb; y0 += hp) {
+			if(check) {
+				serial.write(FS);
+				serial.write('C');
+			}
+
+			serial.write(ESC);
+			serial.write('*');
+			serial.write((tripleHeight ? 0x00 : 0x20) | (dblWidth ? 0x00 : 0x01));
+			write_16le(wb);
+			uint8_t checksum = 0;
+			for(uint16_t x = 0; x < wb; ++ x) {
+				for(uint16_t y = 0; y < hp; ++ y) {
+					uint8_t byte = 0;
+					for(uint8_t yy = 0; yy < 8; ++ yy) {
+						byte = (byte << 1) | bitmask.get_pixel(
+							x,
+							((y + y0) << 3) | yy
+						);
+					}
+					serial.write(byte);
+					checksum += byte;
+				}
+				delayMicroseconds(100);
+			}
+
+			if(check) {
+				serial.listen();
+				serial.write(checksum);
+				serial.write(FS);
+				serial.write('S');
+
+				uint8_t ack = 0x00;
+				if(!(read1(&ack, 1000) && read1(&ack, 100) && read1(&ack, 100))) {
+					return false;
+				}
+				if(ack != 0x1A) {
+					return false;
+				}
+			} else {
+				delay(500);
+			}
+		}
+		return true;
+	}
+
 	// For compatibility with renderScene (3D renderer)
 	template <typename Bitmask>
 	void send(const Bitmask &bitmask, uint8_t, uint8_t) {
@@ -795,6 +933,132 @@ public:
 			(size & 0xF0) != 0,
 			(size & 0x0F) != 0
 		);
+	}
+
+	void set_barcode_text(bool above, bool below) {
+		serial.write(GS);
+		serial.write('H');
+		serial.write((above ? 1 : 0) | (below ? 2 : 0));
+	}
+
+	void set_barcode_height(uint8_t dots) {
+		// Default is 80 (10mm)
+		// (documentation claims 162 but this is not correct)
+		serial.write(GS);
+		serial.write('h');
+		serial.write(dots);
+	}
+
+	void set_barcode_thickness(uint8_t dots) {
+		// Default 3 (0.375mm)
+		// Sets thin element width. Thick element is 2.5x
+		serial.write(GS);
+		serial.write('w');
+		serial.write(ext::max2(uint8_t(2), ext::min2(uint8_t(6), dots)));
+	}
+
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
+	void print_barcode(Barcode type, T code) {
+		uint8_t len = 0;
+		for(T v = code; v[0]; v += 1) {
+			++ len;
+		}
+
+		serial.write(GS);
+		serial.write('k');
+		serial.write(uint8_t(type));
+		serial.write(len);
+		for(T v = code; ; v += 1) {
+			uint8_t c = v[0];
+			if(!c) {
+				break;
+			}
+			serial.write(c & 0x7F);
+		}
+	}
+
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
+	inline void print_barcode_upca(T code) {
+		// length 11 + check digit (auto-calculated if omitted)
+		// chars 0-9
+		// first digit is number system digit, typically 0
+		print_barcode(Barcode::UPCA, code);
+	}
+
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
+	inline void print_barcode_upce(T code) {
+		// length 7 + check digit (auto-calculated if omitted)
+		// chars 0-9
+		// first digit is number system digit, typically 0
+		print_barcode(Barcode::UPCE, code);
+	}
+
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
+	inline void print_barcode_jan13(T code) {
+		// length 12 + check digit (auto-calculated via mod10 if omitted)
+		// chars 0-9
+		// same as EAN13 with a country code of 490-499
+		// same as UPCA with a leading 0
+		print_barcode(Barcode::JAN13, code);
+	}
+
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
+	inline void print_barcode_ean13(T code) {
+		// length 12 + check digit (auto-calculated via mod10 if omitted)
+		// chars 0-9
+		// same as UPCA with a leading 0
+		print_barcode(Barcode::EAN13, code);
+	}
+
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
+	inline void print_barcode_jan8(T code) {
+		// length 7 + check digit (auto-calculated via mod10 if omitted)
+		// chars 0-9
+		// same as EAN8 with a country code of 490-499
+		print_barcode(Barcode::JAN8, code);
+	}
+
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
+	inline void print_barcode_ean8(T code) {
+		// length 7 + check digit (auto-calculated via mod10 if omitted)
+		// chars 0-9
+		print_barcode(Barcode::EAN8, code);
+	}
+
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
+	inline void print_barcode_code39_regular(T code) {
+		// length 1-255
+		// chars 0-9A-Z $%+-./
+		// automatically adds start & stop codes (*)
+		print_barcode(Barcode::CODE39_REGULAR, code);
+	}
+
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
+	inline void print_barcode_itf(T code) {
+		// length 2-254 (even)
+		// chars 0-9
+		print_barcode(Barcode::ITF, code);
+	}
+
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
+	inline void print_barcode_codabar(T code) {
+		// length 1-255
+		// chars 0-9A-D$+-./:
+		print_barcode(Barcode::CODABAR, code);
+	}
+
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
+	inline void print_barcode_code93(T code) {
+		// length 1-255
+		// chars 0-9A-Z $%+-./
+		print_barcode(Barcode::CODE93, code);
+	}
+
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
+	inline void print_barcode_code128(T code) {
+		// length 2-255
+		// chars 0-127
+		print_barcode(Barcode::CODE128, code);
 	}
 
 	void print_test_page(void) {

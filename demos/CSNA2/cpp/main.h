@@ -19,6 +19,7 @@
  */
 
 #include "DemoText.h"
+#include "DemoBarcodes.h"
 #include "DemoBitmaps.h"
 #include "Demo3D.h"
 #include "DemoConfig.h"
@@ -64,6 +65,7 @@ void setup(void) {
 	printer.set_sleep_delay(1);
 
 	demoText(printer);
+	demoBarcodes(printer);
 	demoBitmaps(printer);
 	demo3D(printer);
 	demoConfig(printer);

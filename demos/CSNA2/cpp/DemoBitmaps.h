@@ -50,9 +50,14 @@ void demoBitmaps(Printer &printer) {
 	delay(500);
 
 	printer.awake();
+	printer.print("\nprint_bitmask18_lines\n");
+	printer.print_bitmask18_lines(bitmask); // fails for large images (why??)
+	delay(500);
+
+	printer.awake();
 	printer.print("\nLarge ProgMem image:\n");
 	auto logo = MakeStaticBitmask18(MakeProgMem(LOGO), 256, 256);
-	printer.print_bitmask81msb(logo);
+	printer.print_bitmask18(logo, false, false);
 	printer.linefeed();
 
 	delay(2000);

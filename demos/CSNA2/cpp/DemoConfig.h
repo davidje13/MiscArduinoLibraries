@@ -48,5 +48,6 @@ void demoConfig(Printer &printer) {
 
 	delay(1000);
 
+	printer.awake();
 	printer.configure(CSNA2::Configuration::FACTORY);
 }
