@@ -27,7 +27,7 @@ typedef const uint8_t* Pattern;
 //typedef ProgMem<uint8_t> Pattern; // Uses more program space (inferior compilation); why?
 
 [[gnu::pure,nodiscard,gnu::always_inline]]
-inline uint8_t PatternCol(Pattern p, uint8_t x) {
+inline uint8_t PatternCol(Pattern p, uint16_t x) {
 	return ProgMem<uint8_t>(p)[x & 3];
 }
 

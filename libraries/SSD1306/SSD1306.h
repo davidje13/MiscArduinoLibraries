@@ -14,7 +14,7 @@
 #ifndef SSD1306_H_INCLUDED
 #define SSD1306_H_INCLUDED
 
-#include "SolidFill.h"
+#include <SolidFill.h>
 
 #include "ext.h"
 
@@ -289,7 +289,7 @@ private:
 		curColStart = column;
 	}
 
-	template <typename T> // T = ProgMem<uint8_t> / const uint8*
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
 	[[gnu::noinline]] // Inlining slows down the common full-screen case
 	void send_raw_b(
 		T data, // nullable
@@ -317,7 +317,7 @@ private:
 		}
 	}
 
-	template <typename T> // T = ProgMem<uint8_t> / const uint8*
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
 	[[gnu::always_inline]]
 	inline void send_raw(
 		T data, // nullable
@@ -521,7 +521,7 @@ public:
 			step,
 			xPos + x,
 			y0 >> 3,
-			w, ext::min2(bitmask.height(), hh),
+			w, uint8_t(ext::min2(uint16_t(bitmask.height()), uint16_t(hh))),
 			hPage,
 			yShift
 		);

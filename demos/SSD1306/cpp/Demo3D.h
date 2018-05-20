@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef DEMOCUBE_H_INCLUDED
-#define DEMOCUBE_H_INCLUDED
+#ifndef DEMO3D_H_INCLUDED
+#define DEMO3D_H_INCLUDED
 
 #include "DemoUtils.h"
 

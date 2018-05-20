@@ -18,6 +18,11 @@
  *  RX  -- D6 (any serial transmit pin)
  */
 
+#include "DemoText.h"
+#include "DemoBitmaps.h"
+#include "Demo3D.h"
+#include "DemoConfig.h"
+
 #include <CSNA2.h>
 #include <ProgMem.h>
 #include <ArduinoSoftwareSerial.h>
@@ -27,85 +32,51 @@
 FixedArduinoPin<6> TX;
 FixedArduinoPin<5> RX;
 
-FixedArduinoPin<13> STATUS;
+FixedArduinoPin<7> fakeGround;
+FixedArduinoPin<13> status;
 
 void setup(void) {
-	STATUS.set_output();
+	// Set pin 7 to a fake ground to allow easy wiring on an Arduino Uno
+	fakeGround.set_output();
+	fakeGround.low();
 
-	STATUS.high();
+	status.set_output();
+
+	status.high();
 	auto printer = MakeCSNA2(MakeArduinoSoftwareSerial(TX, RX), 19200);
-	STATUS.low();
+	status.low();
 
 	if(!printer.connected()) {
-		while(true) {
-			STATUS.high();
+		// Keep trying to reset printer and reconnect
+		// (might be waiting to fill a buffer from a previous run)
+		do {
+			status.high();
 			delay(100);
-			STATUS.low();
-			delay(100);
-		}
+			status.low();
+
+			printer.awake();
+		} while(!printer.connected());
+
+		printer.reset();
 	}
 
 	printer.configure(CSNA2::Configuration::FACTORY);
 	printer.set_sleep_delay(1);
 
-	printer.print(ProgMemString("normal "));
-	printer.set_emphasised(true);
-	printer.print(ProgMemString("emphasis "));
-	printer.set_emphasised(false);
-	printer.set_doublestrike(true);
-	printer.print(ProgMemString("dblstrike "));
-	printer.set_emphasised(true);
-	printer.print(ProgMemString("both "));
-	printer.set_doublestrike(false);
-	printer.set_emphasised(false);
-	printer.linefeed();
+	demoText(printer);
+	demoBitmaps(printer);
+	demo3D(printer);
+	demoConfig(printer);
 
-	printer.print(ProgMemString("normal "));
-	printer.set_underline(true);
-	printer.print(ProgMemString("underline "));
-	printer.set_underline(CSNA2::Underline::THICK);
-	printer.print(ProgMemString("dblunderline "));
-	printer.set_underline(false);
-	printer.linefeed();
-
-	printer.print(ProgMemString("normal "));
-	printer.set_inverted(true);
-	printer.print(ProgMemString("inverted "));
-	printer.set_inverted(false);
-	printer.linefeed();
-
-	printer.set_rotation(CSNA2::Rotation::CW_90);
-	printer.print(ProgMemString("CW_90"));
-	printer.linefeed();
-	printer.set_rotation(CSNA2::Rotation::CCW_90);
-	printer.print(ProgMemString("CCW_90"));
-	printer.linefeed();
-	printer.set_rotation(CSNA2::Rotation::REVERSED);
-	printer.print(ProgMemString("REVERSED"));
-	printer.linefeed();
-	printer.set_rotation(CSNA2::Rotation::NORMAL);
-
-	printer.print(ProgMemString("x0"));
-	printer.set_x(100);
-	printer.print(ProgMemString("x100"));
-	printer.set_x(200);
-	printer.print(ProgMemString("x200"));
-	printer.linefeed();
-
-	printer.print(ProgMemString("x0"));
-	printer.set_x(100);
-	printer.print(ProgMemString("x100"));
-	printer.set_x(85);
-	printer.print(ProgMemString("x85"));
-	printer.linefeed();
-
+	// Make last output visible
+	delay(1000);
 	printer.awake();
-	printer.print(ProgMemString("\n\n")); // Make text visible
+	printer.print(ProgMemString("\n\n\n"));
 
 	while(true) {
-		STATUS.high();
+		status.high();
 		delay(500);
-		STATUS.low();
+		status.low();
 		delay(500);
 	}
 }

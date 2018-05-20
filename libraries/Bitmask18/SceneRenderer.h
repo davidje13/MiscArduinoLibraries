@@ -63,11 +63,11 @@ void projectScene(
 	}
 }
 
-template <typename Bitmask, typename IndexT>
+template <typename Bitmask, typename IndexListT>
 void renderLines(
 	Bitmask &bitmask,
 	const int16_t *projVerts,
-	ProgMem<IndexT> lines,
+	IndexListT lines,
 	uint16_t nLines,
 	const Material*, // TODO (ideally optional to save space)
 	uint16_t dx,
@@ -85,11 +85,11 @@ void renderLines(
 	}
 }
 
-template <typename Bitmask, typename IndexT>
+template <typename Bitmask, typename IndexListT>
 void renderTriangles(
 	Bitmask &bitmask,
 	const int16_t *projVerts,
-	ProgMem<IndexT> triangles,
+	IndexListT triangles,
 	uint16_t nTriangles,
 	const Material *materials,
 	uint16_t dx,
@@ -123,7 +123,8 @@ template <
 	typename Display,
 	typename Bitmask,
 	typename VertT,
-	typename IndexT,
+	typename LineIndexListT,
+	typename TriangleIndexListT,
 	typename ProjectorT
 >
 void renderScene(
@@ -131,22 +132,22 @@ void renderScene(
 	Bitmask &bitmask,
 	ProgMem<VertT> vertices,
 	uint16_t nVertices,
-	ProgMem<IndexT> lines,
+	LineIndexListT lines,
 	uint16_t nLines,
-	ProgMem<IndexT> triangles,
+	TriangleIndexListT triangles,
 	uint16_t nTriangles,
 	const ProjectorT &projector,
 	const Material *materials,
-	uint8_t x0,
-	uint8_t y0,
-	uint8_t w,
-	uint8_t h,
+	uint16_t x0,
+	uint16_t y0,
+	uint16_t w,
+	uint16_t h,
 	uint8_t shift
 ) {
 	int16_t *projVerts = alloca(nVertices * 2 * sizeof(int16_t));
 	projectScene(vertices, nVertices, projector, projVerts);
-	for(uint8_t y = 0; y < h; y += bitmask.height()) {
-		for(uint8_t x = 0; x < w; x += bitmask.width()) {
+	for(uint16_t y = 0; y < h; y += bitmask.height()) {
+		for(uint16_t x = 0; x < w; x += bitmask.width()) {
 			bitmask.clear();
 			renderLines(
 				bitmask,

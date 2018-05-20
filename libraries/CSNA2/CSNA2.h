@@ -27,10 +27,15 @@ public:
 	};
 
 	enum class Configuration : uint32_t {
-		FACTORY   = 0x075002, // 64 dots, 800us heating,  20us interval  5ms/ln
-		PRECISION = 0x076414, // 64 dots, 1000us heating,  200us interval 7ms/ln
-		ECO       = 0x016404, // 16 dots, 1000us heating, 40us interval  25ms/ln
-		FAST      = 0x0B4604  // 96 dots, 700us heating,  40us interval  3ms/ln
+		FACTORY   = 0x075002, // 64 dots, 800us heating, 20us interval    5ms/ln
+		PRECISION = 0x016EC8, // 16 dots, 1.1ms heating, 2.00ms interval 74ms/ln
+		ECO       = 0x0164FF, // 16 dots, 1.0ms heating, 2.56ms interval 85ms/ln
+		FAST      = 0x0B4604  // 96 dots, 700us heating, 40us interval    3ms/ln
+	};
+
+	enum class Font : uint8_t {
+		A_12_24,
+		B_9_17
 	};
 
 	enum class Justification : uint8_t {
@@ -82,12 +87,23 @@ protected:
 #define DC2 uint8_t(0x12)
 #define AWAKE uint8_t(0xFF)
 
-#define SMALLEST_FONT_W 12
+#define SMALLEST_FONT_W 9
 #define MAX_TABSTOPS 32
+
+#define MODE_FONTB      0x01
+#define MODE_INVERTED   0x02
+#define MODE_REVERSED   0x04
+#define MODE_EMPHASISED 0x08
+#define MODE_DBLHEIGHT  0x10
+#define MODE_DBLWIDTH   0x20
+#define MODE_DELETELINE 0x40
+#define MODE_MASK (0x7F & ~(MODE_DBLHEIGHT | MODE_DBLWIDTH))
 
 template <typename SerialT, uint16_t widthDots>
 class CSNA2_impl : public CSNA2 {
 	SerialT serial;
+	uint8_t mode;
+	uint8_t size;
 
 	[[gnu::always_inline]]
 	inline void write_16le(uint16_t v) {
@@ -105,6 +121,49 @@ class CSNA2_impl : public CSNA2 {
 		serial.write(ESC);
 		serial.write('=');
 		serial.write(device);
+	}
+
+	void set_rot90(bool on) {
+		serial.write(ESC);
+		serial.write('V');
+		serial.write(on ? 1 : 0);
+	}
+
+	void set_rot180(bool on) {
+		if(on) {
+			mode |= MODE_REVERSED;
+		} else {
+			mode &= ~MODE_REVERSED;
+		}
+		serial.write(ESC);
+		serial.write('{');
+		serial.write(on ? 1 : 0);
+	}
+
+	void send_size(void) {
+		serial.write(GS);
+		serial.write('!');
+		serial.write(size);
+	}
+
+	void send_mode(void) {
+		serial.write(ESC);
+		serial.write('!');
+		uint8_t m = mode & MODE_MASK;
+		uint8_t w = size >> 4;
+		uint8_t h = size & 0x0F;
+		if(w == 1) {
+			m |= MODE_DBLWIDTH;
+		}
+		if(h == 1) {
+			m |= MODE_DBLHEIGHT;
+		}
+		serial.write(m);
+
+		// Ensure size is not clobbered
+		if(w > 1 || h > 1) {
+			send_size();
+		}
 	}
 
 	bool read(uint8_t *target, uint16_t timeoutMillis) {
@@ -155,8 +214,22 @@ public:
 	}
 
 	void reset(void) {
+		awake();
 		serial.write(ESC);
 		serial.write('@');
+		mode = 0x00;
+		size = 0x00;
+	}
+
+	inline void soft_reset(void) {
+		mode = 0x00;
+		size = 0x00;
+
+		awake();
+		send_mode();
+		reset_linespacing();
+		set_character_spacing(0);
+		set_rot90(false);
 	}
 
 	[[gnu::always_inline]]
@@ -295,7 +368,7 @@ public:
 		serial.write(uint8_t(c));
 	}
 
-	template <typename T> // T = ProgMem<uint8_t> / const uint8*
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
 	void print(T message) {
 		for(T v = message; ; v += 1) {
 			char c = v[0];
@@ -359,26 +432,81 @@ public:
 
 	inline void set_character_size(uint8_t width, uint8_t height) {
 		// width & height can be 1, 2, 3, 4, 5, 6, 7, 8
-		serial.write(GS);
-		serial.write('!');
-		serial.write(((width - 1) << 4) | (height - 1));
+		// Note that width takes effect per letter, but height is per line
+		width = max(1, min(8, width));
+		height = max(1, min(8, height));
+		size = ((width - 1) << 4) | (height - 1);
+		send_size();
+	}
+
+	inline void set_character_width(uint8_t width) {
+		width = max(1, min(8, width));
+		size = (size & 0x0F) | ((width - 1) << 4);
+		if(width == 1) {
+			serial.write(ESC);
+			serial.write(uint8_t(0x14));
+			serial.write(uint8_t(1));
+		} else if(width == 2) {
+			serial.write(ESC);
+			serial.write(uint8_t(0x0E));
+			serial.write(uint8_t(1));
+		} else {
+			send_size();
+		}
+	}
+
+	inline void set_character_height(uint8_t height) {
+		height = max(1, min(8, height));
+		size = (size & 0xF0) | (height - 1);
+		send_size();
+	}
+
+	inline void set_font(Font font) {
+		switch(font) {
+		case Font::A_12_24:
+			mode &= ~MODE_FONTB;
+			break;
+		case Font::B_9_17:
+			mode |= MODE_FONTB;
+			break;
+		}
+		send_mode();
 	}
 
 	inline void set_inverted(bool on) {
+		if(on) {
+			mode |= MODE_INVERTED;
+		} else {
+			mode &= ~MODE_INVERTED;
+		}
 		serial.write(GS);
 		serial.write('B');
 		serial.write(uint8_t(on ? 1 : 0));
 	}
 
-	inline void set_emphasised(bool on) {
+	inline void set_strikeout(bool on) {
+		if(on) {
+			mode |= MODE_DELETELINE;
+		} else {
+			mode &= MODE_DELETELINE;
+		}
+		send_mode();
+	}
+
+	inline void set_bold(bool on) {
+		if(on) {
+			mode |= MODE_EMPHASISED;
+		} else {
+			mode &= ~MODE_EMPHASISED;
+		}
 		serial.write(ESC);
 		serial.write('E');
 		serial.write(uint8_t(on ? 1 : 0));
 	}
 
 	inline void set_doublestrike(bool on) {
-		// Same as emphasised mode
-		// TODO: can have emphasised and doublestrike for even bolder?
+		// Same as bold
+		// TODO: can have bold and doublestrike for even bolder?
 		serial.write(ESC);
 		serial.write('G');
 		serial.write(uint8_t(on ? 1 : 0));
@@ -395,20 +523,6 @@ public:
 		set_underline(on ? Underline::THIN : Underline::NONE);
 	}
 
-	inline void set_width_1(void) {
-		// TODO: same as set_character_size?
-		serial.write(ESC);
-		serial.write(uint8_t(0x14));
-		serial.write(uint8_t(1));
-	}
-
-	inline void set_width_2(void) {
-		// TODO: same as set_character_size?
-		serial.write(ESC);
-		serial.write(uint8_t(0x0E));
-		serial.write(uint8_t(1));
-	}
-
 	inline void set_character_spacing(uint8_t dots) {
 		// Changes spacing to right of characters
 		// Spacing = dots * character width set by set_character_size
@@ -418,13 +532,10 @@ public:
 		serial.write(dots);
 	}
 
+	[[gnu::always_inline]]
 	inline void set_rotation(Rotation rotation) {
-		serial.write(ESC);
-		serial.write('V');
-		serial.write(uint8_t(rotation) & 1);
-		serial.write(ESC);
-		serial.write('{');
-		serial.write(uint8_t(rotation) >> 1);
+		set_rot90(uint8_t(rotation) & 1);
+		set_rot180(uint8_t(rotation) >> 1);
 	}
 
 	[[gnu::always_inline]]
@@ -522,6 +633,170 @@ public:
 		serial.write(uint8_t(offTimeMillis / 2));
 	}
 
+	template <typename Bitmask>
+	void print_bitmask81msb(
+		const Bitmask &bitmask,
+		bool dblWidth = false,
+		bool dblHeight = false
+	) {
+		uint16_t wb = (min(bitmask.width(), widthDots) + 7) / 8;
+		uint16_t hb = min(bitmask.height(), 4095);
+
+		set_command_timeout(10);
+		serial.write(GS);
+		serial.write('v');
+		serial.write('0');
+		serial.write((dblWidth ? 1 : 0) | (dblHeight ? 2 : 0));
+		write_16le(wb);
+		write_16le(hb);
+		for(uint16_t y = 0; y < hb; ++ y) {
+			for(uint16_t x = 0; x < wb; ++ x) {
+				uint8_t byte = 0;
+				for(uint8_t xx = 0; xx < 8; ++ xx) {
+					byte = (byte << 1) | bitmask.get_pixel((x << 3) | xx, y);
+				}
+				serial.write(byte);
+			}
+			delayMicroseconds(wb * 200); // avoid overrunning buffer
+		}
+	}
+
+	template <typename Bitmask>
+	void print_bitmask81msb_small(const Bitmask &bitmask) {
+		uint8_t wb = uint8_t((min(bitmask.width(), widthDots) + 7) / 8);
+		uint8_t hb = uint8_t(min(bitmask.height(), 255));
+
+		set_command_timeout(10);
+		serial.write(DC2);
+		serial.write('*');
+		serial.write(hb);
+		serial.write(wb);
+		for(uint16_t y = 0; y < hb; ++ y) {
+			for(uint8_t x = 0; x < wb; ++ x) {
+				uint8_t byte = 0;
+				for(uint8_t xx = 0; xx < 8; ++ xx) {
+					byte = (byte << 1) | bitmask.get_pixel((x << 3) | xx, y);
+				}
+				serial.write(byte);
+			}
+			delay(1); // TODO: needed?
+		}
+	}
+
+	template <typename Bitmask>
+	void print_bitmask81msb_fullwidth(const Bitmask &bitmask) {
+		uint16_t hb = bitmask.height();
+
+		set_command_timeout(10);
+		serial.write(DC2);
+		serial.write('V');
+		write_16le(hb);
+		for(uint16_t y = 0; y < hb; ++ y) {
+			for(uint16_t x = 0; x < widthDots / 8; ++ x) {
+				uint8_t byte = 0;
+				for(uint8_t xx = 0; xx < 8; ++ xx) {
+					byte = (byte << 1) | bitmask.get_pixel((x << 3) | xx, y);
+				}
+				serial.write(byte);
+			}
+			delay(1); // TODO: needed?
+		}
+	}
+
+	template <typename Bitmask>
+	void print_bitmask81lsb_fullwidth(const Bitmask &bitmask) {
+		uint16_t hb = bitmask.height();
+
+		set_command_timeout(10);
+		serial.write(DC2);
+		serial.write('v');
+		write_16le(hb);
+		for(uint16_t y = 0; y < hb; ++ y) {
+			for(uint16_t x = 0; x < widthDots / 8; ++ x) {
+				uint8_t byte = 0;
+				for(uint8_t xx = 8; (xx --) > 0;) {
+					byte = (byte << 1) | bitmask.get_pixel((x << 3) | xx, y);
+				}
+				serial.write(byte);
+			}
+			delay(1); // TODO: needed?
+		}
+	}
+
+	template <typename Bitmask>
+	void print_bitmask18(
+		const Bitmask &bitmask,
+		bool dblWidth = false,
+		bool dblHeight = false
+	) {
+		uint8_t wb = uint8_t((min(bitmask.width(), widthDots) + 7) / 8);
+		uint16_t hb = (bitmask.height() + 7) / 8;
+		uint8_t hp = uint8_t(min(hb, 255));
+
+		// data sheet claims the following:
+//		if(hp > 48) {
+//			hp = 48;
+//		}
+//		if(wb * hp > 1536) {
+//			hp = 1536 / wb;
+//		}
+		// but in reality, seems this is the behaviour:
+		if(wb * hp > 48) {
+			hp = 48 / wb;
+		}
+
+		uint16_t w = uint16_t(wb) * 8;
+
+		set_command_timeout(10);
+
+		for(uint16_t y0 = 0; y0 < hb; y0 += hp) {
+			if(y0 + hp > hb) {
+				hp = uint8_t(hb - y0);
+			}
+
+			// Upload image
+			serial.write(GS);
+			serial.write('*');
+			serial.write(wb);
+			serial.write(hp);
+			for(uint16_t x = 0; x < w; ++ x) {
+				for(uint16_t y = 0; y < hp; ++ y) {
+					uint8_t byte = 0;
+					for(uint8_t yy = 0; yy < 8; ++ yy) {
+						byte = (byte << 1) | bitmask.get_pixel(
+							x,
+							((y + y0) << 3) | yy
+						);
+					}
+					serial.write(byte);
+				}
+			}
+
+			// Print image
+			reprint_bitmask18(dblWidth, dblHeight);
+			delay(10); // TODO: needed?
+		}
+	}
+
+	inline void reprint_bitmask18(
+		bool dblWidth = false,
+		bool dblHeight = false
+	) {
+		serial.write(GS);
+		serial.write('/');
+		serial.write((dblWidth ? 1 : 0) | (dblHeight ? 2 : 0));
+	}
+
+	// For compatibility with renderScene (3D renderer)
+	template <typename Bitmask>
+	void send(const Bitmask &bitmask, uint8_t, uint8_t) {
+		print_bitmask81msb(
+			bitmask,
+			(size & 0xF0) != 0,
+			(size & 0x0F) != 0
+		);
+	}
+
 	void print_test_page(void) {
 		serial.write(DC2);
 		serial.write('T');
@@ -529,10 +804,11 @@ public:
 
 	CSNA2_impl(SerialT &&serial, uint32_t baud)
 		: serial(static_cast<SerialT&&>(serial))
+		, mode(0x00)
+		, size(0x00)
 	{
 		serial.begin(baud);
 		ext::awaitBootMillis(500); // Wait 0.5s to power on
-		awake();
 		reset();
 		set_sleep(0);
 	}
@@ -550,6 +826,15 @@ public:
 #undef AWAKE
 #undef SMALLEST_FONT_W
 #undef MAX_TABSTOPS
+
+#undef MODE_FONTB
+#undef MODE_INVERTED
+#undef MODE_REVERSED
+#undef MODE_EMPHASISED
+#undef MODE_DBLHEIGHT
+#undef MODE_DBLWIDTH
+#undef MODE_DELETELINE
+#undef MODE_MASK
 
 template <typename SerialT, uint16_t widthDots = 384>
 [[gnu::always_inline,nodiscard]]

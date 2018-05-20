@@ -16,16 +16,36 @@
 
 #include "ext.h"
 
-template <typename T> // T = ProgMem<uint8_t> / const uint8*
+template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
 class StaticBitmask18 {
 	T d;
 	int16_t s;
-	uint8_t w;
-	uint8_t h;
+	uint16_t w;
+	uint16_t h;
+
+	[[gnu::pure,nodiscard,gnu::always_inline]]
+	inline bool in_bounds(int16_t x, int16_t y) const {
+		return x >= 0 && y >= 0 && uint16_t(x) < w && uint16_t(y) < h;
+	}
+
+	[[gnu::pure,nodiscard,gnu::always_inline]]
+	inline uint16_t pixel_byte(uint16_t x, uint16_t y) const {
+		return (y >> 3) * s + x;
+	}
+
+	[[gnu::const,nodiscard,gnu::always_inline]]
+	static constexpr inline uint8_t pixel_bit(uint8_t y) {
+		return y & 7;
+	}
 
 public:
 	[[gnu::always_inline]]
-	inline StaticBitmask18(T data, uint8_t width, uint8_t height, int16_t step)
+	inline StaticBitmask18(
+		T data,
+		uint16_t width,
+		uint16_t height,
+		int16_t step
+	)
 		: d(data)
 		, s(step)
 		, w(width)
@@ -33,7 +53,7 @@ public:
 	{}
 
 	[[gnu::always_inline]]
-	inline StaticBitmask18(T data, uint8_t width, uint8_t height)
+	inline StaticBitmask18(T data, uint16_t width, uint16_t height)
 		: d(data)
 		, s(width)
 		, w(width)
@@ -44,13 +64,21 @@ public:
 	inline StaticBitmask18(const StaticBitmask18&) = default;
 
 	[[gnu::pure,nodiscard,gnu::always_inline]]
-	inline uint8_t width(void) const {
+	inline uint16_t width(void) const {
 		return w;
 	}
 
 	[[gnu::pure,nodiscard,gnu::always_inline]]
-	inline uint8_t height(void) const {
+	inline uint16_t height(void) const {
 		return h;
+	}
+
+	[[gnu::pure,nodiscard]]
+	inline bool get_pixel(int16_t x, int16_t y) const {
+		if(!in_bounds(x, y)) {
+			return false;
+		}
+		return (d[pixel_byte(x, y)] >> pixel_bit(y)) & 1;
 	}
 
 	[[gnu::pure,nodiscard,gnu::always_inline]]
@@ -66,13 +94,22 @@ public:
 
 template <typename T>
 [[gnu::always_inline,nodiscard]]
-static inline StaticBitmask18<T> MakeStaticBitmask18(T data, uint8_t width, uint8_t height, int16_t step) {
+static inline StaticBitmask18<T> MakeStaticBitmask18(
+	T data,
+	uint16_t width,
+	uint16_t height,
+	int16_t step
+) {
 	return StaticBitmask18<T>(data, width, height, step);
 }
 
 template <typename T>
 [[gnu::always_inline,nodiscard]]
-static inline StaticBitmask18<T> MakeStaticBitmask18(T data, uint8_t width, uint8_t height) {
+static inline StaticBitmask18<T> MakeStaticBitmask18(
+	T data,
+	uint16_t width,
+	uint16_t height
+) {
 	return StaticBitmask18<T>(data, width, height);
 }
 

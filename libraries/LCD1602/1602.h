@@ -300,7 +300,7 @@ public:
 		send(value);
 	}
 
-	template <typename T> // T = ProgMem<uint8_t> / const uint8*
+	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
 	void print(T message) {
 		set_mode(DataState::DATA_WRITE);
 		for(T v = message; ; v += 1) {
