@@ -35,11 +35,18 @@ void demoBarcodes(Printer &printer) {
 	printer.print_barcode_upca("01234567890");
 	delay(800);
 
-	// UPCE doesn't seem to work
-//	printer.awake();
-//	printer.print("UPCE\n");
-//	printer.print_barcode_upce("0123456");
-//	delay(800);
+	printer.awake();
+	printer.print("UPCE\n");
+	// UPCE is a 0-omitted version of UPCA
+	// Printer takes values in UPCA format and converts them:
+	//  first digit (number system) can be 0 or 1 (all others are rejected)
+	//  remaining digits must match one of the following patterns:
+	//   **x0000*** (x can be 0-2)
+	//   ***00000**
+	//   ****00000*
+	//   *****0000x (x can be 5-9)
+	printer.print_barcode_upce("01230000045");
+	delay(800);
 
 	printer.awake();
 	printer.print("JAN13 / EAN13\n");

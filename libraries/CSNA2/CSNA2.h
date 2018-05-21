@@ -935,13 +935,19 @@ public:
 		);
 	}
 
-	void set_barcode_text(bool above, bool below) {
+	inline void set_barcode_margin_left(uint16_t dots) {
+		serial.write(GS);
+		serial.write('x');
+		write_16le(dots);
+	}
+
+	inline void set_barcode_text(bool above, bool below) {
 		serial.write(GS);
 		serial.write('H');
 		serial.write((above ? 1 : 0) | (below ? 2 : 0));
 	}
 
-	void set_barcode_height(uint8_t dots) {
+	inline void set_barcode_height(uint8_t dots) {
 		// Default is 80 (10mm)
 		// (documentation claims 162 but this is not correct)
 		serial.write(GS);
@@ -949,7 +955,7 @@ public:
 		serial.write(dots);
 	}
 
-	void set_barcode_thickness(uint8_t dots) {
+	inline void set_barcode_thickness(uint8_t dots) {
 		// Default 3 (0.375mm)
 		// Sets thin element width. Thick element is 2.5x
 		serial.write(GS);
@@ -987,9 +993,14 @@ public:
 
 	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
 	inline void print_barcode_upce(T code) {
-		// length 7 + check digit (auto-calculated if omitted)
-		// chars 0-9
-		// first digit is number system digit, typically 0
+		// produces an 8-digit code, but takes in a UPCA-format (11-digit) code
+		// requirements:
+		//  first digit (number system) can be 0 or 1 (all others are rejected)
+		//  remaining digits must match one of the following patterns:
+		//   **x0000*** (x can be 0-2)
+		//   ***00000**
+		//   ****00000*
+		//   *****0000x (x can be 5-9)
 		print_barcode(Barcode::UPCE, code);
 	}
 
