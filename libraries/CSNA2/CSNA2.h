@@ -78,9 +78,84 @@ public:
 		FAST      = 0x0B4604  // 96 dots, 700us heating, 40us interval    3ms/ln
 	};
 
+	enum class Charset : uint8_t {
+		USA           = 0,
+		FRANCE        = 1,
+		GERMANY       = 2,
+		UK            = 3,
+		DENMARK1      = 4,
+		SWEDEN        = 5,
+		ITALY         = 6,
+		SPAIN1        = 7,
+		JAPAN         = 8,
+		NORWAY        = 9,
+		DENMARK2      = 10,
+		SPAIN2        = 11,
+		LATIN_AMERICA = 12,
+		KOREA         = 13,
+		SLOVENIA      = 14,
+		CROATIA       = 14,
+		CHINA         = 15
+	};
+
+	enum class Codepage : uint8_t {
+		CP437       = 0, // USA / Standard Europe
+		KATAKANA    = 1,
+		CP850       = 2, // Multilingual
+		CP860       = 3, // Portuguese
+		CP863       = 4, // Canadian-French
+		CP865       = 5, // Nordic
+		WCP1251     = 6, // Cyrillic
+		CP866       = 7, // Cyrillic #2
+		MIK         = 8, // Cyrillic / Bulgarian
+		CP755       = 9, // East Europe, Latvian 2
+		IRAN1       = 10,
+		CP862       = 15, // Hebrew
+		WCP1252     = 16, // Latin 1
+		WCP1253     = 17, // Greek
+		CP852       = 18, // Latin 2
+		CP858       = 19, // Multilingual Latin 1 + Euro
+		IRAN2       = 20,
+		LATVIAN     = 21,
+		CP864       = 22, // Arabic
+		ISO_8859_1  = 23, // West Europe
+		CP737       = 24, // Greek
+		WCP1257     = 25, // Baltic
+		THAI1       = 26,
+		CP720       = 27, // Arabic
+		CP855       = 28,
+		CP857       = 29, // Turkish
+		WCP1250     = 30, // Central Europe
+		CP775       = 31,
+		WCP1254     = 32, // Turkish
+		WCP1255     = 33, // Hebrew
+		WCP1256     = 34, // Arabic
+		WCP1258     = 35, // Vietnam
+		ISO_8859_2  = 36, // Latin 2
+		ISO_8859_3  = 37, // Latin 3
+		ISO_8859_4  = 38, // Baltic
+		ISO_8859_5  = 39, // Cyrillic
+		ISO_8859_6  = 40, // Arabic
+		ISO_8859_7  = 41, // Greek
+		ISO_8859_8  = 42, // Hebrew
+		ISO_8859_9  = 43, // Turkish
+		ISO_8859_15 = 44, // Latin 3
+		THAI2       = 45,
+		CP856       = 46,
+		CP874       = 47,
+
+		BLANK = 0xFF
+	};
+
+	enum class ChineseEncoding : uint8_t {
+		GBK  = 0,
+		UTF8 = 1,
+		BIG5 = 2
+	};
+
 	enum class Font : uint8_t {
-		A_12_24,
-		B_9_17
+		A_12_24 = 0x00,
+		B_9_17  = 0x01
 	};
 
 	enum class Justification : uint8_t {
@@ -303,10 +378,15 @@ public:
 		set_character_spacing(0);
 		set_rot90(false);
 		set_justification(Justification::LEFT);
+		set_barcode_font(Font::A_12_24);
 		set_barcode_text(false, false);
 		set_barcode_height(80);
 		set_barcode_thickness(3);
 		set_margin_left(0);
+		set_printable_width(0xFFFF);
+		set_charset(Charset::USA);
+		set_codepage(Codepage::CP437);
+		set_user_chars(false);
 	}
 
 	[[gnu::always_inline]]
@@ -437,6 +517,24 @@ public:
 		delay(100);
 	}
 
+	inline void set_charset(Charset charset) {
+		serial.write(ESC);
+		serial.write('R');
+		serial.write(uint8_t(charset));
+	}
+
+	inline void set_codepage(Codepage codepage) {
+		serial.write(ESC);
+		serial.write('t');
+		serial.write(uint8_t(codepage));
+	}
+
+	inline void set_chinese_encoding(ChineseEncoding enc) {
+		serial.write(ESC);
+		serial.write('9');
+		serial.write(uint8_t(enc));
+	}
+
 	inline void print(char c) {
 		if(c == '\r') {
 			// CR is not supported over serial interface, and pointless too
@@ -486,6 +584,14 @@ public:
 		// (must be specified at the start of a line)
 		serial.write(GS);
 		serial.write('L');
+		write_16le(dots);
+	}
+
+	inline void set_printable_width(uint16_t dots) {
+		// Sets a global printable width for all following lines
+		// (must be specified at the start of a line)
+		serial.write(GS);
+		serial.write('W');
 		write_16le(dots);
 	}
 
@@ -716,8 +822,8 @@ public:
 		bool dblWidth = false,
 		bool dblHeight = false
 	) {
-		uint16_t wb = (ext::min2(bitmask.width(), widthDots) + 7) / 8;
-		uint16_t hb = ext::min2(bitmask.height(), uint16_t(4095));
+		uint16_t wb = (ext::min2(uint16_t(bitmask.width()), widthDots) + 7) / 8;
+		uint16_t hb = ext::min2(uint16_t(bitmask.height()), uint16_t(4095));
 
 		set_command_timeout(10);
 		serial.write(GS);
@@ -935,10 +1041,96 @@ public:
 		);
 	}
 
+	inline void set_user_chars(bool on) {
+		serial.write(ESC);
+		serial.write('%');
+		serial.write(on ? 1 : 0);
+	}
+
+	template <typename Bitmask>
+	void set_user_char(uint8_t code, const Bitmask &bitmask) {
+		// BEWARE: setting a character clears all other custom characters
+		if(code < 0x20 || code > 0x7E) {
+			return;
+		}
+
+		uint8_t w = uint8_t(ext::min2(
+			uint16_t(bitmask.width()),
+			uint16_t(255)
+		));
+
+		set_command_timeout(10);
+
+		serial.write(ESC);
+		serial.write('&');
+		serial.write(3);
+		serial.write(code);
+		serial.write(code);
+		serial.write(w);
+		for(uint16_t x = 0; x < w; ++ x) {
+			for(uint16_t y = 0; y < 3; ++ y) {
+				uint8_t byte = 0;
+				for(uint8_t yy = 0; yy < 8; ++ yy) {
+					byte = (byte << 1) | bitmask.get_pixel(x, (y << 3) | yy);
+				}
+				serial.write(byte);
+			}
+		}
+	}
+
+	template <typename Fn>
+	void set_user_chars(uint8_t codeStart, uint8_t count, Fn fn) {
+		// BEWARE: setting a character clears all other custom characters
+		if(codeStart < 0x20 || codeStart + count > 0x7E || count == 0) {
+			return;
+		}
+
+		set_command_timeout(10);
+
+		serial.write(ESC);
+		serial.write('&');
+		serial.write(3);
+		serial.write(codeStart);
+		serial.write(codeStart + count - 1);
+		for(uint8_t i = 0; i < count; ++ i) {
+			const auto &bitmask = fn(char(codeStart + i));
+			uint8_t w = uint8_t(ext::min2(
+				uint16_t(bitmask.width()),
+				uint16_t(255)
+			));
+			serial.write(w);
+			for(uint16_t x = 0; x < w; ++ x) {
+				for(uint16_t y = 0; y < 3; ++ y) {
+					uint8_t byte = 0;
+					for(uint8_t yy = 0; yy < 8; ++ yy) {
+						byte = (byte << 1) | bitmask.get_pixel(x, (y << 3) | yy);
+					}
+					serial.write(byte);
+				}
+			}
+		}
+	}
+
+	inline void clear_user_char(uint8_t code) {
+		if(code < 0x20 || code > 0x7E) {
+			return;
+		}
+
+		serial.write(ESC);
+		serial.write('?');
+		serial.write(code);
+	}
+
 	inline void set_barcode_margin_left(uint16_t dots) {
 		serial.write(GS);
 		serial.write('x');
 		write_16le(dots);
+	}
+
+	inline void set_barcode_font(Font font) {
+		serial.write(GS);
+		serial.write('f');
+		serial.write(uint8_t(font));
 	}
 
 	inline void set_barcode_text(bool above, bool below) {

@@ -20,6 +20,7 @@
 
 #include "DemoText.h"
 #include "DemoBarcodes.h"
+#include "DemoCharset.h"
 #include "DemoBitmaps.h"
 #include "Demo3D.h"
 #include "DemoConfig.h"
@@ -66,6 +67,7 @@ void setup(void) {
 
 	demoText(printer);
 	demoBarcodes(printer);
+	demoCharset(printer);
 	demoBitmaps(printer);
 	demo3D(printer);
 	demoConfig(printer);

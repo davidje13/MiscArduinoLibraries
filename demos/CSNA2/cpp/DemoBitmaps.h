@@ -25,37 +25,37 @@ void demoBitmaps(Printer &printer) {
 	auto bitmask = MakeStaticBitmask18(SolidFill(true), 64, 32);
 
 	printer.awake();
-	printer.print("print_bitmask81msb\n");
+	printer.print(ProgMemString("print_bitmask81msb\n"));
 	printer.print_bitmask81msb(bitmask);
 	delay(500);
 
 	printer.awake();
-	printer.print("\nprint_bitmask81msb_small\n");
+	printer.print(ProgMemString("\nprint_bitmask81msb_small\n"));
 	printer.print_bitmask81msb_small(bitmask);
 	delay(500);
 
 	printer.awake();
-	printer.print("\nprint_bitmask81msb_fullwidth\n");
+	printer.print(ProgMemString("\nprint_bitmask81msb_fullwidth\n"));
 	printer.print_bitmask81msb_fullwidth(bitmask); // lower quality
 	delay(500);
 
 	printer.awake();
-	printer.print("\nprint_bitmask81lsb_fullwidth\n");
+	printer.print(ProgMemString("\nprint_bitmask81lsb_fullwidth\n"));
 	printer.print_bitmask81lsb_fullwidth(bitmask); // lower quality
 	delay(500);
 
 	printer.awake();
-	printer.print("\nprint_bitmask18\n");
+	printer.print(ProgMemString("\nprint_bitmask18\n"));
 	printer.print_bitmask18(bitmask); // lower quality for large images
 	delay(500);
 
 	printer.awake();
-	printer.print("\nprint_bitmask18_lines\n");
+	printer.print(ProgMemString("\nprint_bitmask18_lines\n"));
 	printer.print_bitmask18_lines(bitmask); // fails for large images (why??)
 	delay(500);
 
 	printer.awake();
-	printer.print("\nLarge ProgMem image:\n");
+	printer.print(ProgMemString("\nLarge ProgMem image:\n"));
 	auto logo = MakeStaticBitmask18(MakeProgMem(LOGO), 256, 256);
 	printer.print_bitmask18(logo, false, false);
 	printer.linefeed();

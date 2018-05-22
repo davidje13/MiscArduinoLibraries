@@ -395,7 +395,11 @@ public:
 		BlendMode m = BlendMode::ON,
 		Pattern p = PATTERN_ON
 	) {
-		if(w <= 0 || h <= 0 || x + w <= 0 || y + h <= 0 || x >= WIDTH || y >= HEIGHT) {
+		if(
+			w <= 0 || h <= 0 ||
+			x + w <= 0 || y + h <= 0 ||
+			x >= bitsz_t(WIDTH) || y >= bitsz_t(HEIGHT)
+		) {
 			return;
 		}
 
