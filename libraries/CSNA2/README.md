@@ -41,3 +41,9 @@ delay(2000); // Printer will go to sleep after 1 second
 printer.awake();
 printer.print(ProgMemString("Still here!\n\n\n"));
 ```
+
+## Output
+
+The demo in `demos/CSNA2` will print the following:
+
+![Demo output](./DemoOutput.jpg)
