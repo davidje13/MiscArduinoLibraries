@@ -202,6 +202,7 @@ public:
 		CODE128        = 0x49
 	};
 
+	[[gnu::always_inline]]
 	static constexpr inline uint8_t dots_per_mm(void) {
 		return 8;
 	}
@@ -341,10 +342,12 @@ class CSNA2_impl : public CSNA2 {
 	}
 
 public:
+	[[gnu::always_inline]]
 	static constexpr inline uint16_t width_dots(void) {
 		return widthDots;
 	}
 
+	[[gnu::always_inline]]
 	static constexpr inline uint16_t width_mm(void) {
 		return width_dots() / dots_per_mm();
 	}
@@ -840,7 +843,7 @@ public:
 				}
 				serial.write(byte);
 			}
-			delayMicroseconds(wb * 200); // avoid overrunning buffer
+			delay((wb * 3) / 2); // avoid overrunning buffer
 		}
 	}
 

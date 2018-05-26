@@ -74,8 +74,8 @@ template <typename Printer>
 void demo3D(Printer &printer) {
 	showTitle(printer, ProgMemString("3D!"));
 
-	constexpr uint16_t ww = 128;
-	constexpr uint16_t hh = 128;
+	constexpr uint16_t ww = printer.width_dots();
+	constexpr uint16_t hh = ww;
 	bool doubleSize = false;
 
 	Bitmask18<ww, 16> bitmask;
@@ -88,7 +88,7 @@ void demo3D(Printer &printer) {
 
 	int cx = ww / 2;
 	int cy = hh / 2;
-	int zoom = hh;
+	int zoom = (hh * 4) / 3;
 
 	uint8_t shift = 2;
 	uint8_t matShift = 8;

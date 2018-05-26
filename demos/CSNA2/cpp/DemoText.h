@@ -18,10 +18,8 @@ void demoText(Printer &printer) {
 	showTitle(printer, ProgMemString("Text!"));
 
 	printer.print(ProgMemString(
-		"Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-		"Suspendisse vitae auctor est. "
-		"Aliquam scelerisque scelerisque erat sit amet vulputate."
-		"\n"
+		"Thermal printer test page printed by the CSNA2 library.\n"
+		"github.com/davidje13/MiscArduinoLibraries\n"
 	));
 
 	printer.set_justification(CSNA2::Justification::CENTRE);
@@ -72,41 +70,18 @@ void demoText(Printer &printer) {
 	printer.linefeed();
 	printer.set_rotation(CSNA2::Rotation::NORMAL);
 
-	printer.set_character_size(1, 1);
-	printer.print(ProgMemString("1x1"));
-	printer.set_character_width(2);
-	printer.print(ProgMemString("2x1"));
-	printer.set_character_width(3);
-	printer.print(ProgMemString("3x1"));
-	printer.set_character_width(4);
-	printer.print(ProgMemString("4x1\n"));
+	delay(1000);
 
-	printer.set_character_size(1, 2);
-	printer.print(ProgMemString("1x2"));
-	printer.set_character_width(2);
-	printer.print(ProgMemString("2x2"));
-	printer.set_character_width(3);
-	printer.print(ProgMemString("3x2"));
-	printer.set_character_width(4);
-	printer.print(ProgMemString("4x2\n"));
-
-	printer.set_character_size(1, 3);
-	printer.print(ProgMemString("1x3"));
-	printer.set_character_width(2);
-	printer.print(ProgMemString("2x3"));
-	printer.set_character_width(3);
-	printer.print(ProgMemString("3x3"));
-	printer.set_character_width(4);
-	printer.print(ProgMemString("4x3\n"));
-
-	printer.set_character_size(1, 4);
-	printer.print(ProgMemString("1x4"));
-	printer.set_character_width(2);
-	printer.print(ProgMemString("2x4"));
-	printer.set_character_width(3);
-	printer.print(ProgMemString("3x4"));
-	printer.set_character_width(4);
-	printer.print(ProgMemString("4x4\n"));
+	for(uint8_t h = 1; h < 5; ++ h) {
+		printer.set_character_size(1, h);
+		for(uint8_t w = 1; w < 5; ++ w) {
+			printer.print(char('0' + w));
+			printer.print('x');
+			printer.print(char('0' + h));
+			printer.set_character_width(w + 1);
+		}
+		printer.linefeed();
+	}
 
 	delay(1000);
 

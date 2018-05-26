@@ -20,6 +20,34 @@
 
 static PROGMEM const char HEX_CHARS[] = "0123456789ABCDEF";
 
+template <typename Printer>
+void showCharRange(Printer &printer, uint8_t start, uint8_t end) {
+	auto hex = MakeProgMem(HEX_CHARS);
+
+	printer.set_justification(CSNA2::Justification::CENTRE);
+
+	printer.print(ProgMemString("  "));
+	for(uint8_t i = start; i < end; ++ i) {
+		printer.print(' ');
+		printer.print(hex[i]);
+		printer.print('_');
+	}
+	printer.linefeed();
+
+	for(uint8_t j = 0x00; j < 0x10; ++ j) {
+		printer.print('_');
+		printer.print(hex[j]);
+		for(uint8_t i = start; i < end; ++ i) {
+			printer.print(ProgMemString("  "));
+			printer.print(char((i << 4) | j));
+		}
+		printer.linefeed();
+		delay(200);
+	}
+
+	printer.set_justification(CSNA2::Justification::LEFT);
+}
+
 template <typename Printer, typename T>
 void showFullCharset(Printer &printer, T name, CSNA2::Charset c) {
 	printer.awake();
@@ -29,30 +57,19 @@ void showFullCharset(Printer &printer, T name, CSNA2::Charset c) {
 	printer.print(name);
 	printer.linefeed();
 
-	auto hex = MakeProgMem(HEX_CHARS);
+	showCharRange(printer, 0x2, 0x8);
+}
 
-	printer.set_justification(CSNA2::Justification::CENTRE);
+template <typename Printer, typename T>
+void showCodepage(Printer &printer, T name, CSNA2::Codepage c) {
+	printer.awake();
+	printer.set_codepage(c);
 
-	printer.print(ProgMemString("  "));
-	for(uint8_t i = 0x20; i < 0x80; i += 0x10) {
-		printer.print(' ');
-		printer.print(hex[i >> 4]);
-		printer.print('_');
-	}
+	printer.linefeed();
+	printer.print(name);
 	printer.linefeed();
 
-	for(uint8_t j = 0x00; j < 0x10; ++ j) {
-		printer.print('_');
-		printer.print(hex[j]);
-		for(uint8_t i = 0x20; i < 0x80; i += 0x10) {
-			printer.print(ProgMemString("  "));
-			printer.print(char(i | j));
-		}
-		printer.linefeed();
-		delay(200);
-	}
-
-	printer.set_justification(CSNA2::Justification::LEFT);
+	showCharRange(printer, 0x8, 0x10);
 }
 
 template <typename Printer, typename T>
@@ -134,4 +151,7 @@ void demoCharset(Printer &printer) {
 	printer.print(ProgMemString("\x24\n"));
 	printer.set_charset(CSNA2::Charset::USA);
 	delay(200);
+
+	showCodepage(printer, ProgMemString("CP437"), CSNA2::Codepage::CP437);
+	showCodepage(printer, ProgMemString("CP720"), CSNA2::Codepage::CP720);
 }

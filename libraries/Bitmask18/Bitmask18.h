@@ -35,11 +35,13 @@
 	typedef uint16_t ubitsz_t;
 	typedef int16_t bitsz_t;
 	typedef int16_t bitshiftsz_t;
+	typedef int32_t bitshift2sz_t;
 	typedef int32_t bitlsz_t;
 #else
 	typedef uint8_t ubitsz_t;
 	typedef int16_t bitsz_t;
 	typedef int16_t bitshiftsz_t;
+	typedef int16_t bitshift2sz_t;
 	typedef int32_t bitlsz_t;
 #endif
 
@@ -68,8 +70,8 @@ class Bitmask18 {
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
 	static constexpr inline bool check_tl(
-		bitsz_t x0, bitsz_t y0,
-		bitsz_t x1, bitsz_t y1
+		bitshiftsz_t x0, bitshiftsz_t y0,
+		bitshiftsz_t x1, bitshiftsz_t y1
 	) {
 		return y1 > y0 || (y1 == y0 && x1 < x0);
 	}
@@ -532,7 +534,7 @@ public:
 
 		if(a < 0) {
 			// TODO: convert this to 16-bit operations
-			bitlsz_t D2 = D - dB * a;
+			bitlsz_t D2 = D - bitlsz_t(dB) * a;
 			a = 0;
 			b += D2 / dA;
 			D = D2 % dA;
@@ -830,22 +832,36 @@ public:
 		bitsz_t xL = bitsz_t(minx >> shift);
 		bitsz_t xH = bitsz_t((maxx >> shift) + 1);
 
-		bitshiftsz_t sA01 = y1 - y0;
-		bitshiftsz_t sB01 = x0 - x1;
-		bitshiftsz_t sA12 = y2 - y1;
-		bitshiftsz_t sB12 = x1 - x2;
-		bitshiftsz_t sA20 = y0 - y2;
-		bitshiftsz_t sB20 = x2 - x0;
-
-		int8_t b01 = check_tl(x0, y0, x1, y1) ? -1 : 0;
-		int8_t b12 = check_tl(x1, y1, x2, y2) ? -1 : 0;
-		int8_t b20 = check_tl(x2, y2, x0, y0) ? -1 : 0;
+		bitshift2sz_t sA01 = y1 - y0;
+		bitshift2sz_t sB01 = x0 - x1;
+		bitshift2sz_t sA12 = y2 - y1;
+		bitshift2sz_t sB12 = x1 - x2;
+		bitshift2sz_t sA20 = y0 - y2;
+		bitshift2sz_t sB20 = x2 - x0;
 
 		bitshiftsz_t px = bitshiftsz_t((bitshiftsz_t(xL) << shift) + (1 << shift) / 2);
 		bitshiftsz_t py = bitshiftsz_t(((bitshiftsz_t(yL) << 3) << shift) + (1 << shift) / 2);
-		bitshiftsz_t e010 = sA01 * px + sB01 * py + (y0 * x1) - (x0 * y1) + b01;
-		bitshiftsz_t e120 = sA12 * px + sB12 * py + (y1 * x2) - (x1 * y2) + b12;
-		bitshiftsz_t e200 = sA20 * px + sB20 * py + (y2 * x0) - (x2 * y0) + b20;
+		bitshift2sz_t e010 = (
+			+ sA01 * px
+			+ sB01 * py
+			+ bitshift2sz_t(y0) * x1
+			- bitshift2sz_t(x0) * y1
+			- check_tl(x0, y0, x1, y1)
+		);
+		bitshift2sz_t e120 = (
+			+ sA12 * px
+			+ sB12 * py
+			+ bitshift2sz_t(y1) * x2
+			- bitshift2sz_t(x1) * y2
+			- check_tl(x1, y1, x2, y2)
+		);
+		bitshift2sz_t e200 = (
+			+ sA20 * px
+			+ sB20 * py
+			+ bitshift2sz_t(y2) * x0
+			- bitshift2sz_t(x2) * y0
+			- check_tl(x2, y2, x0, y0)
+		);
 
 		sA01 <<= shift;
 		sA12 <<= shift;
@@ -859,9 +875,9 @@ public:
 		e200 -= sA20 + sB20;
 
 		for(bitsz_t x = xL; x < xH; ++ x) {
-			bitshiftsz_t e01 = (e010 += sA01);
-			bitshiftsz_t e12 = (e120 += sA12);
-			bitshiftsz_t e20 = (e200 += sA20);
+			bitshift2sz_t e01 = (e010 += sA01);
+			bitshift2sz_t e12 = (e120 += sA12);
+			bitshift2sz_t e20 = (e200 += sA20);
 			for(bitsz_t y = yL; y < yH; ++ y) {
 				// Manually unrolled loop, since at Arduino's default -Os,
 				// the compiler won't unroll it for us, and this is a hot loop.

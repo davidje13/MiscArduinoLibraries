@@ -11,7 +11,7 @@
  */
 
 #include "DemoUtils.h"
-#include "Logo.h"
+#include "Ship.h"
 
 #include <CSNA2.h>
 #include <ProgMem.h>
@@ -56,8 +56,8 @@ void demoBitmaps(Printer &printer) {
 
 	printer.awake();
 	printer.print(ProgMemString("\nLarge ProgMem image:\n"));
-	auto logo = MakeStaticBitmask18(MakeProgMem(LOGO), 256, 256);
-	printer.print_bitmask18(logo, false, false);
+	auto ship = MakeStaticBitmask18(MakeProgMem(SHIP), 384, 224);
+	printer.print_bitmask81lsb_fullwidth(ship);
 	printer.linefeed();
 
 	delay(2000);
