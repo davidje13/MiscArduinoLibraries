@@ -13,6 +13,7 @@ SCRIPTDIR="$(dirname "$0")";
 EXEC="$SCRIPTDIR/bin/CharacterWidths";
 EXEC_SRC="$SCRIPTDIR/src/CharacterWidths.cpp";
 DATA="$1";
+RAW="$2";
 
 if [[ -z "$DATA" ]]; then
 	cat >&2 <<EOF;
@@ -28,11 +29,14 @@ fi;
 
 if [[ ! -x "$EXEC" ]]; then
 	mkdir -p "$SCRIPTDIR/bin";
-	g++ --std=c++11 -isystem/opt/local/include -L/opt/local/lib -lpng -Wall -Wextra --pedantic -O3 "$EXEC_SRC" -o "$EXEC";
+	g++ --std=c++11 \
+		-isystem/opt/local/include \
+		-isystem/usr/local/include \
+		-L/opt/local/lib \
+		-lpng \
+		-Wall -Wextra --pedantic \
+		-O3 "$EXEC_SRC" \
+		-o "$EXEC";
 fi;
 
-"$EXEC" "$DATA" | \
-	sed 's/, $//' | \
-	fold -w 48 | \
-	sed 's/ $//' | \
-	sed -e 's/\(.*\)/	\1/g';
+"$EXEC" "$DATA" | "$SCRIPTDIR/tohex.sh" "$RAW";

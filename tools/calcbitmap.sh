@@ -13,14 +13,16 @@ SCRIPTDIR="$(dirname "$0")";
 EXEC="$SCRIPTDIR/bin/BitmapConverter";
 EXEC_SRC="$SCRIPTDIR/src/BitmapConverter.cpp";
 DATA="$1";
+FORMAT="$2";
+RAW="$3";
 
-if [[ -z "$DATA" ]]; then
+if [[ -z "$DATA" ]] || [[ -z "$FORMAT" ]]; then
 	cat >&2 <<EOF;
 
-  Usage: $0 <image_path>
+  Usage: $0 <image_path> <18/81>
 
-Computes a Bitmask18-friendly form of the input image and prints out a C byte
-array defining it.
+Computes a Bitmask-friendly form of the input image (18- or 81- format) and
+prints out a C byte array defining it.
 
 EOF
 	exit 1;
@@ -28,11 +30,15 @@ fi;
 
 if [[ ! -x "$EXEC" ]]; then
 	mkdir -p "$SCRIPTDIR/bin";
-	g++ --std=c++11 -isystem/opt/local/include -L/opt/local/lib -lpng -Wall -Wextra --pedantic -O3 "$EXEC_SRC" -o "$EXEC";
+	g++ --std=c++11 \
+		-isystem/opt/local/include \
+		-isystem/usr/local/include \
+		-L/opt/local/lib \
+		-lpng \
+		-Wall -Wextra --pedantic \
+		-O3 "$EXEC_SRC" \
+		-o "$EXEC";
 fi;
 
-"$EXEC" "$DATA" | \
-	sed 's/, $//' | \
-	fold -w 48 | \
-	sed 's/ $//' | \
-	sed -e 's/\(.*\)/	\1/g';
+"$EXEC" "$DATA" "$FORMAT" \
+	| "$SCRIPTDIR/tohex.sh" "$RAW";

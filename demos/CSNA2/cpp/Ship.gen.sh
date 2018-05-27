@@ -22,7 +22,7 @@ cat <<EOF;
 static PROGMEM const uint8_t SHIP[] = {
 EOF
 
-"$CALC" "$IMG";
+"$CALC" "$IMG" "18";
 
 cat <<EOF;
 };

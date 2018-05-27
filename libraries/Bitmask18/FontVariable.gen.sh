@@ -46,7 +46,7 @@ EOF
 
 echo "	,";
 
-"$CALC_DATA" "$IMG";
+"$CALC_DATA" "$IMG" "18";
 
 cat <<EOF;
 };

@@ -39,13 +39,7 @@ int main(int argc, const char *const *argv) {
 	for(int x = 0; x <= w; ++ x) {
 		bool v = (x == w) ? !lastV : (((imgView(x, 0) + 32) % 192) > 64);
 		if(x != lastX && v != lastV) {
-			std::cout
-				<< "0x"
-				<< std::hex
-				<< std::setfill('0')
-				<< std::setw(2)
-				<< (x - lastX)
-				<< ", ";
+			std::cout << static_cast<unsigned char>(x - lastX);
 			lastX = x;
 		}
 		lastV = v;

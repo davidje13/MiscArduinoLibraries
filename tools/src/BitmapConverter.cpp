@@ -2,11 +2,12 @@
  * PNG to bitmask conversion program.
  *
  * Takes an input PNG image and generates a C-style array declaration which
- * represents it, in Bitmap18 format: each byte represents a 1x8 slice, LSB
- * is top-most pixel, bytes arranged left-to-right, top-to-bottom.
+ * represents it, in Bitmask18 or Bitmask81 format: each byte represents a 1x8
+ * or 8x1 slice, LSB is top-left-most pixel, bytes arranged left-to-right,
+ * top-to-bottom.
  *
  * Usage:
- *  ./BitmapConverter <image_file>
+ *  ./BitmapConverter <image_file> <18/81>
  *
  * Dependencies: boost (GIL, GIL IO), libpng
  *
@@ -20,36 +21,48 @@
 #include <boost/gil/gil_all.hpp>
 #include <boost/gil/extension/io/png_io.hpp>
 #include <iostream>
-#include <ios>
-#include <iomanip>
 #include <stdlib.h>
 
 int main(int argc, const char *const *argv) {
-	if(argc < 2) {
+	if(argc < 3) {
 		return EXIT_FAILURE;
 	}
 	boost::gil::gray8_image_t img;
 	boost::gil::png_read_and_convert_image(argv[1], img);
 
 	auto imgView = boost::gil::const_view(img);
-	for(int y = 0; y < imgView.height(); y += 8) {
-		for(int x = 0; x < imgView.width(); ++ x) {
-			unsigned char value = 0x00;
+	std::string format(argv[2]);
+	if(format == "18") {
+		for(int y = 0; y < imgView.height(); y += 8) {
+			for(int x = 0; x < imgView.width(); ++ x) {
+				unsigned char value = 0x00;
 
-			for(int yy = 0; yy < 8; ++ yy) {
-				if(imgView(x, y + yy) > 128) {
-					value |= 1 << yy;
+				for(int yy = 0; yy < 8; ++ yy) {
+					if(imgView(x, y + yy) > 128) {
+						value |= 1 << yy;
+					}
 				}
-			}
 
-			std::cout
-				<< "0x"
-				<< std::hex
-				<< std::setfill('0')
-				<< std::setw(2)
-				<< int(value)
-				<< ", ";
+				std::cout << value;
+			}
 		}
+	} else if(format == "81") {
+		for(int y = 0; y < imgView.height(); ++ y) {
+			for(int x = 0; x < imgView.width(); x += 8) {
+				unsigned char value = 0x00;
+
+				for(int xx = 0; xx < 8; ++ xx) {
+					if(imgView(x + xx, y) > 128) {
+						value |= 1 << xx;
+					}
+				}
+
+				std::cout << value;
+			}
+		}
+	} else {
+		std::cerr << "Unknown format " << format << std::endl;
+		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;

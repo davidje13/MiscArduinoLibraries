@@ -42,7 +42,7 @@ static PROGMEM const uint8_t FONTFIXED_DATA[] = {
 	5,
 EOF
 
-"$CALC" "$IMG";
+"$CALC" "$IMG" "18";
 
 cat <<EOF;
 };
