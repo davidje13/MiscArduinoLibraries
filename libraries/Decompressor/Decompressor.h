@@ -16,6 +16,10 @@
 
 #include "ext.h"
 
+// save some RAM and processing time if we trust the input
+// (set to 0 for untrusted input; may not catch all attacks)
+#define TRUSTED_INPUT 1
+
 typedef uint8_t windowsz_t;
 
 template <typename BaseT, windowsz_t windowSize>
@@ -37,7 +41,11 @@ class Decompressor {
 	uint16_t blockLen;
 	windowsz_t blockDist;
 	windowsz_t currentWindowPos;
+#if TRUSTED_INPUT
+	bits_t beginnings[maxBits - 2];
+#else
 	bits_t beginnings[maxBits - 1];
+#endif
 	uint8_t window[windowSize];
 
 	[[gnu::always_inline,gnu::pure,nodiscard]]
@@ -96,11 +104,13 @@ class Decompressor {
 
 	[[gnu::pure,nodiscard]]
 	bool is_known(bits_t value, uint8_t len) const {
+#if TRUSTED_INPUT
 		if(len == maxBits) {
 			// We assume input data is non-malicious, so if we get this
 			// far it must be OK (saves us storing 2 bytes)
 			return true;
 		}
+#endif
 		return (
 			(len == 1 || value >= beginnings[len - 2]) &&
 			value < (beginnings[len - 1] >> 1)
@@ -149,7 +159,7 @@ class Decompressor {
 		// bits 12+: 4-bit symbol length (one per symbol)
 		uint16_t symbolCount = symbol_count();
 		bits_t v = 0;
-		for(uint8_t len = 1; len < maxBits; ++ len) {
+		for(uint8_t len = 1; len <= maxBits - (TRUSTED_INPUT ? 1 : 0); ++ len) {
 			for(uint16_t i = 0; i < symbolCount; ++ i) {
 				if(symbol_size(i) == len) {
 					++ v;
@@ -184,6 +194,12 @@ class Decompressor {
 
 	void advance_block(void) {
 		-- blockLen;
+#if !TRUSTED_INPUT
+		if(blockDist > windowSize) {
+			advance_byte(0);
+			return;
+		}
+#endif
 		advance_byte(read_window(blockDist));
 	}
 
