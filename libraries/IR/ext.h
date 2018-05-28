@@ -113,17 +113,6 @@ namespace ext {
 		return ((a % b) + b) % b;
 	}
 
-	static inline void awaitBootMillis(uint16_t ms) {
-		// We ignore rollover here, since this is intended to be used in
-		// setup-type code, so it's unlikely we've already been running
-		// for 50 days.
-		uint32_t tm0 = millis();
-		if(tm0 < ms) {
-			// Has not been running long enough yet
-			delay(ms - tm0);
-		}
-	}
-
 	// This class is a simplified version of boost's compressed_pair. It is
 	// used to allow empty structs to be stored without taking up any memory.
 	template <typename OptionalT, typename KnownT>

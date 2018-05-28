@@ -160,8 +160,8 @@ class Bitmask18 {
 		T bm = maskImg;
 
 		ubitsz_t x0;
-		ubitsz_t x1 = ubitsz_t(ext::min2(x + w, bitsz_t(WIDTH)));
-		ubitsz_t y1 = ubitsz_t(ext::min2(y + h, bitsz_t(HEIGHT)));
+		ubitsz_t x1 = ubitsz_t(ext::min2(bitsz_t(x + w), bitsz_t(WIDTH)));
+		ubitsz_t y1 = ubitsz_t(ext::min2(bitsz_t(y + h), bitsz_t(HEIGHT)));
 		uint8_t shift = y & 7;
 
 		if(x < 0) {
@@ -169,7 +169,7 @@ class Bitmask18 {
 			bm = safe_subdata(bm, -x);
 			x0 = 0;
 		} else {
-			x0 = x;
+			x0 = ubitsz_t(x);
 		}
 		ubitsz_t ww = x1 - x0;
 		ubitsz_t yBlock1 = y1 / 8;
@@ -408,8 +408,8 @@ public:
 		fill_rect_fast(
 			ubitsz_t(ext::max2(x, bitsz_t(0))),
 			ubitsz_t(ext::max2(y, bitsz_t(0))),
-			ubitsz_t(ext::min2(x + w, bitsz_t(WIDTH))),
-			ubitsz_t(ext::min2(y + h, bitsz_t(HEIGHT))),
+			ubitsz_t(ext::min2(bitsz_t(x + w), bitsz_t(WIDTH))),
+			ubitsz_t(ext::min2(bitsz_t(y + h), bitsz_t(HEIGHT))),
 			m, p
 		);
 	}
@@ -520,7 +520,7 @@ public:
 
 		bitshiftsz_t D = dA * ((dB < 0) ? 1 : -1);
 		if(shift > 0) {
-			bitshiftsz_t mask = (bitshiftsz_t(1) << shift) - 1;
+			bitshiftsz_t mask = bitshiftsz_t((bitshiftsz_t(1) << shift) - 1);
 			D += (dB - dA
 				+ (((b & mask) * dA) >> (shift - 1))
 				- (((a & mask) * dB) >> (shift - 1))
@@ -821,8 +821,14 @@ public:
 
 		bitshiftsz_t minx = ext::max2(ext::min3(x0, x1, x2), bitshiftsz_t(0));
 		bitshiftsz_t miny = ext::max2(ext::min3(y0, y1, y2), bitshiftsz_t(0));
-		bitshiftsz_t maxx = ext::min2(ext::max3(x0, x1, x2), (bitshiftsz_t(WIDTH) << shift) - 1);
-		bitshiftsz_t maxy = ext::min2(ext::max3(y0, y1, y2), (bitshiftsz_t(HEIGHT) << shift) - 1);
+		bitshiftsz_t maxx = ext::min2(
+			ext::max3(x0, x1, x2),
+			bitshiftsz_t((bitshiftsz_t(WIDTH) << shift) - 1)
+		);
+		bitshiftsz_t maxy = ext::min2(
+			ext::max3(y0, y1, y2),
+			bitshiftsz_t((bitshiftsz_t(HEIGHT) << shift) - 1)
+		);
 		if(maxx < minx || maxy < miny) {
 			return;
 		}

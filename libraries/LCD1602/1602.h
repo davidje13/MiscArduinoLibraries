@@ -15,6 +15,7 @@
 #define LCD1602_H_INCLUDED
 
 #include "ext.h"
+#include <bootup.h>
 
 class LCD1602 {
 public:
@@ -190,7 +191,7 @@ public:
 		en.low();
 		bank.send_batch();
 
-		ext::awaitBootMillis(40); // Wait 40ms for power on
+		awaitBootMillis(40); // Wait 40ms for power on
 		handshake();
 	}
 

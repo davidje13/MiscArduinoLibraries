@@ -15,6 +15,7 @@
 #define CSNA2_H_INCLUDED
 
 #include "ext.h"
+#include <bootup.h>
 #include <ProgMem.h>
 
 #define BARCODE_00 "\x80"
@@ -1278,7 +1279,7 @@ public:
 		, size(0x00)
 	{
 		serial.begin(baud);
-		ext::awaitBootMillis(500); // Wait 0.5s to power on
+		awaitBootMillis(500); // Wait 0.5s to power on
 		reset();
 		set_sleep(0);
 	}

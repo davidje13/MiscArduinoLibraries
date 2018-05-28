@@ -1,17 +1,16 @@
 #!/bin/bash
 set -e;
 
-# Generator for the Ship.h file
+# Header generator
 
 SCRIPTDIR="$(dirname "$0")";
 TOOLSDIR="$SCRIPTDIR/../../../tools";
-DATADIR="$SCRIPTDIR/../data";
 
-IMG="$DATADIR/Burrumbeet.png";
+CONTENT="This is a moderately long test message which will be compressed and decompressed. Hopefully the compression will actually save some bytes.";
 
 FILENAME="${0##*/}";
 FILENAME="${FILENAME%.gen.sh}"
-DEFNAME="SHIP";
+DEFNAME="COMPRESSED_TEST";
 
 {
 cat <<EOF;
@@ -25,7 +24,7 @@ cat <<EOF;
 static PROGMEM const uint8_t $DEFNAME[] = {
 EOF
 
-"$TOOLSDIR/calcbitmap.sh" "$IMG" "18";
+"$TOOLSDIR/compressor.sh" "32" <<<"$CONTENT";
 
 cat <<EOF;
 };

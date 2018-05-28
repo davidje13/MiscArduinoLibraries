@@ -167,12 +167,16 @@ public:
 
 template <typename T>
 class codebook {
-	std::vector<uint32_t> bits;
+	typedef uint16_t bits_t;
+	static constexpr uint8_t maxBits = 15;
+
+	std::vector<bits_t> bits;
 	std::vector<uint8_t> sizes;
 	uint8_t maxSize;
 
 	void populate_sizes(const huffnode<T> &node, uint8_t len) {
-		if(len > 32) {
+		if(len > maxBits) {
+			// TODO: try to generate non-optimal trees in this situation
 			throw std::string("Cannot encode: huffman tree is too skewed");
 		}
 		if(node.child1 == nullptr) {
@@ -186,7 +190,7 @@ class codebook {
 
 	void populate_bits(void) {
 		// Thanks, https://en.wikipedia.org/wiki/Canonical_Huffman_code
-		uint32_t b = 0;
+		bits_t b = 0;
 		for(uint8_t l = 1; l <= maxSize; ++ l) {
 			for(T v = 0; v < symbol_count(); ++ v) {
 				if(sizes[v] == l) {
@@ -264,7 +268,7 @@ public:
 	}
 
 	void debug_value(std::ostream &target, const T &v) const {
-		uint32_t value = bits.at(v);
+		bits_t value = bits.at(v);
 		uint8_t size = sizes.at(v);
 		for(uint8_t i = size; (i --) > 0;) {
 			target << ((value & (1 << i)) ? '1' : '0');
@@ -275,29 +279,21 @@ public:
 		target << "TABLE:" << std::endl;
 		for(T v = 0; v < symbol_count(); ++ v) {
 			target << "  " << int(v) << ": ";
-			debug_value(v);
+			debug_value(target, v);
 			target << std::endl;
 		}
 	}
 
 	template <typename Writer>
 	void write(Writer &target) const {
-		uint8_t bps = 0;
-		for(uint8_t lim = maxSize; lim; lim >>= 1) {
-			++ bps;
-		}
-
-		// maxSize could be 0-32, so bits per symbol could be 0-6
-		// store this in the first 3 bits:
-		target.push(bps, 3);
+		uint8_t bitsPerSymbol = 4;
 
 		// store total symbol count
-		// (12 bits is usually overkill, but we need at least 9)
-		target.push(sizes.size(), 12);
+		target.push(sizes.size(), 10);
 
 		// now store the number of bits used by each entry in order:
 		for(auto size : sizes) {
-			target.push(size, bps);
+			target.push(size, bitsPerSymbol);
 		}
 	}
 
@@ -317,11 +313,12 @@ codebook<T> make_codebook(const std::vector<T> &values) {
 }
 
 struct opts_t {
-	std::size_t windowSize;
+	std::size_t maxDist;
 	std::size_t minDist;
 	std::size_t minLen;
 	std::size_t zeroDist;
 	std::size_t zeroLen;
+	bool splitMarker;
 	bool distFirst;
 };
 
@@ -331,21 +328,24 @@ codebook<uint16_t> compress(
 	const std::vector<uint8_t> &bytes,
 	opts_t opts
 ) {
-	std::size_t maxDist = opts.windowSize;
 	std::size_t maxLen = opts.zeroLen + 255;
 	if(opts.distFirst) {
-		maxLen += maxDist - opts.zeroDist;
+		maxLen += opts.maxDist - opts.zeroDist;
 	}
 
 	std::vector<uint16_t> values;
 	compress_duplicates(
 		bytes,
 		opts.minDist,
-		maxDist,
+		opts.maxDist,
 		opts.minLen,
 		maxLen,
 		[&values, &opts] (std::size_t dist, std::size_t len) {
-			if(opts.distFirst) {
+			if(opts.splitMarker) {
+				values.push_back(0);
+				values.push_back(dist - opts.zeroDist);
+				values.push_back(len - opts.zeroLen);
+			} else if(opts.distFirst) {
 				values.push_back(256 + dist - opts.zeroDist);
 				values.push_back(len - opts.zeroLen);
 			} else {
@@ -353,13 +353,18 @@ codebook<uint16_t> compress(
 				values.push_back(dist - opts.zeroDist);
 			}
 		},
-		[&values] (uint8_t c) {
-			values.push_back(c);
+		[&values, &opts] (uint8_t c) {
+			if(opts.splitMarker) {
+				values.push_back(c + 1);
+			} else {
+				values.push_back(c);
+			}
 		}
 	);
 
 	auto table = make_codebook(values);
-	writer.push(opts.distFirst); // first bit records whether we use distFirst
+	writer.push(opts.splitMarker);
+	writer.push(opts.distFirst);
 	table.write(writer);
 	for(const auto &v : values) {
 		table.write_coded(writer, v);
@@ -371,6 +376,19 @@ codebook<uint16_t> compress(
 template <typename T>
 void inc(T &value, int skip) {
 	value = (value & ~(skip - 1)) + skip;
+}
+
+std::vector<std::size_t> suggest_window_sizes(std::size_t limit) {
+	std::vector<std::size_t> windowSizes;
+	windowSizes.push_back(0);
+	if(limit > 0) {
+		windowSizes.push_back(1);
+		for(std::size_t sz = 2; sz < limit; sz += 2) {
+			windowSizes.push_back(sz);
+		}
+		windowSizes.push_back(limit);
+	}
+	return windowSizes;
 }
 
 int main(int argc, const char *const *argv) {
@@ -393,10 +411,13 @@ int main(int argc, const char *const *argv) {
 	opts.zeroLen = 2;
 
 	// brute-force best settings
+	std::vector<std::size_t> windowSizes = suggest_window_sizes(maxWindowSize);
 	for(opts.minDist = opts.zeroDist; opts.minDist <= 1; ++ opts.minDist) {
 		for(opts.minLen = opts.zeroLen; opts.minLen <= 3; ++ opts.minLen) {
-			for(opts.windowSize = 1; opts.windowSize <= maxWindowSize; inc(opts.windowSize, 2)) {
-				for(int flags = 0; flags < 0x02; ++ flags) {
+			for(std::size_t windowSize : windowSizes) {
+				opts.maxDist = windowSize;
+				for(int flags = 0; flags < 3; ++ flags) {
+					opts.splitMarker = (flags & 0x02);
 					opts.distFirst = (flags & 0x01);
 
 					bitsizer writer;
@@ -420,10 +441,14 @@ int main(int argc, const char *const *argv) {
 
 	std::cerr
 		<< "Compressed bits:    " << (writer.size() * 8)
-		<< " (window: " << bestOpts.windowSize
+		<< " (window: " << bestOpts.maxDist
 		<< ", min-dist: " << bestOpts.minDist
 		<< ", min-len: " << bestOpts.minLen
-		<< ", dist-first: " << (bestOpts.distFirst ? "y" : "n")
+		<< ", mode: " << (
+			bestOpts.splitMarker ? "split" :
+			bestOpts.distFirst ? "dist-len" :
+			"len-dist"
+		)
 		<< ", symbols: " << table.symbol_count()
 		<< ")"
 		<< std::endl;
