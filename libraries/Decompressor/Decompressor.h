@@ -19,7 +19,7 @@
 typedef uint8_t windowsz_t;
 
 template <typename BaseT, windowsz_t windowSize>
-class decompressor {
+class Decompressor {
 	enum Mode : uint8_t {
 		LEN_DIST,
 		DIST_LEN,
@@ -225,14 +225,14 @@ class decompressor {
 	}
 
 public:
-	decompressor(const BaseT &baseData)
+	Decompressor(const BaseT &baseData)
 		: baseData(baseData)
 	{
 		prepare();
 		reset();
 	}
 
-	decompressor(BaseT &&baseData)
+	Decompressor(BaseT &&baseData)
 		: baseData(static_cast<BaseT&&>(baseData))
 	{
 		prepare();
@@ -253,20 +253,20 @@ public:
 
 template <windowsz_t windowSize, typename BaseT>
 [[gnu::always_inline,nodiscard]]
-inline decompressor<BaseT, windowSize> MakeDecompressor(const BaseT &baseData) {
-	return decompressor<BaseT, windowSize>(baseData);
+inline Decompressor<BaseT, windowSize> MakeDecompressor(const BaseT &baseData) {
+	return Decompressor<BaseT, windowSize>(baseData);
 }
 
 template <windowsz_t windowSize, typename BaseT>
 [[gnu::always_inline,nodiscard]]
-inline decompressor<BaseT, windowSize> MakeDecompressor(BaseT &&baseData) {
-	return decompressor<BaseT, windowSize>(static_cast<BaseT&&>(baseData));
+inline Decompressor<BaseT, windowSize> MakeDecompressor(BaseT &&baseData) {
+	return Decompressor<BaseT, windowSize>(static_cast<BaseT&&>(baseData));
 }
 
 template <windowsz_t windowSize, typename T>
 [[gnu::always_inline,nodiscard]]
-inline decompressor<const T*, windowSize> MakeDecompressor(const T *baseData) {
-	return decompressor<const T*, windowSize>(baseData);
+inline Decompressor<const T*, windowSize> MakeDecompressor(const T *baseData) {
+	return Decompressor<const T*, windowSize>(baseData);
 }
 
 #endif

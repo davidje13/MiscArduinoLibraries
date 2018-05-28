@@ -34,7 +34,9 @@ fi;
 
 # Invoke all generator scripts
 find "$LIBDIR" "$SRCDIR" -iname '*.gen.sh' -type f | while read LN; do
-	"$LN";
+	if [[ "$MODE" == "local-test" || "$LN" != *"/test/"* ]]; then
+		"$LN";
+	fi;
 done;
 
 # Copy all shared header files to each library

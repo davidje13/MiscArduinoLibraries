@@ -12,7 +12,6 @@ BOOST_AUTO_TEST_CASE(decompresses_to_original_string) {
 		" compressed and decompressed. Hopefully the compression"
 		" will actually save some bytes."
 	);
-	// first huffman-decoded value should be 85 (T + 1)
 	for(int i = 0; expected[i] != '\0'; ++ i) {
 		char actual = char(test.get(i));
 		BOOST_CHECK_EQUAL(actual, expected[i]);
