@@ -53,7 +53,7 @@ public:
 	// not a pure function
 	[[gnu::always_inline,nodiscard]]
 	inline uint8_t operator[](int index) const {
-		return decompressor->get(p + index);
+		return decompressor->get(uint16_t(p + index));
 	}
 };
 

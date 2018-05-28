@@ -42,9 +42,9 @@ class Decompressor {
 	windowsz_t blockDist;
 	windowsz_t currentWindowPos;
 #if TRUSTED_INPUT
-	bits_t beginnings[maxBits - 2];
-#else
 	bits_t beginnings[maxBits - 1];
+#else
+	bits_t beginnings[maxBits];
 #endif
 	uint8_t window[windowSize];
 
@@ -255,7 +255,7 @@ public:
 		reset();
 	}
 
-	uint8_t get(int index) {
+	uint8_t get(uint16_t index) {
 		if(index < currentDataPos - windowSize) {
 			// cannot decode backwards, so must rewind stream
 			reset();
