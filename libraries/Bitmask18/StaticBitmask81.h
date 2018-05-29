@@ -1,6 +1,6 @@
 /*
- * StaticBitmask18 - Immutable bitmask (bytes represent 1x8 tiles) storage.
- * Written in 2017 by David Evans
+ * StaticBitmask81 - Immutable bitmask (bytes represent 8x1 tiles) storage.
+ * Written in 2018 by David Evans
  *
  * To the extent possible under law, the author(s) have dedicated all copyright
  * and related and neighboring rights to this software to the public domain
@@ -11,13 +11,13 @@
  * <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
-#ifndef STATICBITMASK18_H_INCLUDED
-#define STATICBITMASK18_H_INCLUDED
+#ifndef STATICBITMASK81_H_INCLUDED
+#define STATICBITMASK81_H_INCLUDED
 
 #include "ext.h"
 
 template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
-class StaticBitmask18 {
+class StaticBitmask81 {
 	T d;
 	int16_t s;
 	uint16_t w;
@@ -30,17 +30,17 @@ class StaticBitmask18 {
 
 	[[gnu::pure,nodiscard,gnu::always_inline]]
 	inline uint16_t pixel_byte(uint16_t x, uint16_t y) const {
-		return (y >> 3) * s + x;
+		return y * s + (x >> 3);
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static constexpr inline uint8_t pixel_bit(uint8_t y) {
-		return y & 7;
+	static constexpr inline uint8_t pixel_bit(uint8_t x) {
+		return x & 7;
 	}
 
 public:
 	[[gnu::always_inline]]
-	inline StaticBitmask18(
+	inline StaticBitmask81(
 		T data,
 		uint16_t width,
 		uint16_t height,
@@ -53,15 +53,15 @@ public:
 	{}
 
 	[[gnu::always_inline]]
-	inline StaticBitmask18(T data, uint16_t width, uint16_t height)
+	inline StaticBitmask81(T data, uint16_t width, uint16_t height)
 		: d(data)
-		, s(width)
+		, s((width + 7) >> 3)
 		, w(width)
 		, h(height)
 	{}
 
 	[[gnu::always_inline]]
-	inline StaticBitmask18(const StaticBitmask18&) = default;
+	inline StaticBitmask81(const StaticBitmask81&) = default;
 
 	[[gnu::pure,nodiscard,gnu::always_inline]]
 	inline uint16_t width(void) const {
@@ -78,7 +78,7 @@ public:
 		if(!in_bounds(x, y)) {
 			return false;
 		}
-		return (d[pixel_byte(x, y)] >> pixel_bit(y)) & 1;
+		return (d[pixel_byte(x, y)] >> pixel_bit(x)) & 1;
 	}
 
 	[[gnu::pure,nodiscard,gnu::always_inline]]
@@ -94,23 +94,23 @@ public:
 
 template <typename T>
 [[gnu::always_inline,nodiscard]]
-static inline StaticBitmask18<T> MakeStaticBitmask18(
+static inline StaticBitmask81<T> MakeStaticBitmask81(
 	T data,
 	uint16_t width,
 	uint16_t height,
 	int16_t step
 ) {
-	return StaticBitmask18<T>(data, width, height, step);
+	return StaticBitmask81<T>(data, width, height, step);
 }
 
 template <typename T>
 [[gnu::always_inline,nodiscard]]
-static inline StaticBitmask18<T> MakeStaticBitmask18(
+static inline StaticBitmask81<T> MakeStaticBitmask81(
 	T data,
 	uint16_t width,
 	uint16_t height
 ) {
-	return StaticBitmask18<T>(data, width, height);
+	return StaticBitmask81<T>(data, width, height);
 }
 
 #endif

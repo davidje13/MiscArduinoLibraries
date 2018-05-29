@@ -73,17 +73,17 @@ class Decompressor {
 	inline uint16_t read_bits_16(uint16_t bit, uint8_t length) const {
 		uint16_t p = bit >> 3;
 		uint8_t b = bit & 7;
-		uint8_t r;
+		uint16_t r;
 		if(b + length > 16) {
 			r = (
-				uint8_t(baseData[p] << (b + length - 8)) |
-				uint8_t(baseData[p + 1] << (b + length - 16)) |
-				uint8_t(baseData[p + 2] >> (24 - b - length))
+				uint16_t(baseData[p] << (b + length - 8)) |
+				uint16_t(baseData[p + 1] << (b + length - 16)) |
+				uint16_t(baseData[p + 2] >> (24 - b - length))
 			);
 		} else {
 			r = (
-				uint8_t(baseData[p] << (b + length - 8)) |
-				uint8_t(baseData[p + 1] >> (16 - b - length))
+				uint16_t(baseData[p] << (b + length - 8)) |
+				uint16_t(baseData[p + 1] >> (16 - b - length))
 			);
 		}
 		return r & ((uint16_t(1) << length) - 1);
@@ -212,8 +212,8 @@ class Decompressor {
 		switch(mode()) {
 		case Mode::LEN_DIST:
 			if(decoded >= 256) {
-				blockDist = windowsz_t(decoded - 256 + zeroDist);
-				blockLen = uint16_t(read_next_symbol() + zeroLen);
+				blockLen = uint16_t(decoded - 256 + zeroLen);
+				blockDist = windowsz_t(read_next_symbol() + zeroDist);
 				advance_block();
 			} else {
 				advance_byte(uint8_t(decoded));
@@ -221,8 +221,8 @@ class Decompressor {
 			break;
 		case Mode::DIST_LEN:
 			if(decoded >= 256) {
-				blockLen = uint16_t(decoded - 256 + zeroLen);
-				blockDist = windowsz_t(read_next_symbol() + zeroDist);
+				blockDist = windowsz_t(decoded - 256 + zeroDist);
+				blockLen = uint16_t(read_next_symbol() + zeroLen);
 				advance_block();
 			} else {
 				advance_byte(uint8_t(decoded));
