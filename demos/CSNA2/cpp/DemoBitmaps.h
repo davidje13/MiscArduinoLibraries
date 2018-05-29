@@ -11,18 +11,66 @@
  */
 
 #include "DemoUtils.h"
-#include "Ship.h"
+#include "CompressedFace.h"
+#include "CompressedShip.h"
 
 #include <CSNA2.h>
 #include <ProgMem.h>
-#include <StaticBitmask18.h>
 #include <SolidFill.h>
+#include <Decompressor.h>
+#include <DecompressorPointer.h>
+#include <StaticBitmask81.h>
+
+template <typename Printer>
+void showFace(Printer &printer) {
+	printer.awake();
+	printer.print(ProgMemString("\nSimple compressed ProgMem image:\n"));
+	// window size must be at least as large as
+	// the configured value during compression
+	auto faceDecompressor = MakeDecompressor<128>(
+		MakeProgMem(COMPRESSED_FACE)
+	);
+	auto face = MakeStaticBitmask81(
+		MakeDecompressorPointer(&faceDecompressor),
+		256,
+		256
+	);
+	printer.print_bitmask81msb(face);
+	printer.linefeed();
+	delay(1000);
+}
+
+template <typename Printer>
+void showShip(Printer &printer) {
+//	printer.awake();
+//	printer.print(ProgMemString("\nLarge ProgMem image:\n"));
+//	auto rawShip = MakeStaticBitmask81(MakeProgMem(SHIP), 384, 224);
+//	printer.print_bitmask81lsb_fullwidth(rawShip);
+//	printer.linefeed();
+//	delay(2000);
+
+	printer.awake();
+	printer.print(ProgMemString("\nLarge compressed ProgMem image:\n"));
+	// window size must be at least as large as
+	// the configured value during compression
+	auto shipDecompressor = MakeDecompressor<128>(
+		MakeProgMem(COMPRESSED_SHIP)
+	);
+	auto ship = MakeStaticBitmask81(
+		MakeDecompressorPointer(&shipDecompressor),
+		384,
+		224
+	);
+	printer.print_bitmask81lsb_fullwidth(ship);
+	printer.linefeed();
+	delay(1000);
+}
 
 template <typename Printer>
 void demoBitmaps(Printer &printer) {
 	showTitle(printer, ProgMemString("Bitmaps!"));
 
-	auto bitmask = MakeStaticBitmask18(SolidFill(true), 64, 32);
+	auto bitmask = MakeStaticBitmask81(SolidFill(true), 64, 32);
 
 	printer.awake();
 	printer.print(ProgMemString("print_bitmask81msb\n"));
@@ -54,11 +102,6 @@ void demoBitmaps(Printer &printer) {
 	printer.print_bitmask18_lines(bitmask); // fails for large images (why??)
 	delay(500);
 
-	printer.awake();
-	printer.print(ProgMemString("\nLarge ProgMem image:\n"));
-	auto ship = MakeStaticBitmask18(MakeProgMem(SHIP), 384, 224);
-	printer.print_bitmask81lsb_fullwidth(ship);
-	printer.linefeed();
-
-	delay(2000);
+	showFace(printer);
+	showShip(printer);
 }

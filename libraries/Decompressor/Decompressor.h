@@ -256,7 +256,8 @@ public:
 	}
 
 	uint8_t get(uint16_t index) {
-		if(index < currentDataPos - windowSize) {
+		// both checks are needed to avoid rollover issues
+		if(index < currentDataPos - windowSize && currentDataPos >= windowSize) {
 			// cannot decode backwards, so must rewind stream
 			reset();
 		}

@@ -63,6 +63,13 @@
 #define CODE128_FNC4 "{4"
 #define CODE128_BRACE "{{"
 
+void wait_minimum_microseconds(uint16_t tm0, uint16_t delay) {
+	uint16_t elapsed = uint16_t(micros() - tm0);
+	if(elapsed < delay) {
+		delayMicroseconds(delay - elapsed);
+	}
+}
+
 class CSNA2 {
 public:
 	enum Status : uint8_t {
@@ -838,13 +845,16 @@ public:
 		write_16le(hb);
 		for(uint16_t y = 0; y < hb; ++ y) {
 			for(uint16_t x = 0; x < wb; ++ x) {
+				uint16_t tm0 = micros();
 				uint8_t byte = 0;
 				for(uint8_t xx = 0; xx < 8; ++ xx) {
 					byte = (byte << 1) | bitmask.get_pixel((x << 3) | xx, y);
 				}
 				serial.write(byte);
+				// avoid overrunning buffer
+				// TODO: tune value (depends on print speed?)
+				wait_minimum_microseconds(tm0, 1500);
 			}
-			delay((wb * 3) / 2); // avoid overrunning buffer
 		}
 	}
 
@@ -859,6 +869,7 @@ public:
 		serial.write(hb);
 		serial.write(wb);
 		for(uint16_t y = 0; y < hb; ++ y) {
+			uint16_t tm0 = micros();
 			for(uint8_t x = 0; x < wb; ++ x) {
 				uint8_t byte = 0;
 				for(uint8_t xx = 0; xx < 8; ++ xx) {
@@ -866,7 +877,8 @@ public:
 				}
 				serial.write(byte);
 			}
-			delay(1); // TODO: needed?
+			// TODO: tune value (depends on print speed?)
+			wait_minimum_microseconds(tm0, 1000);
 		}
 	}
 
@@ -879,6 +891,7 @@ public:
 		serial.write('V');
 		write_16le(hb);
 		for(uint16_t y = 0; y < hb; ++ y) {
+			uint16_t tm0 = micros();
 			for(uint16_t x = 0; x < widthDots / 8; ++ x) {
 				uint8_t byte = 0;
 				for(uint8_t xx = 0; xx < 8; ++ xx) {
@@ -886,7 +899,8 @@ public:
 				}
 				serial.write(byte);
 			}
-			delay(1); // TODO: needed?
+			// TODO: tune value (depends on print speed?)
+			wait_minimum_microseconds(tm0, 1000);
 		}
 	}
 
@@ -899,6 +913,7 @@ public:
 		serial.write('v');
 		write_16le(hb);
 		for(uint16_t y = 0; y < hb; ++ y) {
+			uint16_t tm0 = micros();
 			for(uint16_t x = 0; x < widthDots / 8; ++ x) {
 				uint8_t byte = 0;
 				for(uint8_t xx = 8; (xx --) > 0;) {
@@ -906,7 +921,8 @@ public:
 				}
 				serial.write(byte);
 			}
-			delay(1); // TODO: needed?
+			// TODO: tune value (depends on print speed?)
+			wait_minimum_microseconds(tm0, 1000);
 		}
 	}
 
@@ -937,6 +953,7 @@ public:
 		set_command_timeout(10);
 
 		for(uint16_t y0 = 0; y0 < hb; y0 += hp) {
+			uint16_t tm0 = micros();
 			if(y0 + hp > hb) {
 				hp = uint8_t(hb - y0);
 			}
@@ -961,7 +978,8 @@ public:
 
 			// Print image
 			reprint_bitmask18(dblWidth, dblHeight);
-			delay(10); // TODO: needed?
+			// TODO: tune value (depends on print speed?)
+			wait_minimum_microseconds(tm0, 10000);
 		}
 	}
 
@@ -1001,6 +1019,7 @@ public:
 			write_16le(wb);
 			uint8_t checksum = 0;
 			for(uint16_t x = 0; x < wb; ++ x) {
+				uint16_t tm0 = micros();
 				for(uint16_t y = 0; y < hp; ++ y) {
 					uint8_t byte = 0;
 					for(uint8_t yy = 0; yy < 8; ++ yy) {
@@ -1012,7 +1031,8 @@ public:
 					serial.write(byte);
 					checksum += byte;
 				}
-				delayMicroseconds(100);
+				// TODO: tune value (depends on print speed?)
+				wait_minimum_microseconds(tm0, 100);
 			}
 
 			if(check) {

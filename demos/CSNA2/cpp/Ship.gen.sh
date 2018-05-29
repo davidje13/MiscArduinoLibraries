@@ -25,7 +25,7 @@ cat <<EOF;
 static PROGMEM const uint8_t $DEFNAME[] = {
 EOF
 
-"$TOOLSDIR/calcbitmap.sh" "$IMG" "18";
+"$TOOLSDIR/calcbitmap.sh" "$IMG" "81";
 
 cat <<EOF;
 };
