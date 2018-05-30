@@ -29,12 +29,14 @@
 
 #ifdef WIDE_DATA
 	typedef uint16_t ubitsz_t;
+	typedef uint16_t ubitref_t;
 	typedef int16_t bitsz_t;
 	typedef int16_t bitshiftsz_t;
 	typedef int32_t bitshift2sz_t;
 	typedef int32_t bitlsz_t;
 #else
 	typedef uint8_t ubitsz_t;
+	typedef uint16_t ubitref_t;
 	typedef int16_t bitsz_t;
 	typedef int16_t bitshiftsz_t;
 	typedef int16_t bitshift2sz_t;
@@ -55,8 +57,8 @@ class Bitmask18 {
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
-	static constexpr inline ubitsz_t pixel_byte(ubitsz_t x, ubitsz_t y) {
-		return (y >> 3) * WIDTH + x;
+	static constexpr inline ubitref_t pixel_byte(ubitsz_t x, ubitsz_t y) {
+		return ubitref_t(y >> 3) * WIDTH + x;
 	}
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
@@ -93,7 +95,7 @@ class Bitmask18 {
 		ubitsz_t x, ubitsz_t yBlock,
 		uint8_t maskedValue
 	) {
-		ubitsz_t s = yBlock * WIDTH + x;
+		ubitref_t s = ubitref_t(yBlock) * WIDTH + x;
 		buffer[s] = (buffer[s] & A) ^ B ^ maskedValue;
 	}
 
@@ -305,7 +307,7 @@ public:
 	) {
 		uint8_t A = precalc_block_A(mask, m);
 		uint8_t B = precalc_block_B(0xFF, m);
-		ubitsz_t s = yBlock * WIDTH + x;
+		ubitref_t s = ubitref_t(yBlock) * WIDTH + x;
 		buffer[s] = (buffer[s] & A) ^ ((B ^ PatternCol(p, x)) & mask);
 	}
 
@@ -316,7 +318,7 @@ public:
 	) {
 		uint8_t A = precalc_block_A(mask, m);
 		uint8_t B = precalc_block_B(0xFF, m);
-		ubitsz_t s = yBlock * WIDTH + x;
+		ubitref_t s = ubitref_t(yBlock) * WIDTH + x;
 		for(ubitsz_t i = 0; i < w; ++ i) {
 			buffer[s+i] = (buffer[s+i] & A) ^ ((B ^ PatternCol(p, x + i)) & mask);
 		}
