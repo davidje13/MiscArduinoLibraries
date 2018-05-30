@@ -28,4 +28,11 @@ $("$TOOLS_DIR/calcbitmap.sh" "data/fixedfont.png" "18")
 #define ${UPPER_SNAKE_NAME}_IMG (${UPPER_SNAKE_NAME}_DATA + 5 + 1)
 #define ${UPPER_SNAKE_NAME}_MASK (nullptr)
 
+#define MakeFixedFont(...) Font( \\
+	${UPPER_SNAKE_NAME}_DATA, \\
+	${UPPER_SNAKE_NAME}_IMG, \\
+	${UPPER_SNAKE_NAME}_MASK \\
+	, ## __VA_ARGS__ \\
+)
+
 #endif

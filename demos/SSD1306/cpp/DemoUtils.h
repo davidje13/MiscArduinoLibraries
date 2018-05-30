@@ -28,7 +28,7 @@
 
 template <typename Bitmask, typename String>
 void printTitle(Bitmask &bitmask, String title) {
-	Font f1(F1DATA, F1IMG, F1MASK);
+	auto f1 = MakeFont1();
 
 	uint16_t w = f1.measure(title);
 	uint16_t h = f1.height();
@@ -66,7 +66,7 @@ template <typename Display, typename T>
 void showNumber(Display &display, T value) {
 	Bitmask18<display.width(),display.height()> bitmask;
 
-	Font f1(F1DATA, F1IMG, F1MASK);
+	auto f1 = MakeFont1();
 
 	uint16_t h = f1.height();
 

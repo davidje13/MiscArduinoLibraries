@@ -186,7 +186,7 @@ public:
 	template <typename Bitmask>
 	void render_back(Bitmask &bitmask) const {
 		// Extracting the font makes the executable much larger (>1kB)
-		Font f(F0DATA, F0IMG, F0MASK, BlendMode::OFF);
+		auto f = MakeFont0(BlendMode::OFF);
 
 		uint8_t diameter = rad * 2 + 1;
 		bitmask.fill_ellipse(

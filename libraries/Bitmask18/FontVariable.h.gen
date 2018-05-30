@@ -29,4 +29,11 @@ $("$TOOLS_DIR/calcbitmap.sh" "data/variablefont.png" "18")
 #define ${UPPER_SNAKE_NAME}_IMG (${UPPER_SNAKE_NAME}_DATA + 5 + (0x7F - 0x20) + 1)
 #define ${UPPER_SNAKE_NAME}_MASK (nullptr)
 
+#define MakeVariableFont(...) Font( \\
+	${UPPER_SNAKE_NAME}_DATA, \\
+	${UPPER_SNAKE_NAME}_IMG, \\
+	${UPPER_SNAKE_NAME}_MASK \\
+	, ## __VA_ARGS__ \\
+)
+
 #endif

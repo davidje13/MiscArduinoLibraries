@@ -72,6 +72,7 @@ if [[ "$MODE" == "local-test" ]]; then
 		-Wconversion -Wsign-conversion \
 		-Wold-style-cast -Wmissing-variable-declarations \
 		-Warray-bounds-pointer-arithmetic -Wundefined-reinterpret-cast \
+		-Wno-gnu-zero-variadic-macro-arguments \
 		-I "$SCRIPTDIR/libraries" \
 		-I "$SCRIPTDIR/mocks" \
 		-o "$SCRIPTDIR/out/test-$TESTNAME" \

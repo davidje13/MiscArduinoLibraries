@@ -64,7 +64,7 @@ void demoPong(Display &display, BatLPinT batL, BatRPinT batR) {
 	uint8_t respawn = startDelay;
 	bool startRight = random(2);
 
-	Font f0(F0DATA, F0IMG, F0MASK);
+	auto f0 = MakeFont0();
 
 	while(true) {
 		if(batL.supports_analog_input()) {

@@ -74,11 +74,11 @@ void demoText(Display &display) {
 	display.send(bitmask);
 	delay(1500);
 
-	Font f0(F0DATA, F0IMG, F0MASK);
-	Font f1(F1DATA, F1IMG, F1MASK);
-	Font f2(F2DATA, F2IMG, F2MASK);
-	Font f3(F3DATA, F3IMG, F3MASK);
-	Font fVar(FONT_VARIABLE_DATA, FONT_VARIABLE_IMG, FONT_VARIABLE_MASK);
+	auto f0 = MakeFont0();
+	auto f1 = MakeFont1();
+	auto f2 = MakeFont2();
+	auto f3 = MakeFont3();
+	auto fVar = MakeVariableFont();
 
 	demoCharacters(display, bitmask, f0);
 	demoCharacters(display, bitmask, fVar);
@@ -165,10 +165,10 @@ void demoText(Display &display) {
 
 template <typename Display, typename Bitmask>
 static void _testText(Display &display, Bitmask &bitmask, int x, int y) {
-	Font f0(F0DATA, F0IMG, F0MASK);
-	Font f1(F1DATA, F1IMG, F1MASK);
-	Font f2(F2DATA, F2IMG, F2MASK);
-	Font f3(F3DATA, F3IMG, F3MASK);
+	auto f0 = MakeFont0();
+	auto f1 = MakeFont1();
+	auto f2 = MakeFont2();
+	auto f3 = MakeFont3();
 
 	bitmask.clear();
 //	bitmask.fill_rect(0, 0, bitmask.width(), bitmask.height(), BlendMode::ON, PATTERN_CHECKER);

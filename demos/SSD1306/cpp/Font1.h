@@ -138,4 +138,11 @@ static PROGMEM const uint8_t F1DATA[] = {
 #define F1IMG (F1DATA + 7)
 #define F1MASK (nullptr)
 
+#define MakeFont1(...) Font( \
+	F1DATA, \
+	F1IMG, \
+	F1MASK \
+	, ## __VA_ARGS__ \
+)
+
 #endif

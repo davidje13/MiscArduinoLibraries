@@ -48,7 +48,7 @@ void message(
 	Message msg1,
 	Message msg2
 ) {
-	Font f(FONT_FIXED_DATA, FONT_FIXED_IMG, FONT_FIXED_MASK);
+	auto f = MakeFixedFont();
 
 	bitmask.clear();
 	auto r = MakeFontRenderer(&bitmask, 0, 0, bitmask.width(), 0);
@@ -97,7 +97,7 @@ void demoGyroscope(
 ) {
 	Bitmask18<display.width(),display.height()> bitmask;
 
-	Font f(FONT_FIXED_DATA, FONT_FIXED_IMG, FONT_FIXED_MASK);
+	auto f = MakeFixedFont();
 
 	gyroscope.awake();
 

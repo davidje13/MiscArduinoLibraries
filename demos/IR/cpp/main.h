@@ -71,7 +71,7 @@ void setup(void) {
 //		oled.send(bitmask);
 //	}
 
-	Font f(FONT_FIXED_DATA, FONT_FIXED_IMG, FONT_FIXED_MASK);
+	auto f = MakeFixedFont();
 	auto r = MakeFontRenderer(&bitmask, 0, 0);
 
 	while(true) {

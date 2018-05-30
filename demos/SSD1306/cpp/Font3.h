@@ -92,4 +92,11 @@ static PROGMEM const uint8_t F3DATA[] = {
 #define F3IMG (F3DATA + 7)
 #define F3MASK (nullptr)
 
+#define MakeFont3(...) Font( \
+	F3DATA, \
+	F3IMG, \
+	F3MASK \
+	, ## __VA_ARGS__ \
+)
+
 #endif
