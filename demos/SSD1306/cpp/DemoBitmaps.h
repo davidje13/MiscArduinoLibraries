@@ -24,8 +24,11 @@
 
 #include <StaticBitmask18.h>
 #include <ProgMem.h>
+//#include <Decompressor.h>
+//#include <DecompressorPointer.h>
 
-#include "logo.h"
+//#include "CompressedLogo.h"
+#include "Logo.h"
 
 template <typename Display>
 void demoBitmaps(Display &display) {
@@ -33,6 +36,8 @@ void demoBitmaps(Display &display) {
 	delay(1500);
 
 	display.send(MakeLogoBitmask());
+//	auto logoDecompressor = MakeLogoDecompressor();
+//	display.send(MakeCompressedLogoBitmask(&logoDecompressor));
 	delay(1500);
 }
 
@@ -42,6 +47,8 @@ void demoCommands(Display &display) {
 	delay(1500);
 
 	auto logo = MakeLogoBitmask();
+//	auto logoDecompressor = MakeLogoDecompressor();
+//	auto logo = MakeCompressedLogoBitmask(&logoDecompressor);
 
 	display.send(logo);
 	delay(500);
