@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "container:demos">
+   </FileRef>
+   <FileRef
+      location = "container:libraries">
+   </FileRef>
+   <FileRef
+      location = "container:mocks">
+   </FileRef>
+   <FileRef
+      location = "container:shared">
+   </FileRef>
+   <FileRef
+      location = "container:tools">
+   </FileRef>
+   <FileRef
+      location = "container:wrapper">
+   </FileRef>
+   <FileRef
+      location = "container:compile.sh">
+   </FileRef>
+   <FileRef
+      location = "container:LICENSE">
+   </FileRef>
+   <FileRef
+      location = "container:Makefile">
+   </FileRef>
+   <FileRef
+      location = "container:README.md">
+   </FileRef>
+   <FileRef
+      location = "container:run_generators.sh">
+   </FileRef>
+   <FileRef
+      location = "container:target.sh">
+   </FileRef>
+   <FileRef
+      location = "container:test.cpp">
+   </FileRef>
+</Workspace>
