@@ -78,7 +78,7 @@ void demoText(Display &display) {
 	Font f1(F1DATA, F1IMG, F1MASK);
 	Font f2(F2DATA, F2IMG, F2MASK);
 	Font f3(F3DATA, F3IMG, F3MASK);
-	Font fVar(FONTVARIABLE_DATA, FONTVARIABLE_IMG, FONTVARIABLE_MASK);
+	Font fVar(FONT_VARIABLE_DATA, FONT_VARIABLE_IMG, FONT_VARIABLE_MASK);
 
 	demoCharacters(display, bitmask, f0);
 	demoCharacters(display, bitmask, fVar);

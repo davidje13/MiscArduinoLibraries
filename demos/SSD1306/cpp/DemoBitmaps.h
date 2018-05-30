@@ -32,7 +32,7 @@ void demoBitmaps(Display &display) {
 	showTitle(display, ProgMemString("Bitmaps!"));
 	delay(1500);
 
-	display.send(MakeStaticBitmask18(MakeProgMem(LOGO), 128, 64));
+	display.send(MakeLogoBitmask());
 	delay(1500);
 }
 
@@ -41,7 +41,7 @@ void demoCommands(Display &display) {
 	showTitle(display, ProgMemString("Commands!"));
 	delay(1500);
 
-	auto logo = MakeStaticBitmask18(MakeProgMem(LOGO), 128, 64);
+	auto logo = MakeLogoBitmask();
 
 	display.send(logo);
 	delay(500);

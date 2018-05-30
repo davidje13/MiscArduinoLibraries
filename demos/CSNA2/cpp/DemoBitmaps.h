@@ -27,14 +27,8 @@ void showFace(Printer &printer) {
 	printer.print(ProgMemString("\nSimple compressed ProgMem image:\n"));
 	// window size must be at least as large as
 	// the configured value during compression
-	auto faceDecompressor = MakeDecompressor<128>(
-		MakeProgMem(COMPRESSED_FACE)
-	);
-	auto face = MakeStaticBitmask81(
-		MakeDecompressorPointer(&faceDecompressor),
-		256,
-		256
-	);
+	auto faceDecompressor = MakeFaceDecompressor();
+	auto face = MakeCompressedFaceBitmask(&faceDecompressor);
 	printer.print_bitmask81msb(face);
 	printer.linefeed();
 	delay(1000);
@@ -44,7 +38,7 @@ template <typename Printer>
 void showShip(Printer &printer) {
 //	printer.awake();
 //	printer.print(ProgMemString("\nLarge ProgMem image:\n"));
-//	auto rawShip = MakeStaticBitmask81(MakeProgMem(SHIP), 384, 224);
+//	auto rawShip = MakeShipBitmask();
 //	printer.print_bitmask81lsb_fullwidth(rawShip);
 //	printer.linefeed();
 //	delay(2000);
@@ -53,14 +47,8 @@ void showShip(Printer &printer) {
 	printer.print(ProgMemString("\nLarge compressed ProgMem image:\n"));
 	// window size must be at least as large as
 	// the configured value during compression
-	auto shipDecompressor = MakeDecompressor<128>(
-		MakeProgMem(COMPRESSED_SHIP)
-	);
-	auto ship = MakeStaticBitmask81(
-		MakeDecompressorPointer(&shipDecompressor),
-		384,
-		224
-	);
+	auto shipDecompressor = MakeShipDecompressor();
+	auto ship = MakeCompressedShipBitmask(&shipDecompressor);
 	printer.print_bitmask81lsb_fullwidth(ship);
 	printer.linefeed();
 	delay(1000);

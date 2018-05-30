@@ -33,11 +33,11 @@ if [[ "$1" == "--local-test" ]]; then
 fi;
 
 # Invoke all generator scripts
-find "$LIBDIR" "$SRCDIR" -iname '*.gen.sh' -type f | while read LN; do
-	if [[ "$MODE" == "local-test" || "$LN" != *"/test/"* ]]; then
-		"$LN";
-	fi;
-done;
+if [[ "$MODE" == "local-test" ]]; then
+	"$SCRIPTDIR/run_generators.sh" "all" "$LIBDIR" "$SRCDIR";
+else
+	"$SCRIPTDIR/run_generators.sh" "no-test" "$LIBDIR" "$SRCDIR";
+fi;
 
 # Copy all shared header files to each library
 for D in "$LIBDIR"/*/; do

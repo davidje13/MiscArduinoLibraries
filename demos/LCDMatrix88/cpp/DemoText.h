@@ -22,7 +22,7 @@ template <typename Display>
 void demoText(Display &display) {
 	Bitmask18<display.width(),display.height()> bitmask;
 
-	Font font(FONTVARIABLE_DATA, FONTVARIABLE_IMG, FONTVARIABLE_MASK);
+	Font font(FONT_VARIABLE_DATA, FONT_VARIABLE_IMG, FONT_VARIABLE_MASK);
 	auto r = MakeFontRenderer(&bitmask, 0, 0);
 	auto message = ProgMemString(
 		"Hello LED array!"

@@ -8,7 +8,7 @@
 BOOST_AUTO_TEST_SUITE(Decompressor_test)
 
 BOOST_AUTO_TEST_CASE(decompresses_to_original_string) {
-	auto test = MakeDecompressor<32>(COMPRESSED_TEST);
+	auto test = MakeTestDecompressor();
 	const char *expected = (
 		"This is a moderately long test message which will be"
 		" compressed and decompressed. Hopefully the compression"
@@ -28,16 +28,15 @@ BOOST_AUTO_TEST_CASE(uses_minimal_ram) {
 BOOST_AUTO_TEST_CASE(decompresses_complex_data) {
 	const uint16_t size = 10752; // 384x224
 
-	auto test = MakeDecompressor<128>(COMPRESSED_SHIP);
-	const char *expected = reinterpret_cast<const char*>(SHIP);
-	char *actual = static_cast<char*>(malloc(size));
+	auto test = MakeShipDecompressor();
+	uint8_t *actual = static_cast<uint8_t*>(malloc(size));
 
 	for(uint16_t i = 0; i < size; ++ i) {
-		actual[i] = char(test.get(i));
+		actual[i] = test.get(i);
 	}
 	BOOST_CHECK_EQUAL_COLLECTIONS(
 		actual, actual + size,
-		expected, expected + size
+		SHIP_PM, SHIP_PM + size
 	);
 }
 

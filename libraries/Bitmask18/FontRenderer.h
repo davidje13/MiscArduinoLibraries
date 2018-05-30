@@ -13,11 +13,7 @@
 #ifndef FONTRENDERER_H_INCLUDED
 #define FONTRENDERER_H_INCLUDED
 
-#ifdef ARDUINO
-#  include <ProgMem.h>
-#else
-#  include <ProgMem/ProgMem.h>
-#endif
+#include <ProgMem.h>
 
 #include "ext.h"
 

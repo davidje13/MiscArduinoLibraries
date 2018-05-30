@@ -49,7 +49,7 @@ void message(
 	Message msg1,
 	Message msg2
 ) {
-	Font f(FONTFIXED_DATA, FONTFIXED_IMG, FONTFIXED_MASK);
+	Font f(FONT_FIXED_DATA, FONT_FIXED_IMG, FONT_FIXED_MASK);
 
 	bitmask.clear();
 	auto r = MakeFontRenderer(&bitmask, 0, 0, bitmask.width(), 0);
@@ -98,7 +98,7 @@ void demoAccelerometer(
 ) {
 	Bitmask18<display.width(),display.height()> bitmask;
 
-	Font f(FONTFIXED_DATA, FONTFIXED_IMG, FONTFIXED_MASK);
+	Font f(FONT_FIXED_DATA, FONT_FIXED_IMG, FONT_FIXED_MASK);
 
 	auto status = accelerometer.connection_status();
 	if(status != Accel::ConnectionStatus::CONNECTED) {

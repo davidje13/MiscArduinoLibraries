@@ -47,7 +47,7 @@ void message(
 	Message msg1,
 	Message msg2
 ) {
-	Font f(FONTVARIABLE_DATA, FONTVARIABLE_IMG, FONTVARIABLE_MASK);
+	Font f(FONT_VARIABLE_DATA, FONT_VARIABLE_IMG, FONT_VARIABLE_MASK);
 
 	bitmask.clear();
 	auto r = MakeFontRenderer(&bitmask, 0, 0, bitmask.width(), 0);

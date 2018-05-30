@@ -1,0 +1,22 @@
+#ifndef ${UPPER_SNAKE_NAME}_H_INCLUDED
+#define ${UPPER_SNAKE_NAME}_H_INCLUDED
+
+// Auto-generated from ${GENERATOR_NAME}
+
+#include <ProgMem.h>
+
+#ifdef NO_PATTERNS
+
+$("$TOOLS_DIR/calcpatterns.sh" "PATTERN" "data/NoPatterns.dat" "data"/*.dat)
+
+#elifdef REDUCED_PATTERNS
+
+$("$TOOLS_DIR/calcpatterns.sh" "PATTERN" "data/ReducedPatterns.dat" "data"/*.dat)
+
+#else
+
+$("$TOOLS_DIR/calcpatterns.sh" "PATTERN" "data/Patterns.dat" "data"/*.dat)
+
+#endif
+
+#endif

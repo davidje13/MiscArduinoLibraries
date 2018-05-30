@@ -15,11 +15,7 @@
 #ifndef SEGMENT_DIGITS_H_INCLUDED
 #define SEGMENT_DIGITS_H_INCLUDED
 
-#ifdef ARDUINO
-#  include <ProgMem.h>
-#else
-#  include <ProgMem/ProgMem.h>
-#endif
+#include <ProgMem.h>
 
 #include "ext.h"
 

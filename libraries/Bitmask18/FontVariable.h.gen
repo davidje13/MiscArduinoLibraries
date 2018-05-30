@@ -1,0 +1,32 @@
+#ifndef ${UPPER_SNAKE_NAME}_H_INCLUDED
+#define ${UPPER_SNAKE_NAME}_H_INCLUDED
+
+// Auto-generated from ${GENERATOR_NAME}
+
+#include <ProgMem.h>
+
+// Variable-width (height 8) font
+static PROGMEM const uint8_t ${UPPER_SNAKE_NAME}_DATA[] = {
+	// data section defines:
+	//  FONTHEIGHT
+	//  LINEHEIGHT
+	//  ASCII START CHAR (inclusive)
+	//  ASCII END CHAR (inclusive)
+	//  DATA LAYOUT:
+	//    0x00 = 1 bitmap image, chars from left-to-right
+	//    0x01 = 1 bitmap image per character
+	//    0x02 = 1 2D bitmap image, chars left-to-right, top-to-bottom, with width given below
+	//  WIDTHS:
+	//    layout 0x00: one int per char
+	//    layout 0x01: one int for all chars
+	//    layout 0x02: one int for all chars then one for # chars per line
+	8, 8, 0x20, 0x7F, 0x00,
+$("$TOOLS_DIR/charwidths.sh" "data/variablefont.png"),
+
+$("$TOOLS_DIR/calcbitmap.sh" "data/variablefont.png" "18")
+};
+
+#define ${UPPER_SNAKE_NAME}_IMG (${UPPER_SNAKE_NAME}_DATA + 5 + (0x7F - 0x20) + 1)
+#define ${UPPER_SNAKE_NAME}_MASK (nullptr)
+
+#endif

@@ -1,3 +1,3 @@
-// Ignore progmem storage during testing
+// Redirect ProgMem imports during testing
 
-#define PROGMEM
+#include <ProgMem/ProgMem.h>

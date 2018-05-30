@@ -15,11 +15,7 @@
 
 #include "PatternData.h"
 
-#ifdef ARDUINO
-#  include <ProgMem.h>
-#else
-#  include <ProgMem/ProgMem.h>
-#endif
+#include <ProgMem.h>
 
 #include "ext.h"
 

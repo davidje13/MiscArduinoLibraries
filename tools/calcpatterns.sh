@@ -12,12 +12,14 @@ SCRIPTDIR="$(dirname "$0")";
 
 EXEC="$SCRIPTDIR/bin/WordCompounder";
 EXEC_SRC="$SCRIPTDIR/src/WordCompounder.cpp";
+CONST_PREFIX="$1";
+shift;
 DATA="$1";
 
 if [[ -z "$DATA" ]]; then
 	cat >&2 <<EOF;
 
-  Usage: $0 <data_file> [<extra_name_files>]
+  Usage: $0 <constant_prefix> <data_file> [<extra_name_files>]
 
 Computes a compressed form of the input data by identifying overlapping parts.
 The output is not necessarily optimal, but will find the most obvious savings.
@@ -45,8 +47,7 @@ fi;
 
 DAT="$(cut -f1 -d' ' "$DATA" | "$EXEC" 2> /dev/null)";
 
-echo;
-echo "static PROGMEM const uint8_t PATTERNS[] = {";
+echo "static PROGMEM const uint8_t RAW_${CONST_PREFIX}_DATA[] = {";
 echo "$DAT" | \
 	sed -e 's/\([0-9A-F]\)/0x\1\1, /g' | \
 	sed 's/, $//' | \
@@ -60,7 +61,6 @@ grep --no-filename ' ' "$@" | while read LN; do
 	WORD="${LN%% *}";
 	CROP="${DAT%%$WORD*}";
 	if [[ "$CROP" != "$DAT" ]]; then
-		echo "#define PATTERN_${LN#* }|(PATTERNS + ${#CROP})";
+		echo "#define ${CONST_PREFIX}_${LN#* }|(RAW_${CONST_PREFIX}_DATA + ${#CROP})";
 	fi;
 done | column -s '|' -t | sort | uniq;
-echo;
