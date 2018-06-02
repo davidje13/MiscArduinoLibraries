@@ -110,9 +110,9 @@ void optimise_strings(std::vector<stringdef> &strings) {
 		for(auto j = strings.begin(); j != i; ++ j) {
 			if(j->value == i->value) {
 				stringdef d = std::move(*i);
-				result.erase(i);
+				strings.erase(i);
 				d.value.clear();
-				result.insert(j, std::move(d));
+				strings.insert(j, std::move(d));
 				break;
 			}
 		}
