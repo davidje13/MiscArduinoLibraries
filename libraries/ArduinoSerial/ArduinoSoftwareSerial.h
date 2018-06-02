@@ -23,8 +23,7 @@ class ArduinoSoftwareSerial {
 	SoftwareSerial *serial;
 
 public:
-	[[gnu::always_inline]]
-	inline void begin(uint32_t baud) {
+	void begin(uint32_t baud) {
 		serial->begin(baud);
 	}
 
@@ -33,14 +32,13 @@ public:
 		return canListen;
 	}
 
-	[[gnu::always_inline]]
-	inline void listen(void) {
+	void listen(void) {
 		if(canListen) {
 			serial->listen();
 		}
 	}
 
-	[[gnu::always_inline,nodiscard]]
+	[[nodiscard]]
 	inline uint8_t read(void) {
 		if(!canListen) {
 			return 0;
@@ -48,12 +46,11 @@ public:
 		return serial->read();
 	}
 
-	[[gnu::always_inline]]
 	inline void write(uint8_t byte) {
 		serial->write(byte);
 	}
 
-	[[gnu::always_inline,nodiscard]]
+	[[nodiscard]]
 	inline uint8_t available(void) {
 		if(!canListen) {
 			return 0;

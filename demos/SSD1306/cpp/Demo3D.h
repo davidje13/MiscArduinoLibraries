@@ -177,7 +177,7 @@ void demoCube(Display &display) {
 
 template <typename Display>
 void demo3D(Display &display) {
-	showTitle(display, ProgMemString("3D!"));
+	showTitle(display, TITLE_3D);
 	delay(1500);
 
 	demoCube(display);

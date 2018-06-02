@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e;
+set -eo pipefail;
 
 # Wrapper script for the Bitmap Converter and Compression programs.
 

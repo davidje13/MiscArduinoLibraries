@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e;
+set -eo pipefail;
 
 # Generator script for pattern data.
 # Builds the program if required, formats the output with line-wrapping and

@@ -21,18 +21,19 @@
 #define DEMOBITMAPS_H_INCLUDED
 
 #include "DemoUtils.h"
+#include "Strings.h"
 
 #include <StaticBitmask18.h>
 #include <ProgMem.h>
-//#include <Decompressor.h>
-//#include <DecompressorPointer.h>
+#include <Decompressor.h>
+#include <DecompressorPointer.h>
 
 //#include "CompressedLogo.h"
 #include "Logo.h"
 
 template <typename Display>
 void demoBitmaps(Display &display) {
-	showTitle(display, ProgMemString("Bitmaps!"));
+	showTitle(display, TITLE_BITMAPS);
 	delay(1500);
 
 	display.send(MakeLogoBitmask());
@@ -43,7 +44,7 @@ void demoBitmaps(Display &display) {
 
 template <typename Display>
 void demoCommands(Display &display) {
-	showTitle(display, ProgMemString("Commands!"));
+	showTitle(display, TITLE_COMMANDS);
 	delay(1500);
 
 	auto logo = MakeLogoBitmask();

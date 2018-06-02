@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e;
+set -eo pipefail;
 
 # Board format:
 # arduino:avr:<board>:<flags>

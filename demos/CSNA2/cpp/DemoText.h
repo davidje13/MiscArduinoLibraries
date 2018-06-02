@@ -10,63 +10,62 @@
  * <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
+#include "CompressedStrings.h"
+
 #include <CSNA2.h>
 #include <ProgMem.h>
 
 template <typename Printer>
 void demoText(Printer &printer) {
-	showTitle(printer, ProgMemString("Text!"));
+	showTitle(printer, TITLE_TEXT);
 
-	printer.print(ProgMemString(
-		"Thermal printer test page printed by the CSNA2 library.\n"
-		"github.com/davidje13/MiscArduinoLibraries\n"
-	));
+	printer.print(TEXT_INTRO);
 
 	printer.set_justification(CSNA2::Justification::CENTRE);
-	printer.print(ProgMemString("centre\n"));
+	printer.print(TEXT_CENTRE);
 	printer.set_justification(CSNA2::Justification::RIGHT);
-	printer.print(ProgMemString("right\n"));
+	printer.print(TEXT_RIGHT);
 	printer.set_justification(CSNA2::Justification::LEFT);
 
-	printer.print(ProgMemString("normal "));
+	printer.print(TEXT_NORMAL);
 	printer.set_bold(true);
-	printer.print(ProgMemString("bold "));
+	printer.print(TEXT_BOLD);
 	printer.set_bold(false);
 	printer.set_doublestrike(true);
-	printer.print(ProgMemString("dblstrike "));
+	printer.print(TEXT_DBLSTRIKE);
 	printer.set_bold(true);
-	printer.print(ProgMemString("both "));
+	printer.print(TEXT_BOTH);
 	printer.set_doublestrike(false);
 	printer.set_bold(false);
 	printer.linefeed();
 
-	printer.print(ProgMemString("normal "));
+	printer.print(TEXT_NORMAL);
 	printer.set_underline(true);
-	printer.print(ProgMemString("underline "));
+	printer.print(TEXT_UNDERLINE);
 	printer.set_underline(CSNA2::Underline::THICK);
-	printer.print(ProgMemString("dblunderline "));
+	printer.print(TEXT_DBLUNDERLINE);
 	printer.set_underline(false);
 	printer.linefeed();
 
-	printer.print(ProgMemString("normal "));
+	printer.print(TEXT_NORMAL);
 	printer.set_inverted(true);
-	printer.print(ProgMemString("inverted "));
+	printer.print(TEXT_INVERTED);
 	printer.set_inverted(false);
 	printer.set_strikeout(true);
-	printer.print(ProgMemString("strikeout"));
+	printer.print(TEXT_STRIKEOUT);
 	printer.set_strikeout(false);
 	printer.linefeed();
 
 	delay(1000);
 
 	printer.set_rotation(CSNA2::Rotation::CW_90);
-	printer.print(ProgMemString("CW_90"));
+	printer.print(TEXT_CW_90);
 	printer.linefeed();
 	printer.set_rotation(CSNA2::Rotation::CCW_90);
-	printer.print(ProgMemString("CCW_90"));
+	printer.print(TEXT_CCW_90);
 	printer.linefeed();
 	printer.set_rotation(CSNA2::Rotation::REVERSED);
-	printer.print(ProgMemString("REVERSED"));
+	printer.print(TEXT_REVERSED);
 	printer.linefeed();
 	printer.set_rotation(CSNA2::Rotation::NORMAL);
 
@@ -88,25 +87,25 @@ void demoText(Printer &printer) {
 	printer.set_character_size(1, 1);
 
 	printer.set_font(CSNA2::Font::B_9_17);
-	printer.print(ProgMemString("Alternative font\n"));
+	printer.print(TEXT_ALTFONT);
 	printer.set_font(CSNA2::Font::A_12_24);
 
 	printer.set_character_spacing(2 * 8);
-	printer.print(ProgMemString("WIDE SPACING\n"));
+	printer.print(TEXT_WIDE);
 	printer.set_character_spacing(0);
 
-	printer.print(ProgMemString("x0"));
+	printer.print(TEXT_X0);
 	printer.set_x(100);
-	printer.print(ProgMemString("x100"));
+	printer.print(TEXT_X100);
 	printer.set_x(200);
-	printer.print(ProgMemString("x200"));
+	printer.print(TEXT_X200);
 	printer.linefeed();
 
-	printer.print(ProgMemString("x0"));
+	printer.print(TEXT_X0);
 	printer.set_x(100);
-	printer.print(ProgMemString("x100"));
+	printer.print(TEXT_X100);
 	printer.set_x(85);
-	printer.print(ProgMemString("x85"));
+	printer.print(TEXT_X85);
 	printer.linefeed();
 
 	delay(2000);

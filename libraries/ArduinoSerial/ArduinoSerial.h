@@ -21,8 +21,7 @@ class ArduinoSerial {
 	SerialT *serial;
 
 public:
-	[[gnu::always_inline]]
-	inline void begin(uint32_t baud) {
+	void begin(uint32_t baud) {
 		serial->begin(baud);
 	}
 
@@ -35,17 +34,16 @@ public:
 	inline void listen(void) {
 	}
 
-	[[gnu::always_inline,nodiscard]]
+	[[nodiscard]]
 	inline uint8_t read(void) {
 		return serial->read();
 	}
 
-	[[gnu::always_inline]]
 	inline void write(uint8_t byte) {
 		serial->write(byte);
 	}
 
-	[[gnu::always_inline,nodiscard]]
+	[[nodiscard]]
 	inline uint8_t available(void) {
 		return serial->available();
 	}

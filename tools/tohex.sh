@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e;
+set -eo pipefail;
 
 # Wrapper script for the ToHex program.
 

@@ -21,6 +21,7 @@
 #define DEMOPATTERNS_H_INCLUDED
 
 #include "DemoUtils.h"
+#include "Strings.h"
 
 #include <Bitmask18.h>
 #include <BlendMode.h>
@@ -175,7 +176,7 @@ void demoShades(Display &display) {
 
 template <typename Display>
 void demoPatterns(Display &display) {
-	showTitle(display, ProgMemString("Patterns!"));
+	showTitle(display, TITLE_PATTERNS);
 	delay(1500);
 
 	demoSwatches(display);

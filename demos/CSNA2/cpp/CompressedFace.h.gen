@@ -14,7 +14,7 @@ $("$TOOLS_DIR/calccompressedbitmap.sh" "../data/Face.png" "81" 128)
 #define MakeFaceDecompressor() MakeDecompressor<128>(${UPPER_SNAKE_NAME})
 
 #define Make${CAMEL_NAME}Bitmask(decompressorPtr) MakeStaticBitmask81( \\
-	MakeDecompressorPointer(decompressorPtr), \\
+	MakeDecompressorPointer<uint8_t>(decompressorPtr), \\
 	256, \\
 	256 \\
 )

@@ -13,7 +13,10 @@
  * @license Public Domain
  */
 
+#include "strings.h"
+
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <queue>
 #include <unordered_map>
@@ -35,6 +38,10 @@ public:
 
 	std::size_t size(void) const {
 		return count;
+	}
+
+	std::size_t size_bits(void) const {
+		return (count << 3) | sz;
 	}
 
 	void push(bool bit) {
@@ -70,6 +77,10 @@ public:
 		return sz >> 3;
 	}
 
+	std::size_t size_bits(void) const {
+		return sz;
+	}
+
 	void push(bool) {
 		++ sz;
 	}
@@ -92,6 +103,20 @@ std::vector<uint8_t> read_all(std::istream &in) {
 	}
 
 	return result;
+}
+
+void optimise_strings(std::vector<stringdef> &strings) {
+	for(auto i = strings.begin(); i != strings.end(); ++ i) {
+		for(auto j = strings.begin(); j != i; ++ j) {
+			if(j->value == i->value) {
+				stringdef d = std::move(*i);
+				result.erase(i);
+				d.value.clear();
+				result.insert(j, std::move(d));
+				break;
+			}
+		}
+	}
 }
 
 template <typename LookbackFn, typename RawByteFn>
@@ -325,8 +350,9 @@ struct opts_t {
 template <typename Writer>
 codebook<uint16_t> compress(
 	Writer &writer,
-	const std::vector<uint8_t> &bytes,
-	opts_t opts
+	std::vector<std::size_t> &zeroPositions,
+	const std::vector<std::vector<uint8_t>> &byteBlocks,
+	const opts_t &opts
 ) {
 	std::size_t maxLen = opts.zeroLen + 255;
 	if(opts.distFirst) {
@@ -334,40 +360,50 @@ codebook<uint16_t> compress(
 	}
 
 	std::vector<uint16_t> values;
-	compress_duplicates(
-		bytes,
-		opts.minDist,
-		opts.maxDist,
-		opts.minLen,
-		maxLen,
-		[&values, &opts] (std::size_t dist, std::size_t len) {
-			if(opts.splitMarker) {
-				values.push_back(0);
-				values.push_back(dist - opts.zeroDist);
-				values.push_back(len - opts.zeroLen);
-			} else if(opts.distFirst) {
-				values.push_back(256 + dist - opts.zeroDist);
-				values.push_back(len - opts.zeroLen);
-			} else {
-				values.push_back(256 + len - opts.zeroLen);
-				values.push_back(dist - opts.zeroDist);
+	zeroPositions.clear();
+	for(const auto &bytes : byteBlocks) {
+		zeroPositions.push_back(values.size());
+		compress_duplicates(
+			bytes,
+			opts.minDist,
+			opts.maxDist,
+			opts.minLen,
+			maxLen,
+			[&values, &opts] (std::size_t dist, std::size_t len) {
+				if(opts.splitMarker) {
+					values.push_back(0);
+					values.push_back(dist - opts.zeroDist);
+					values.push_back(len - opts.zeroLen);
+				} else if(opts.distFirst) {
+					values.push_back(256 + dist - opts.zeroDist);
+					values.push_back(len - opts.zeroLen);
+				} else {
+					values.push_back(256 + len - opts.zeroLen);
+					values.push_back(dist - opts.zeroDist);
+				}
+			},
+			[&values, &opts] (uint8_t c) {
+				if(opts.splitMarker) {
+					values.push_back(c + 1);
+				} else {
+					values.push_back(c);
+				}
 			}
-		},
-		[&values, &opts] (uint8_t c) {
-			if(opts.splitMarker) {
-				values.push_back(c + 1);
-			} else {
-				values.push_back(c);
-			}
-		}
-	);
+		);
+	}
 
 	auto table = make_codebook(values);
 	writer.push(opts.splitMarker);
 	writer.push(opts.distFirst);
 	table.write(writer);
-	for(const auto &v : values) {
-		table.write_coded(writer, v);
+
+	std::size_t section = 0;
+	for(std::size_t i = 0; i < values.size(); ++ i) {
+		while(i == zeroPositions[section]) {
+			zeroPositions[section] = writer.size_bits();
+			++ section;
+		}
+		table.write_coded(writer, values[i]);
 	}
 
 	return table;
@@ -391,16 +427,10 @@ std::vector<std::size_t> suggest_window_sizes(std::size_t limit) {
 	return windowSizes;
 }
 
-int main(int argc, const char *const *argv) {
-	if(argc < 2) {
-		return EXIT_FAILURE;
-	}
-
-	std::size_t maxWindowSize = std::size_t(atoi(argv[1]));
-
-	std::vector<uint8_t> bytes = read_all(std::cin);
-	std::cerr << "Original bits:      " << (bytes.size() * 8) << std::endl;
-
+opts_t pick_compression_options(
+	const std::vector<std::vector<uint8_t>> &byteBlocks,
+	std::size_t maxWindowSize
+) {
 	opts_t bestOpts;
 	std::size_t bestSize = std::size_t(-1);
 
@@ -409,6 +439,8 @@ int main(int argc, const char *const *argv) {
 	// fixed settings (not stored in data)
 	opts.zeroDist = 1;
 	opts.zeroLen = 2;
+
+	std::vector<std::size_t> zeroPositions;
 
 	// brute-force best settings
 	std::vector<std::size_t> windowSizes = suggest_window_sizes(maxWindowSize);
@@ -421,7 +453,7 @@ int main(int argc, const char *const *argv) {
 					opts.distFirst = (flags & 0x01);
 
 					bitsizer writer;
-					compress(writer, bytes, opts);
+					compress(writer, zeroPositions, byteBlocks, opts);
 					writer.close();
 
 					if(writer.size() < bestSize) {
@@ -432,21 +464,74 @@ int main(int argc, const char *const *argv) {
 			}
 		}
 	}
+	return bestOpts;
+}
+
+int main(int argc, const char *const *argv) {
+	std::vector<std::vector<uint8_t>> byteBlocks;
+
+	if(argc < 2) {
+		return EXIT_FAILURE;
+	}
+
+	std::size_t maxWindowSize = std::size_t(atoi(argv[1]));
+
+	std::vector<stringdef> strings;
+	std::string indexFile;
+	if(argc > 3 && std::string("--strings") == argv[2]) {
+		indexFile = argv[3];
+		strings = read_all_strings(std::cin);
+		optimise_strings(strings);
+		for(const stringdef &string : strings) {
+			byteBlocks.push_back(string.value);
+		}
+	} else {
+		byteBlocks.push_back(read_all(std::cin));
+	}
+
+	std::size_t totalBytesIn = 0;
+	for(const auto &bytes : byteBlocks) {
+		totalBytesIn += bytes.size();
+	}
+	std::cerr
+		<< "Original bits:      " << (totalBytesIn * 8)
+		<< " (parts: " << byteBlocks.size() << ")"
+		<< std::endl;
+
+	if(totalBytesIn == 0) {
+		std::cerr << "No data!" << std::endl;
+		return EXIT_FAILURE;
+	}
+
+	const opts_t opts = pick_compression_options(byteBlocks, maxWindowSize);
 
 	bitwriter writer(&std::cout);
-	auto table = compress(writer, bytes, bestOpts);
+	std::vector<std::size_t> zeroPositions;
+	auto table = compress(writer, zeroPositions, byteBlocks, opts);
 	writer.close();
+
+	if(!indexFile.empty()) {
+		std::fstream indexStream(indexFile, std::fstream::out);
+		for(std::size_t i = 0; i < strings.size(); ++ i) {
+			indexStream
+				<< strings[i].name
+				<< " "
+				<< zeroPositions[i]
+				<< std::endl;
+		}
+		indexStream.close();
+	}
 
 //	table.debug(std::cerr);
 
 	std::cerr
 		<< "Compressed bits:    " << (writer.size() * 8)
-		<< " (window: " << bestOpts.maxDist
-		<< ", min-dist: " << bestOpts.minDist
-		<< ", min-len: " << bestOpts.minLen
+		<< " (window: " << opts.maxDist
+		<< ", min-dist: " << opts.minDist
+		<< ", min-len: " << opts.minLen
 		<< ", mode: " << (
-			bestOpts.splitMarker ? "split" :
-			bestOpts.distFirst ? "dist-len" :
+			opts.splitMarker ? "split" :
+			opts.distFirst ? "dist-len" :
 			"len-dist"
 		)
 		<< ", symbols: " << table.symbol_count()

@@ -23,6 +23,9 @@
       location = "container:compile.sh">
    </FileRef>
    <FileRef
+      location = "container:decompile.sh">
+   </FileRef>
+   <FileRef
       location = "container:LICENSE">
    </FileRef>
    <FileRef

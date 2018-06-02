@@ -16,15 +16,14 @@
 
 #include "ext.h"
 
-template <typename DecompressorT>
+template <typename DecompressorT, typename T>
 class DecompressorPointer {
-	typedef DecompressorPointer<DecompressorT> Me;
+	typedef DecompressorPointer<DecompressorT, T> Me;
 
 	DecompressorT *decompressor;
 	int p;
 
 public:
-	[[gnu::always_inline]]
 	constexpr inline DecompressorPointer(DecompressorT *decompressor, int p = 0)
 		: decompressor(decompressor)
 		, p(p)
@@ -52,17 +51,17 @@ public:
 	// Reading values can have side-effects (advancing the window), so this is
 	// not a pure function
 	[[gnu::always_inline,nodiscard]]
-	inline uint8_t operator[](int index) const {
-		return decompressor->get(uint16_t(p + index));
+	inline T operator[](int index) const {
+		return T(decompressor->get(uint16_t(p + index)));
 	}
 };
 
-template <typename DecompressorT>
+template <typename T, typename DecompressorT>
 [[gnu::always_inline,nodiscard]]
-inline DecompressorPointer<DecompressorT> MakeDecompressorPointer(
+inline DecompressorPointer<DecompressorT, T> MakeDecompressorPointer(
 	DecompressorT *decompressor
 ) {
-	return DecompressorPointer<DecompressorT>(decompressor);
+	return DecompressorPointer<DecompressorT, T>(decompressor);
 }
 
 #endif

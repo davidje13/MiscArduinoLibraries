@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e;
+set -eo pipefail;
 
 SCRIPTDIR="$(dirname "$0")";
 
@@ -106,7 +106,7 @@ mkdir -p "$OUTPUT";
 
 if ! which "$BUILDER"; then
 	IDE="$IDE_PACKAGE/Contents/MacOS/Arduino";
-	BUILDER="$IDE_PACKAGE/Contents/Java/$BUILDER";
+	BUILDER="$BASEDIR/$BUILDER";
 fi;
 
 if [[ -x "$BUILDER" ]]; then

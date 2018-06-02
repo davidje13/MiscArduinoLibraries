@@ -70,7 +70,7 @@ static PROGMEM const uint8_t COMPRESSED_LOGO_PM[] = {
 #define MakeLogoDecompressor() MakeDecompressor<32>(COMPRESSED_LOGO)
 
 #define MakeCompressedLogoBitmask(decompressorPtr) MakeStaticBitmask18( \
-	MakeDecompressorPointer(decompressorPtr), \
+	MakeDecompressorPointer<uint8_t>(decompressorPtr), \
 	128, \
 	64 \
 )

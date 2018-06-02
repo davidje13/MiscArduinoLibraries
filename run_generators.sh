@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e;
+set -eo pipefail;
 
 SCRIPT_ABS_DIR="$(cd "$(dirname "$0")"; pwd)";
 TOOLS_DIR="$SCRIPT_ABS_DIR/tools";
@@ -20,9 +20,11 @@ generate() {
 	UPPER_SNAKE_NAME="$(echo "$SNAKE_NAME" | tr '[:lower:]' '[:upper:]')";
 
 	cd "$BASE_DIR";
-	if ! eval > "$OUTPUT_NAME" "cat <<EOF
-$(cat "$GENERATOR_NAME")
-EOF"; then
+	if ! eval > "$OUTPUT_NAME" "
+			set -eo pipefail;
+			TMP=\"$(cat "$GENERATOR_NAME")\";
+			[[ $? == 0 ]] && echo \"\$TMP\";
+	"; then
 		echo "ERROR GENERATING FILE" > "$OUTPUT_NAME";
 		echo "Failed to generate $OUTPUT_NAME";
 		cd - >/dev/null;

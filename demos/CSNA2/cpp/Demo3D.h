@@ -11,6 +11,7 @@
  */
 
 #include "DemoUtils.h"
+#include "CompressedStrings.h"
 
 #define WIDE_DATA
 #include <Bitmask18.h>
@@ -72,7 +73,7 @@ static PROGMEM const uint8_t CUBE_TRIANGLES[] = {
 
 template <typename Printer>
 void demo3D(Printer &printer) {
-	showTitle(printer, ProgMemString("3D!"));
+	showTitle(printer, TITLE_3D);
 
 	constexpr uint16_t ww = printer.width_dots();
 	constexpr uint16_t hh = ww;

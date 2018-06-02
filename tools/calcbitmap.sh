@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e;
+set -eo pipefail;
 
 # Wrapper script for the Bitmap Converter program.
 # Builds the program if required, and formats the output with line-wrapping

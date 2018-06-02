@@ -21,6 +21,7 @@
 #define DEMOLINES_H_INCLUDED
 
 #include "DemoUtils.h"
+#include "Strings.h"
 
 #include <Bitmask18.h>
 #include <FastMath.h>
@@ -29,7 +30,7 @@ template <typename Display>
 void demoLines(Display &display) {
 	Bitmask18<display.width(),display.height()> bitmask;
 
-	printTitle(bitmask, ProgMemString("Lines!"));
+	printTitle(bitmask, TITLE_LINES);
 	display.send(bitmask);
 	delay(1500);
 

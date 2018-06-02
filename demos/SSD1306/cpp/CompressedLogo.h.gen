@@ -14,7 +14,7 @@ $("$TOOLS_DIR/calccompressedbitmap.sh" "../data/logo.png" "18" 32)
 #define MakeLogoDecompressor() MakeDecompressor<32>(${UPPER_SNAKE_NAME})
 
 #define Make${CAMEL_NAME}Bitmask(decompressorPtr) MakeStaticBitmask18( \\
-	MakeDecompressorPointer(decompressorPtr), \\
+	MakeDecompressorPointer<uint8_t>(decompressorPtr), \\
 	128, \\
 	64 \\
 )

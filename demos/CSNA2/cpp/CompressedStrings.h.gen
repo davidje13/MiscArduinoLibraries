@@ -1,0 +1,11 @@
+#ifndef ${UPPER_SNAKE_NAME}_H_INCLUDED
+#define ${UPPER_SNAKE_NAME}_H_INCLUDED
+
+// Auto-generated from ${GENERATOR_NAME}
+
+#include <ProgMem.h>
+#include <SegmentedDecompressor.h>
+
+$("$TOOLS_DIR/calccompressedstrings.sh" "../data/strings.strings" "${UPPER_SNAKE_NAME}_PM" "${CAMEL_NAME}Decompressor" 4)
+
+#endif

@@ -564,7 +564,7 @@ static PROGMEM const uint8_t COMPRESSED_SHIP_PM[] = {
 #define MakeShipDecompressor() MakeDecompressor<128>(COMPRESSED_SHIP)
 
 #define MakeCompressedShipBitmask(decompressorPtr) MakeStaticBitmask81( \
-	MakeDecompressorPointer(decompressorPtr), \
+	MakeDecompressorPointer<uint8_t>(decompressorPtr), \
 	384, \
 	224 \
 )

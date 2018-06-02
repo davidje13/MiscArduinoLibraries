@@ -21,6 +21,7 @@
 #define DEMOPIXELS_H_INCLUDED
 
 #include "DemoUtils.h"
+#include "Strings.h"
 
 #include <Bitmask18.h>
 
@@ -28,7 +29,7 @@ template <typename Display>
 void demoPixels(Display &display) {
 	Bitmask18<display.width(),display.height()> bitmask;
 
-	printTitle(bitmask, ProgMemString("Pixels!"));
+	printTitle(bitmask, TITLE_PIXELS);
 	display.send(bitmask);
 	delay(1500);
 

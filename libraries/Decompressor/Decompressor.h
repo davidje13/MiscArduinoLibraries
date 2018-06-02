@@ -22,8 +22,9 @@
 
 typedef uint8_t windowsz_t;
 
-template <typename BaseT, windowsz_t windowSize>
-class Decompressor {
+template <typename BaseT>
+class DecompressorBase {
+protected:
 	enum Mode : uint8_t {
 		LEN_DIST,
 		DIST_LEN,
@@ -32,21 +33,17 @@ class Decompressor {
 
 	typedef uint16_t bits_t;
 	static constexpr uint8_t maxBits = 15;
-	static constexpr windowsz_t zeroDist = 1;
-	static constexpr uint16_t zeroLen = 2;
 
-	BaseT baseData;
+	const BaseT baseData;
 	uint16_t currentDataPos;
 	uint16_t currentStreamBit;
 	uint16_t blockLen;
 	windowsz_t blockDist;
-	windowsz_t currentWindowPos;
 #if TRUSTED_INPUT
 	bits_t beginnings[maxBits - 1];
 #else
 	bits_t beginnings[maxBits];
 #endif
-	uint8_t window[windowSize];
 
 	[[gnu::always_inline,gnu::pure,nodiscard]]
 	inline uint8_t read_bit(uint16_t bit) const {
@@ -142,14 +139,8 @@ class Decompressor {
 		return read_bits_16(2, 10);
 	}
 
-	void reset(void) {
-		currentDataPos = 0;
-		currentStreamBit = 12 + symbol_count() * 4;
-		blockLen = 0;
-		currentWindowPos = 0;
-		for(uint8_t i = 0; i < windowSize; ++ i) {
-			window[i] = 0;
-		}
+	inline uint16_t zero_bit(void) const {
+		return 12 + symbol_count() * 4;
 	}
 
 	void prepare(void) {
@@ -170,17 +161,6 @@ class Decompressor {
 		}
 	}
 
-	[[gnu::pure,nodiscard]]
-	uint8_t read_window(windowsz_t dist) const {
-		return window[(currentWindowPos + windowSize - dist) % windowSize];
-	}
-
-	void advance_byte(uint8_t value) {
-		window[currentWindowPos] = value;
-		currentWindowPos = (currentWindowPos + 1) % windowSize;
-		++ currentDataPos;
-	}
-
 	uint16_t read_next_symbol(void) {
 		bits_t v = 0;
 		uint8_t len = 0;
@@ -192,46 +172,92 @@ class Decompressor {
 		return identify(v, len);
 	}
 
+public:
+	[[gnu::always_inline]]
+	inline DecompressorBase(const BaseT &baseData)
+		: baseData(baseData)
+	{
+		prepare();
+	}
+
+	[[gnu::always_inline]]
+	inline DecompressorBase(BaseT &&baseData)
+		: baseData(static_cast<BaseT&&>(baseData))
+	{
+		prepare();
+	}
+};
+
+template <typename BaseT, windowsz_t windowSize>
+class Decompressor : protected DecompressorBase<BaseT> {
+protected:
+	static constexpr windowsz_t zeroDist = 1;
+	static constexpr uint16_t zeroLen = 2;
+
+	windowsz_t currentWindowPos;
+	uint8_t window[windowSize];
+
+	void reset(uint16_t streamBit) {
+		this->currentDataPos = 0;
+		this->currentStreamBit = streamBit;
+		this->blockLen = 0;
+		currentWindowPos = 0;
+		for(uint8_t i = 0; i < windowSize; ++ i) {
+			window[i] = 0;
+		}
+	}
+
+	[[gnu::pure,nodiscard]]
+	uint8_t read_window(windowsz_t dist) const {
+		return window[(currentWindowPos + windowSize - dist) % windowSize];
+	}
+
+	void advance_byte(uint8_t value) {
+		window[currentWindowPos] = value;
+		currentWindowPos = (currentWindowPos + 1) % windowSize;
+		++ this->currentDataPos;
+	}
+
 	void advance_block(void) {
-		-- blockLen;
+		-- this->blockLen;
 #if !TRUSTED_INPUT
 		if(blockDist > windowSize) {
 			advance_byte(0);
 			return;
 		}
 #endif
-		advance_byte(read_window(blockDist));
+		advance_byte(read_window(this->blockDist));
 	}
 
 	void advance(void) {
-		if(blockLen) {
+		if(this->blockLen) {
 			advance_block();
 			return;
 		}
-		uint16_t decoded = read_next_symbol();
-		switch(mode()) {
-		case Mode::LEN_DIST:
+		uint16_t decoded = this->read_next_symbol();
+		switch(this->mode()) {
+		case Decompressor::Mode::LEN_DIST:
 			if(decoded >= 256) {
-				blockLen = uint16_t(decoded - 256 + zeroLen);
-				blockDist = windowsz_t(read_next_symbol() + zeroDist);
+				this->blockLen = uint16_t(decoded - 256 + zeroLen);
+				this->blockDist = windowsz_t(this->read_next_symbol() + zeroDist);
 				advance_block();
 			} else {
 				advance_byte(uint8_t(decoded));
 			}
 			break;
-		case Mode::DIST_LEN:
+		case Decompressor::Mode::DIST_LEN:
 			if(decoded >= 256) {
-				blockDist = windowsz_t(decoded - 256 + zeroDist);
-				blockLen = uint16_t(read_next_symbol() + zeroLen);
+				this->blockDist = windowsz_t(decoded - 256 + zeroDist);
+				this->blockLen = uint16_t(this->read_next_symbol() + zeroLen);
 				advance_block();
 			} else {
 				advance_byte(uint8_t(decoded));
 			}
 			break;
-		case Mode::SPLIT:
+		case Decompressor::Mode::SPLIT:
 			if(decoded == 0) {
-				blockDist = windowsz_t(read_next_symbol() + zeroDist);
-				blockLen = uint16_t(read_next_symbol() + zeroLen);
+				this->blockDist = windowsz_t(this->read_next_symbol() + zeroDist);
+				this->blockLen = uint16_t(this->read_next_symbol() + zeroLen);
 				advance_block();
 			} else {
 				advance_byte(uint8_t(decoded - 1));
@@ -240,31 +266,47 @@ class Decompressor {
 		}
 	}
 
-public:
-	Decompressor(const BaseT &baseData)
-		: baseData(baseData)
-	{
-		prepare();
-		reset();
+	[[gnu::always_inline,gnu::pure,nodiscard]]
+	inline bool beyond_index(uint16_t index) const {
+		// both checks are needed to avoid rollover issues
+		return (
+			index < this->currentDataPos - windowSize &&
+			this->currentDataPos >= windowSize
+		);
 	}
 
-	Decompressor(BaseT &&baseData)
-		: baseData(static_cast<BaseT&&>(baseData))
+	[[gnu::always_inline]]
+	inline void advance_to_index(uint16_t index) {
+		while(index >= this->currentDataPos) {
+			advance();
+		}
+	}
+
+	[[gnu::always_inline,gnu::pure,nodiscard]]
+	inline uint8_t get_index(uint16_t index) const {
+		return read_window(windowsz_t(this->currentDataPos - index));
+	}
+
+public:
+	inline Decompressor(const BaseT &baseData)
+		: DecompressorBase<BaseT>(baseData)
 	{
-		prepare();
-		reset();
+		reset(this->zero_bit());
+	}
+
+	inline Decompressor(BaseT &&baseData)
+		: DecompressorBase<BaseT>(static_cast<BaseT&&>(baseData))
+	{
+		reset(this->zero_bit());
 	}
 
 	uint8_t get(uint16_t index) {
-		// both checks are needed to avoid rollover issues
-		if(index < currentDataPos - windowSize && currentDataPos >= windowSize) {
+		if(beyond_index(index)) {
 			// cannot decode backwards, so must rewind stream
-			reset();
+			reset(this->zero_bit());
 		}
-		while(index >= currentDataPos) {
-			advance();
-		}
-		return read_window(windowsz_t(currentDataPos - index));
+		advance_to_index(index);
+		return get_index(index);
 	}
 };
 

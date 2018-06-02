@@ -125,7 +125,7 @@ public:
 
 		uint16_t w = 0;
 		uint8_t c;
-		for(T p = message; (c = uint8_t(p[0])) != 0; p = p + 1) {
+		for(T p = message; (c = uint8_t(p[0])) != 0; p += 1) {
 			if(char_supported(c)) {
 				w += measure(c) + spacing();
 			}
@@ -215,7 +215,7 @@ public:
 
 		uint16_t w = 0;
 		uint8_t c;
-		for(T p = message; (c = uint8_t(p[0])) != 0; p = p + 1) {
+		for(T p = message; (c = uint8_t(p[0])) != 0; p += 1) {
 			if(char_supported(c)) {
 				w += render(bitmask, c, x + w, y) + spacing();
 			}

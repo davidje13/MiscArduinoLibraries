@@ -21,6 +21,7 @@
 #define DEMOCLOCK_H_INCLUDED
 
 #include "DemoUtils.h"
+#include "Strings.h"
 
 #include <Bitmask18.h>
 #include <BlendMode.h>
@@ -207,13 +208,13 @@ public:
 			PATTERN_ON
 		);
 
-		int w12 = f.measure(ProgMemString("12"));
+		int w12 = f.measure(CLOCK_12);
 		int w3 = f.measure('3');
 		int w6 = f.measure('6');
 		int w9 = f.measure('9');
 		int numHalfHeight = f.height() / 2;
 
-		f.render(bitmask, ProgMemString("12"), cx - w12 / 2, cy - numRad - numHalfHeight);
+		f.render(bitmask, CLOCK_12, cx - w12 / 2, cy - numRad - numHalfHeight);
 		f.render(bitmask, '3', cx + numRad - w3 / 2, cy - numHalfHeight);
 		f.render(bitmask, '6', cx - w6 / 2, cy + numRad - numHalfHeight);
 		f.render(bitmask, '9', cx - numRad - w9 / 2, cy - numHalfHeight);
@@ -266,7 +267,7 @@ template <typename Display>
 void demoClock(Display &display) {
 	Bitmask18<display.width(),display.height()> bitmask;
 
-	printTitle(bitmask, ProgMemString("Clock!"));
+	printTitle(bitmask, TITLE_CLOCK);
 	display.send(bitmask);
 	delay(1500);
 

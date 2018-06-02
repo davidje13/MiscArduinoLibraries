@@ -25,6 +25,7 @@
 #include "Font1.h"
 #include "Font2.h"
 #include "Font3.h"
+#include "Strings.h"
 
 #include <Bitmask18.h>
 #include <Font.h>
@@ -70,7 +71,7 @@ template <typename Display>
 void demoText(Display &display) {
 	Bitmask18<display.width(),display.height()> bitmask;
 
-	printTitle(bitmask, ProgMemString("Text!"));
+	printTitle(bitmask, TITLE_TEXT);
 	display.send(bitmask);
 	delay(1500);
 
@@ -84,24 +85,16 @@ void demoText(Display &display) {
 	demoCharacters(display, bitmask, fVar);
 
 	{
-		demoMessage(display, bitmask, f1, fVar, ProgMemString(
-			"The quick brown fox jumps over the lazy dog."
-		));
-
-		demoMessage(display, bitmask, f1, fVar, ProgMemString(
-			"HOW VEXINGLY QUICK (DAFT) ZEBRAS JUMP!"
-		));
-
-		demoMessage(display, bitmask, f1, fVar, ProgMemString(
-			"Bright vixens jump; dozy fowl quack."
-		));
+		demoMessage(display, bitmask, f1, fVar, TEXT_SAMPLE_1);
+		demoMessage(display, bitmask, f1, fVar, TEXT_SAMPLE_2);
+		demoMessage(display, bitmask, f1, fVar, TEXT_SAMPLE_3);
 
 		bitmask.clear();
 		auto r = MakeFontRenderer(&bitmask, 0, 0, bitmask.width(), 0);
 		for(uint8_t i = 0x20; i <= 0x40; ++ i) {
 			r.print(f1, char(i));
 		}
-		r.print(f1, ProgMemString("[\\]^_`{|}~"));
+		r.print(f1, TEXT_FINAL_CHARS);
 		display.send(bitmask);
 		delay(1000);
 	}
@@ -111,29 +104,29 @@ void demoText(Display &display) {
 
 		auto r = MakeFontRenderer(&bitmask, 0, 0, bitmask.width(), 0);
 		r.set_yshift(4);
-		r.print(f0, ProgMemString("A0: "));
+		r.print(f0, TEXT_A0);
 		r.set_yshift(0);
 		r.print_number(f2, analogRead(A0), 4);
 		r.set_yshift(8);
-		r.print(f0, ProgMemString(" /1024"));
+		r.print(f0, TEXT_PER1024);
 		r.set_yshift(0);
 
 		r.move(0, 20, bitmask.width(), 0);
 		r.set_yshift(4);
-		r.print(f0, ProgMemString("A1: "));
+		r.print(f0, TEXT_A1);
 		r.set_yshift(0);
 		r.print_number(f2, analogRead(A1), 4);
 		r.set_yshift(8);
-		r.print(f0, ProgMemString(" /1024"));
+		r.print(f0, TEXT_PER1024);
 		r.set_yshift(0);
 
 		r.move(0, 40, bitmask.width(), 0);
 		r.set_yshift(4);
-		r.print(f0, ProgMemString("A2: "));
+		r.print(f0, TEXT_A2);
 		r.set_yshift(0);
 		r.print_number(f2, analogRead(A2), 4);
 		r.set_yshift(8);
-		r.print(f0, ProgMemString(" /1024"));
+		r.print(f0, TEXT_PER1024);
 		r.set_yshift(0);
 
 		display.send(bitmask);
@@ -174,10 +167,10 @@ static void _testText(Display &display, Bitmask &bitmask, int x, int y) {
 //	bitmask.fill_rect(0, 0, bitmask.width(), bitmask.height(), BlendMode::ON, PATTERN_CHECKER);
 
 	auto r = MakeFontRenderer(&bitmask, x, y, bitmask.width() - x, 0);
-	r.print(f0, ProgMemString("012A"));
-	r.print(f1, ProgMemString("012A"));
-	r.print(f2, ProgMemString("012\n"));
-	r.print(f3, ProgMemString("012"));
+	r.print(f0, TEXT_F0_SHORT);
+	r.print(f1, TEXT_F1_SHORT);
+	r.print(f2, TEXT_F2_SHORT);
+	r.print(f3, TEXT_F3_SHORT);
 	display.send(bitmask);
 //	delay(500);
 }

@@ -13,6 +13,7 @@
 #include "DemoUtils.h"
 #include "CompressedFace.h"
 #include "CompressedShip.h"
+#include "CompressedStrings.h"
 
 #include <CSNA2.h>
 #include <ProgMem.h>
@@ -24,7 +25,7 @@
 template <typename Printer>
 void showFace(Printer &printer) {
 	printer.awake();
-	printer.print(ProgMemString("\nSimple compressed ProgMem image:\n"));
+	printer.print(IMAGE_COMPRESSED_FACE);
 	// window size must be at least as large as
 	// the configured value during compression
 	auto faceDecompressor = MakeFaceDecompressor();
@@ -44,7 +45,7 @@ void showShip(Printer &printer) {
 //	delay(2000);
 
 	printer.awake();
-	printer.print(ProgMemString("\nLarge compressed ProgMem image:\n"));
+	printer.print(IMAGE_COMPRESSED_SHIP);
 	// window size must be at least as large as
 	// the configured value during compression
 	auto shipDecompressor = MakeShipDecompressor();
@@ -56,37 +57,37 @@ void showShip(Printer &printer) {
 
 template <typename Printer>
 void demoBitmaps(Printer &printer) {
-	showTitle(printer, ProgMemString("Bitmaps!"));
+	showTitle(printer, TITLE_BITMAPS);
 
 	auto bitmask = MakeStaticBitmask81(SolidFill(true), 64, 32);
 
 	printer.awake();
-	printer.print(ProgMemString("print_bitmask81msb\n"));
+	printer.print(BITMAPS_BITMASK81MSB);
 	printer.print_bitmask81msb(bitmask);
 	delay(500);
 
 	printer.awake();
-	printer.print(ProgMemString("\nprint_bitmask81msb_small\n"));
+	printer.print(BITMAPS_BITMASK81MSB_SMALL);
 	printer.print_bitmask81msb_small(bitmask);
 	delay(500);
 
 	printer.awake();
-	printer.print(ProgMemString("\nprint_bitmask81msb_fullwidth\n"));
+	printer.print(BITMAPS_BITMASK81MSB_FULLWIDTH);
 	printer.print_bitmask81msb_fullwidth(bitmask); // lower quality
 	delay(500);
 
 	printer.awake();
-	printer.print(ProgMemString("\nprint_bitmask81lsb_fullwidth\n"));
+	printer.print(BITMAPS_BITMASK81LSB_FULLWIDTH);
 	printer.print_bitmask81lsb_fullwidth(bitmask); // lower quality
 	delay(500);
 
 	printer.awake();
-	printer.print(ProgMemString("\nprint_bitmask18\n"));
+	printer.print(BITMAPS_BITMASK18);
 	printer.print_bitmask18(bitmask); // lower quality for large images
 	delay(500);
 
 	printer.awake();
-	printer.print(ProgMemString("\nprint_bitmask18_lines\n"));
+	printer.print(BITMAPS_BITMASK18_LINES);
 	printer.print_bitmask18_lines(bitmask); // fails for large images (why??)
 	delay(500);
 

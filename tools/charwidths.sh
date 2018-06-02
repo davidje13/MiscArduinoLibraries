@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e;
+set -eo pipefail;
 
 # Wrapper script for the Character Widths program.
 # Builds the program if required, and formats the output with line-wrapping

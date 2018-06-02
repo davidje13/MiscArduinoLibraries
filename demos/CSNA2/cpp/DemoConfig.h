@@ -11,40 +11,39 @@
  */
 
 #include "DemoUtils.h"
+#include "CompressedStrings.h"
 
 #include <CSNA2.h>
 
 template <typename Printer>
 void demoConfig(Printer &printer) {
-	showTitle(printer, ProgMemString("Configuration!"));
-
-	auto test = ProgMemString("\xB0\xB0\xB1\xB1\xB2\xB2\xDB\xDB\n");
+	showTitle(printer, TITLE_CONFIG);
 
 	printer.awake();
 	printer.configure(CSNA2::Configuration::FACTORY);
-	printer.print(ProgMemString("FACTORY MODE    "));
-	printer.print(test);
+	printer.print(CONFIG_FACTORY);
+	printer.print(CONFIG_SAMPLE);
 
 	delay(1000);
 
 	printer.awake();
 	printer.configure(CSNA2::Configuration::ECO);
-	printer.print(ProgMemString("ECO MODE        "));
-	printer.print(test);
+	printer.print(CONFIG_ECO);
+	printer.print(CONFIG_SAMPLE);
 
 	delay(1000);
 
 	printer.awake();
 	printer.configure(CSNA2::Configuration::PRECISION);
-	printer.print(ProgMemString("PRECISION MODE  "));
-	printer.print(test);
+	printer.print(CONFIG_PRECISION);
+	printer.print(CONFIG_SAMPLE);
 
 	delay(1000);
 
 	printer.awake();
 	printer.configure(CSNA2::Configuration::FAST);
-	printer.print(ProgMemString("FAST MODE       "));
-	printer.print(test);
+	printer.print(CONFIG_FAST);
+	printer.print(CONFIG_SAMPLE);
 
 	delay(1000);
 

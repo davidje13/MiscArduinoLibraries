@@ -75,7 +75,7 @@ void setup(void) {
 	// Make last output visible
 	delay(1000);
 	printer.awake();
-	printer.print(ProgMemString("\n\n\n"));
+	printer.print(TRIPLE_NEWLINE);
 
 	while(true) {
 		status.high();

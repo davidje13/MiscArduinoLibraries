@@ -22,6 +22,7 @@
 
 #include "DemoUtils.h"
 #include "Font0.h"
+#include "Strings.h"
 
 #include <Bitmask18.h>
 #include <BlendMode.h>
@@ -32,7 +33,7 @@ template <typename Display, typename BatLPinT, typename BatRPinT>
 void demoPong(Display &display, BatLPinT batL, BatRPinT batR) {
 	Bitmask18<display.width(),display.height()> bitmask;
 
-	printTitle(bitmask, ProgMemString("Pong!"));
+	printTitle(bitmask, TITLE_PONG);
 	display.send(bitmask);
 	delay(1500);
 
@@ -213,7 +214,7 @@ void testEllipses(Display &display) {
 			_testEllipses(display, bitmask, x, y);
 		}
 	}
-	
+
 	for(int x = 2; x < 32; x += 2) {
 		int y;
 		for(y = 2; y < 32; y += 2) {
