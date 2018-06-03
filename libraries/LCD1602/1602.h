@@ -301,6 +301,11 @@ public:
 		send(value);
 	}
 
+	[[gnu::always_inline]]
+	inline void print(char value) {
+		print(uint8_t(value));
+	}
+
 	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
 	void print(T message) {
 		set_mode(DataState::DATA_WRITE);

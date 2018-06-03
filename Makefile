@@ -25,6 +25,10 @@ HCSR04 :
 HCSR04_LCD :
 	@ ./compile.sh --upload HCSR04_LCD
 
+.PHONY : DHT11
+DHT11 :
+	@ ./compile.sh --upload DHT11
+
 .PHONY : CSNA2
 CSNA2 :
 	@ ./compile.sh --upload CSNA2
@@ -57,6 +61,7 @@ check :
 	@ ./compile.sh --check ADXL345
 	@ ./compile.sh --check HCSR04
 	@ ./compile.sh --check HCSR04_LCD
+	@ ./compile.sh --check DHT11
 	@ ./compile.sh --check CSNA2
 	@ ./compile.sh --check TM1638
 	@ ./compile.sh --check MY9221
