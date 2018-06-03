@@ -1,10 +1,12 @@
-# DHT11 (Temp. / Humidity sensor)
+# DHT11/DHT22 (Temp. / Humidity sensor)
 
-This library wraps communication with the DHT11 temperature / humidity
-sensor.
+This library wraps communication with DHT temperature / humidity
+sensors.
 
 ## Features
 
+* Compatible with DHT11 and DHT22 (fractional readings only available
+  with DHT22; DHT11 always returns integer readings)
 * Data in integer or float representations
 * Error checking
 * Automatically retry readings until hardware is ready
