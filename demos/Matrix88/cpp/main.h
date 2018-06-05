@@ -21,7 +21,7 @@
  */
 
 #include <74HC595.h>
-#include <LCDMatrix88.h>
+#include <LEDMatrix88.h>
 #include <ArduinoPin.h>
 #include <DemoText.h>
 #include <DemoPatterns.h>
@@ -34,7 +34,7 @@
 #define LCD_PIN_DS    FixedArduinoPin<9>()
 
 void setup(void) {
-	auto lcd = MakeLCDMatrix88(Make74HC595(
+	auto lcd = MakeLEDMatrix88(Make74HC595(
 		LCD_PIN_ST_CP,
 		LCD_PIN_SH_CP,
 		LCD_PIN_DS

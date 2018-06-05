@@ -21,7 +21,7 @@
 #include <RotaryEncoder.h>
 #include <ArduinoPin.h>
 #include <74HC595.h>
-#include <LCDMatrix88.h>
+#include <LEDMatrix88.h>
 #include <Bitmask18.h>
 
 // These can be set to any available pin, but it is recommended to use pins
@@ -39,7 +39,7 @@
 #define SCALE 4
 
 void setup(void) {
-	auto lcd = MakeLCDMatrix88(Make74HC595(
+	auto lcd = MakeLEDMatrix88(Make74HC595(
 		LCD_PIN_ST_CP,
 		LCD_PIN_SH_CP,
 		LCD_PIN_DS

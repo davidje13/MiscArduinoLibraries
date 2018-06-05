@@ -1,5 +1,5 @@
 /*
- * LCDMatrix88 - Sends data to an 8x8 LCD matrix powered by two 74HC595 chips
+ * LEDMatrix88 - Sends data to an 8x8 LED matrix powered by two 74HC595 chips
  * (e.g. the Adeept 8x8 LED Matrix Module)
  * Written in 2018 by David Evans
  *
@@ -13,8 +13,8 @@
  * <http://creativecommons.org/publicdomain/zero/1.0/>.
  */
 
-#ifndef LCDMATRIX88_H_INCLUDED
-#define LCDMATRIX88_H_INCLUDED
+#ifndef LEDMATRIX88_H_INCLUDED
+#define LEDMATRIX88_H_INCLUDED
 
 #include <ProgMem.h>
 
@@ -57,18 +57,18 @@ static PROGMEM const uint32_t FLICKER[] = {
 	0xFFFFFFFF  // 32/32
 };
 
-class LCDMatrix88 {
+class LEDMatrix88 {
 protected:
-	LCDMatrix88(void) = default;
-	LCDMatrix88(const LCDMatrix88&) = delete;
-	LCDMatrix88(LCDMatrix88&&) = default;
+	LEDMatrix88(void) = default;
+	LEDMatrix88(const LEDMatrix88&) = delete;
+	LEDMatrix88(LEDMatrix88&&) = default;
 
-	LCDMatrix88 &operator=(const LCDMatrix88&) = delete;
-	LCDMatrix88 &operator=(LCDMatrix88&&) = delete;
+	LEDMatrix88 &operator=(const LEDMatrix88&) = delete;
+	LEDMatrix88 &operator=(LEDMatrix88&&) = delete;
 };
 
 template <typename RegisterT>
-class LCDMatrix88_impl : public LCDMatrix88 {
+class LEDMatrix88_impl : public LEDMatrix88 {
 	RegisterT reg;
 
 public:
@@ -231,21 +231,21 @@ public:
 		blank();
 	}
 
-	LCDMatrix88_impl(RegisterT &&reg)
+	LEDMatrix88_impl(RegisterT &&reg)
 		: reg(static_cast<RegisterT&&>(reg))
 	{
 		blank();
 	}
 
-	LCDMatrix88_impl(LCDMatrix88_impl &&b)
+	LEDMatrix88_impl(LEDMatrix88_impl &&b)
 		: reg(static_cast<RegisterT&&>(b.reg))
 	{}
 };
 
 template <typename RegisterT>
 [[gnu::always_inline,nodiscard]]
-inline LCDMatrix88_impl<RegisterT> MakeLCDMatrix88(RegisterT &&reg) {
-	return LCDMatrix88_impl<RegisterT>(static_cast<RegisterT&&>(reg));
+inline LEDMatrix88_impl<RegisterT> MakeLEDMatrix88(RegisterT &&reg) {
+	return LEDMatrix88_impl<RegisterT>(static_cast<RegisterT&&>(reg));
 }
 
 #endif

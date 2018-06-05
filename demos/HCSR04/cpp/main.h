@@ -22,7 +22,7 @@
 #include <HCSR04.h>
 #include <ArduinoPin.h>
 #include <74HC595.h>
-#include <LCDMatrix88.h>
+#include <LEDMatrix88.h>
 #include <Bitmask18.h>
 
 #define TRIG_PIN FixedArduinoPin<5>()
@@ -37,7 +37,7 @@
 #define MAX_DIST 600
 
 void setup(void) {
-	auto lcd = MakeLCDMatrix88(Make74HC595(
+	auto lcd = MakeLEDMatrix88(Make74HC595(
 		LCD_PIN_ST_CP,
 		LCD_PIN_SH_CP,
 		LCD_PIN_DS

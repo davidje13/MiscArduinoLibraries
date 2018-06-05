@@ -41,9 +41,9 @@ TM1638 :
 MY9221 :
 	@ ./compile.sh --upload MY9221
 
-.PHONY : LCDMatrix88
-LCDMatrix88 :
-	@ ./compile.sh --upload LCDMatrix88
+.PHONY : Matrix88
+Matrix88 :
+	@ ./compile.sh --upload Matrix88
 
 .PHONY : RotaryEncoder
 RotaryEncoder :
@@ -65,7 +65,7 @@ check :
 	@ ./compile.sh --check CSNA2
 	@ ./compile.sh --check TM1638
 	@ ./compile.sh --check MY9221
-	@ ./compile.sh --check LCDMatrix88
+	@ ./compile.sh --check Matrix88
 	@ ./compile.sh --check RotaryEncoder
 	@ ./compile.sh --check IR
 
