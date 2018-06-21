@@ -15,7 +15,7 @@
 #include "ArduinoTWIMaster.h"
 
 uint8_t ArduinoTWIMaster::refCount = 0;
-uint32_t ArduinoTWIMaster::lastClockHz = 0;
+uint32_t ArduinoTWIMaster::capClockHz = 400000;
 
 void ArduinoTWIMaster::inc(void) {
 	if(refCount == 0) {
@@ -27,5 +27,12 @@ void ArduinoTWIMaster::inc(void) {
 void ArduinoTWIMaster::dec(void) {
 	if((-- refCount) == 0) {
 		Wire.end();
+	}
+}
+
+void ArduinoTWIMaster::_set_max_clock(uint32_t hz, bool force) {
+	if(hz < capClockHz || force) {
+		Wire.setClock(hz);
+		capClockHz = hz;
 	}
 }

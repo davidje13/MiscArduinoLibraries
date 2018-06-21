@@ -27,35 +27,105 @@
  *  Current   -- A1
  */
 
-#include <RotaryEncoder.h>
+#include <L298.h>
+#include <ArduinoTWIMaster.h>
 #include <ArduinoPin.h>
-#include <ArduinoMotorShield.h>
+#include <VoidPin.h>
+#include <MCP23017.h>
 
-FixedArduinoPin<7> rotPinA;
-FixedArduinoPin<6> rotPinB;
-FixedArduinoPin<5> rotPinPress;
+void err(int n) {
+	FixedArduinoPin<2> ledErr;
+	ledErr.set_output();
 
-#define SCALE 4
+	if(n == 0) {
+		ledErr.high();
+		return;
+	}
+	while(true) {
+		for(int i = 0; i < n; ++ i) {
+			ledErr.high();
+			delay(150);
+			ledErr.low();
+			delay(150);
+		}
+		delay(500);
+	}
+}
 
 void setup(void) {
-	auto channelA = MakeArduinoMotorShieldChannelA();
-	auto channelB = MakeArduinoMotorShieldChannelB();
+	auto twi = ArduinoTWIMaster();
+	auto io = MakeMCP23017(twi, 0x7);
+
+	switch(io.connection_status()) {
+	case MCP23017::ConnectionStatus::CONNECTED:
+		err(0);
+		break;
+	case MCP23017::ConnectionStatus::REQUEST_ERR_DATA_TOO_LONG:
+		err(1);
+		break;
+	case MCP23017::ConnectionStatus::REQUEST_ERR_NACK_ADDR:
+		err(2);
+		break;
+	case MCP23017::ConnectionStatus::REQUEST_ERR_NACK_DATA:
+		err(3);
+		break;
+	case MCP23017::ConnectionStatus::REQUEST_ERR_OTHER:
+		err(4);
+		break;
+	case MCP23017::ConnectionStatus::READ_TIMEOUT:
+		err(5);
+		break;
+	}
+
+	auto led = io.pin<MCP23017::Pin::A_0>();
+	led.set_output();
+
+	auto channelA = MakeSN754410Channel(
+		io.pin<MCP23017::Pin::B_0>(),
+		io.pin<MCP23017::Pin::B_2>(),
+		FixedArduinoPin<5>()
+	);
+	auto channelB = MakeSN754410Channel(
+		io.pin<MCP23017::Pin::B_1>(),
+		io.pin<MCP23017::Pin::B_3>(),
+		FixedArduinoPin<13>()
+	);
+
+	led.high();
+	delay(200);
+	led.low();
 
 	channelA.forward();
 	channelB.reverse();
 	delay(2000);
 
+	led.high();
+	delay(200);
+	led.low();
+
 	channelA.brake();
 	channelB.brake();
 	delay(1000);
+
+	led.high();
+	delay(200);
+	led.low();
 
 	channelA.reverse();
 	channelB.forward();
 	delay(2000);
 
+	led.high();
+	delay(200);
+	led.low();
+
 	channelA.freewheel();
 	channelB.freewheel();
 	delay(1000);
+
+	led.high();
+	delay(200);
+	led.low();
 
 	for(int speed = 0; speed < 255; speed += 5) {
 		channelA.set(speed);
@@ -69,35 +139,10 @@ void setup(void) {
 		delay(20);
 	}
 
-	auto encoder = MakeRotaryEncoder(rotPinA, rotPinB);
-	bool pressState = false;
-	rotPinPress.set_input();
-
-	int raw = (encoder.fraction() + 2) % SCALE;
-
-	int16_t speeds[] = {0, 0};
-	uint8_t channel = 0;
-
 	while(true) {
-		raw += encoder.delta();
-
-		if(raw >= SCALE) {
-			speeds[channel] = min(255, speeds[channel] + 15);
-			raw -= SCALE;
-		} else if(raw < 0) {
-			speeds[channel] = max(-255, speeds[channel] - 15);
-			raw += SCALE;
-		}
-
-		bool press = rotPinPress.read_digital();
-		if(press != pressState) {
-			pressState = press;
-			if(!press) {
-				channel = !channel;
-			}
-		}
-
-		channelA.set(speeds[0]);
-		channelB.set(speeds[1]);
+		led.high();
+		delay(200);
+		led.low();
+		delay(200);
 	}
 }

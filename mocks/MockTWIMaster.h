@@ -22,13 +22,10 @@ public:
 		uint8_t transmission_restart_call_count = 0;
 		Error transmission_restart_return_value = SUCCESS;
 		uint8_t begin_transmission_last_address = 0;
-		uint32_t begin_transmission_last_hz = 0;
 		uint8_t send_last_address = 0;
-		uint32_t send_last_hz = 0;
 		uint8_t send_last_value = 0;
 		Error send_return_value = SUCCESS;
 		uint8_t request_from_last_address = 0;
-		uint32_t request_from_last_hz = 0;
 		uint8_t request_from_last_count = 0;
 		bool request_from_last_stop = false;
 		bool request_read_return_value = false;
@@ -110,27 +107,19 @@ public:
 		}
 	};
 
-	Transmission begin_transmission(uint8_t address, uint32_t hz) {
+	Transmission begin_transmission(uint8_t address) {
 		mock->begin_transmission_last_address = address;
-		mock->begin_transmission_last_hz = hz;
 		return Transmission(mock);
 	}
 
-	Error send(uint8_t address, uint32_t hz, uint8_t value) {
+	Error send(uint8_t address, uint8_t value) {
 		mock->send_last_address = address;
-		mock->send_last_hz = hz;
 		mock->send_last_value = value;
 		return mock->send_return_value;
 	}
 
-	Request request_from(
-		uint8_t address,
-		uint32_t hz,
-		uint8_t count,
-		bool stop = true
-	) {
+	Request request_from(uint8_t address, uint8_t count, bool stop = true) {
 		mock->request_from_last_address = address;
-		mock->request_from_last_hz = hz;
 		mock->request_from_last_count = count;
 		mock->request_from_last_stop = stop;
 		return Request(mock);
@@ -138,14 +127,12 @@ public:
 
 	bool request_from(
 		uint8_t address,
-		uint32_t hz,
 		void *buffer,
 		uint8_t count,
 		uint16_t maxMicros,
 		bool stop = true
 	) {
 		mock->request_from_last_address = address;
-		mock->request_from_last_hz = hz;
 		uint8_t *b = static_cast<uint8_t*>(buffer);
 		for(uint8_t i = 0; i < count; ++ i) {
 			b[i] = mock->request_read_buffer[mock->request_read_count ++];

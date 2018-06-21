@@ -64,16 +64,12 @@ class PCF8574_impl : public PCF8574 {
 		uint8_t *target,
 		uint16_t maxMicros
 	) {
-		return twiComm.request_from(
-			i2c_addr(), i2c_speed(),
-			target, 1,
-			maxMicros
-		);
+		return twiComm.request_from(i2c_addr(), target, 1, maxMicros);
 	}
 
 	[[gnu::always_inline]]
 	inline typename TwiT::Error send(void) {
-		return twiComm.send(i2c_addr(), i2c_speed(), bits);
+		return twiComm.send(i2c_addr(), bits);
 	}
 
 public:
@@ -168,6 +164,7 @@ public:
 		: twiComm(twi, (address & 0x07) | (isPCF8574A ? 0x08 : 0x00))
 		, intPin(interrupt, 0xFF)
 	{
+		twiComm.set_max_clock(i2c_speed());
 		intPin.set_input();
 	}
 

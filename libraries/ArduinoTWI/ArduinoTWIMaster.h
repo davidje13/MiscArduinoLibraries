@@ -18,20 +18,20 @@
 
 #include "ext.h"
 
+// Typical supported speeds:
+// - 10000 (sometimes)
+// - 100000 (always)
+// - 400000 (always)
+// - 1000000 (sometimes)
+// - 3400000 (sometimes)
+
 class ArduinoTWIMaster {
 	static uint8_t refCount;
-	static uint32_t lastClockHz;
+	static uint32_t capClockHz;
 
 	static void inc(void);
 	static void dec(void);
-
-	[[gnu::always_inline]]
-	inline void set_clock(uint32_t hz, bool force = false) {
-		if(lastClockHz != hz || force) {
-			Wire.setClock(hz);
-			lastClockHz = hz;
-		}
-	}
+	static void _set_max_clock(uint32_t hz, bool force);
 
 public:
 	enum Error : uint8_t {
@@ -150,16 +150,20 @@ public:
 		dec();
 	}
 
+	[[gnu::always_inline]]
+	inline void set_max_clock(uint32_t hz, bool force = false) {
+		_set_max_clock(hz, force);
+	}
+
 	[[nodiscard,gnu::always_inline]]
-	inline Transmission begin_transmission(uint8_t address, uint32_t hz) {
-		set_clock(hz);
+	inline Transmission begin_transmission(uint8_t address) {
 		Wire.beginTransmission(address);
 		return Transmission();
 	}
 
 	[[nodiscard,gnu::always_inline]]
-	inline Error send(uint8_t address, uint32_t hz, uint8_t value) {
-		auto t = begin_transmission(address, hz);
+	inline Error send(uint8_t address, uint8_t value) {
+		auto t = begin_transmission(address);
 		t.write(value);
 		return t.stop();
 	}
@@ -167,11 +171,9 @@ public:
 	[[nodiscard,gnu::always_inline]]
 	inline Request request_from(
 		uint8_t address,
-		uint32_t hz,
 		uint8_t count,
 		bool stop = true
 	) {
-		set_clock(hz);
 		Wire.requestFrom(address, count, uint8_t(stop));
 		return Request();
 	}
@@ -179,13 +181,12 @@ public:
 	[[gnu::always_inline]]
 	inline bool request_from(
 		uint8_t address,
-		uint32_t hz,
 		void *buffer,
 		uint8_t count,
 		uint16_t maxMicros,
 		bool stop = true
 	) {
-		return request_from(address, hz, count, stop)
+		return request_from(address, count, stop)
 			.read(buffer, count, maxMicros);
 	}
 };

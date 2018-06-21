@@ -200,7 +200,7 @@ class ITG3200_impl : public ITG3200 {
 
 	[[gnu::always_inline]]
 	typename TwiT::Error set_register(Register r, uint8_t value) {
-		auto t = twiComm.begin_transmission(i2c_addr(), i2c_speed());
+		auto t = twiComm.begin_transmission(i2c_addr());
 		t.write(r);
 		t.write(value);
 		return t.stop();
@@ -212,14 +212,15 @@ class ITG3200_impl : public ITG3200 {
 		uint8_t count,
 		uint16_t maxMicros
 	) {
-		auto err = twiComm.send(i2c_addr(), i2c_speed(), r);
+		auto err = twiComm.send(i2c_addr(), r);
 		if(err != TwiT::Error::SUCCESS) {
 			return ConnectionStatus(err);
 		}
 
 		bool success = twiComm.request_from(
-			i2c_addr(), i2c_speed(),
-			buffer, count,
+			i2c_addr(),
+			buffer,
+			count,
 			maxMicros
 		);
 		if(success) {
@@ -463,6 +464,7 @@ public:
 		: intPin(interrupt, 0x00) // powerCache - assume default
 		, twiComm(twi, FlattenedAddrRange(AD0, false)) // addrLSB, hasSetRange
 	{
+		twiComm.set_max_clock(i2c_speed());
 		intPin.set_input();
 		if(connection_status() == ConnectionStatus::CONNECTED) {
 			reset();

@@ -226,7 +226,7 @@ class ADXL345_impl : public ADXL345 {
 
 	[[gnu::always_inline]]
 	typename TwiT::Error set_register(Register r) {
-		return twiComm.send(i2c_addr(), i2c_speed(), r);
+		return twiComm.send(i2c_addr(), r);
 	}
 
 	[[gnu::always_inline]]
@@ -235,7 +235,7 @@ class ADXL345_impl : public ADXL345 {
 		const uint8_t *values,
 		uint8_t count
 	) {
-		auto t = twiComm.begin_transmission(i2c_addr(), i2c_speed());
+		auto t = twiComm.begin_transmission(i2c_addr());
 		t.write(r);
 		t.write(values, count);
 		return t.stop();
@@ -247,11 +247,7 @@ class ADXL345_impl : public ADXL345 {
 	}
 
 	bool read(void *buffer, uint8_t count, uint16_t maxMicros) {
-		return twiComm.request_from(
-			i2c_addr(), i2c_speed(),
-			buffer, count,
-			maxMicros
-		);
+		return twiComm.request_from(i2c_addr(), buffer, count, maxMicros);
 	}
 
 	bool setIntConfig(Interrupt i, InterruptPin pin) {
@@ -856,6 +852,7 @@ public:
 		, twiComm(twi, 0x00) // intMap
 		, power((activeIntModeHigh * 0x80) | (altAddress * 0x40))
 	{
+		twiComm.set_max_clock(i2c_speed());
 		int1Pin.set_input();
 		int2Pin.set_input();
 	}

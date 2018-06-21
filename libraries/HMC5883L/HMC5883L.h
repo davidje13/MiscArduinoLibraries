@@ -373,13 +373,13 @@ private:
 	[[gnu::always_inline]]
 	typename TwiT::Error set_register(Register r) {
 		currentRegister = r;
-		return twiComm.send(i2c_addr(), i2c_speed(), r);
+		return twiComm.send(i2c_addr(), r);
 	}
 
 	[[gnu::always_inline]]
 	typename TwiT::Error set_register(Register r, uint8_t value) {
 		currentRegister = r + 1;
-		auto t = twiComm.begin_transmission(i2c_addr(), i2c_speed());
+		auto t = twiComm.begin_transmission(i2c_addr());
 		t.write(r);
 		t.write(value);
 		return t.stop();
@@ -388,8 +388,9 @@ private:
 	bool read(void *buffer, uint8_t count, uint16_t maxMicros) {
 		currentRegister += count;
 		bool success = twiComm.request_from(
-			i2c_addr(), i2c_speed(),
-			buffer, count,
+			i2c_addr(),
+			buffer,
+			count,
 			maxMicros
 		);
 		if(!success) {
@@ -749,6 +750,7 @@ public:
 		, gainChanged(false)
 		, confASent(false)
 	{
+		twiComm.set_max_clock(i2c_speed());
 		drdyPin.set_input();
 	}
 

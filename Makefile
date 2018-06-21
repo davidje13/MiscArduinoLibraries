@@ -29,6 +29,10 @@ HCSR04_LCD :
 DHT11 :
 	@ ./compile.sh --upload DHT11
 
+.PHONY : MotorShield
+MotorShield :
+	@ ./compile.sh --upload MotorShield
+
 .PHONY : L298
 L298 :
 	@ ./compile.sh --upload L298
@@ -66,6 +70,7 @@ check :
 	@ ./compile.sh --check HCSR04
 	@ ./compile.sh --check HCSR04_LCD
 	@ ./compile.sh --check DHT11
+	@ ./compile.sh --check MotorShield
 	@ ./compile.sh --check L298
 	@ ./compile.sh --check CSNA2
 	@ ./compile.sh --check TM1638

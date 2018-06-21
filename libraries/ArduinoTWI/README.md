@@ -13,9 +13,13 @@ destructor.
 
 ArduinoTWIMaster myTWI;
 
+// Each device on the wire should specify its maximum speed once;
+// the highest speed which all devices (and the host) support will
+// be used for communication with any device.
+myTWI.set_max_clock(100000); // 100kHz
+
 myTWI.begin_transmission(
-	0x01,  // 7-bit target address
-	100000 // 100kHz
+	0x01 // 7-bit target address
 );
 
 myTWI.write(0x50);

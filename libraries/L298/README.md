@@ -1,8 +1,9 @@
 # L298 (Dual full-bridge driver)
 
 This library wraps communication with a L298 bridge driver. It also
-includes support for the Arduino Motor Shield Rev3, which uses the
-L298.
+includes support for the Arduino Motor Shield Rev3 (which uses the
+L298), and is compatible with the SN754410 (which supports the same
+interface but lacks integrated current detection).
 
 ## Features
 
