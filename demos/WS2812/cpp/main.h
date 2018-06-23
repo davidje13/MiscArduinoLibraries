@@ -23,6 +23,7 @@
 #include <ArduinoPin.h>
 #include <ProgMem.h>
 #include <FastMath.h>
+#include <HumanLuminosity.h>
 
 FixedArduinoPin<6> stripPin;
 
@@ -42,50 +43,65 @@ const PROGMEM uint8_t values[] = {
 	255, 255, 255
 };
 
-const PROGMEM uint8_t values_zeros[] = {
-	0, 0, 0,
-	0, 0, 0,
-	0, 0, 0,
-	0, 0, 0,
-	0, 0, 0,
-	0, 0, 0,
-	0, 0, 0,
-	0, 0, 0,
-	0, 0, 0,
-	0, 0, 0,
-	0, 0, 0,
-	0, 0, 255
-};
-
 void setup(void) {
 	auto strip = MakeWS2812(stripPin);
+	const uint8_t count = 12;
+
+	for(uint16_t n = 0; n < count; ++ n) {
+		// Display test pattern (all off except 1 bright blue pixel)
+		strip.send_fn(count * 3, [n] (uint16_t i) {
+			if(i == n * 3 + 2) {
+				return 255;
+			} else {
+				return 0;
+			}
+		});
+		delay(100);
+	}
 
 	// Display rainbow / brightness pattern
 	strip.send(12 * 3, MakeProgMem(values));
-
-	delay(3000);
-
-	// Display test pattern (all off except 1 bright blue pixel)
-	strip.send(12 * 3, MakeProgMem(values_zeros));
-
-	delay(1000);
+	delay(2000);
 
 	// Display moving rainbow
-	uint8_t x = 0;
+	const uint16_t period_r = 190;
+	const uint16_t period_g = 220;
+	const uint16_t period_b = 250;
+	const uint8_t step = 256 / count;
+	uint16_t xr = 0;
+	uint16_t xg = 85 * period_g;
+	uint16_t xb = 171 * period_b;
 	while(true) {
 		strip.send_rgb_fn(
-			12,
-			[x] (uint16_t i, uint8_t *r) {
-				*r = uint8_t(sin8(i * 21 + x) + 127) / 4 + 1;
+			count,
+			[xr] (uint16_t i, uint8_t *r) {
+				*r = HUMAN_LUMINOSITY_R[
+					uint8_t(sin8(i * step + xr / period_r) + 127) / 2 + 1
+				];
 			},
-			[x] (uint16_t i, uint8_t *g) {
-				*g = uint8_t(sin8(i * 21 + 85 + x) + 127) / 8 + 1;
+			[xg] (uint16_t i, uint8_t *g) {
+				*g = HUMAN_LUMINOSITY_G[
+					uint8_t(sin8(i * step + xg / period_g) + 127) / 2 + 1
+				];
 			},
-			[x] (uint16_t i, uint8_t *b) {
-				*b = uint8_t(sin8(i * 21 + 171 + x) + 127) / 16 + 1;
+			[xb] (uint16_t i, uint8_t *b) {
+				*b = HUMAN_LUMINOSITY_B[
+					uint8_t(sin8(i * step + xb / period_b) + 127) / 2 + 1
+				];
 			}
 		);
-		x += 2;
+		xr += 256;
+		xg += 256;
+		xb += 256;
+		if(xr >= period_r * 256) {
+			xr -= period_r * 256;
+		}
+		if(xg >= period_g * 256) {
+			xg -= period_g * 256;
+		}
+		if(xb >= period_b * 256) {
+			xb -= period_b * 256;
+		}
 		delay(10);
 	}
 }

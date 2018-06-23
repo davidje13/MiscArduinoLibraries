@@ -1,0 +1,26 @@
+#ifndef ${UPPER_SNAKE_NAME}_H_INCLUDED
+#define ${UPPER_SNAKE_NAME}_H_INCLUDED
+
+// Auto-generated from ${GENERATOR_NAME}
+// Wavelength and intensity values are from the WS2812 datasheet
+
+#include <ProgMem.h>
+
+static PROGMEM const uint8_t ${UPPER_SNAKE_NAME}_R_PM[] = {
+$("$TOOLS_DIR/calcluminousintensity.sh" 625 625)
+};
+
+static PROGMEM const uint8_t ${UPPER_SNAKE_NAME}_G_PM[] = {
+$("$TOOLS_DIR/calcluminousintensity.sh" 522 1250)
+};
+
+static PROGMEM const uint8_t ${UPPER_SNAKE_NAME}_B_PM[] = {
+$("$TOOLS_DIR/calcluminousintensity.sh" 470 300)
+};
+
+#define ${UPPER_SNAKE_NAME} MakeProgMem(${UPPER_SNAKE_NAME}_G_PM)
+#define ${UPPER_SNAKE_NAME}_R MakeProgMem(${UPPER_SNAKE_NAME}_R_PM)
+#define ${UPPER_SNAKE_NAME}_G MakeProgMem(${UPPER_SNAKE_NAME}_G_PM)
+#define ${UPPER_SNAKE_NAME}_B MakeProgMem(${UPPER_SNAKE_NAME}_B_PM)
+
+#endif
