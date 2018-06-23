@@ -49,6 +49,10 @@ TM1638 :
 MY9221 :
 	@ ./compile.sh --upload MY9221
 
+.PHONY : WS2812
+WS2812 :
+	@ ./compile.sh --upload WS2812
+
 .PHONY : Matrix88
 Matrix88 :
 	@ ./compile.sh --upload Matrix88
@@ -75,6 +79,7 @@ check :
 	@ ./compile.sh --check CSNA2
 	@ ./compile.sh --check TM1638
 	@ ./compile.sh --check MY9221
+	@ ./compile.sh --check WS2812
 	@ ./compile.sh --check Matrix88
 	@ ./compile.sh --check RotaryEncoder
 	@ ./compile.sh --check IR

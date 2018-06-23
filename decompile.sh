@@ -27,7 +27,7 @@ fi;
 
 if [[ " $* " == *" --noaddr "* ]]; then
 	# In this form, it is easy to perform diffs between compiled versions
-	"$DECOMPILER" -S "$OUTPUT/"*".ino.elf" \
+	"$DECOMPILER" -z -S "$OUTPUT/"*".ino.elf" \
 		| cut -c10- \
 		| sed -E 's/([^0-9a-qs-zA-Z_]|^)[0-9a-fA-F]{4}([^0-9a-zA-Z]|$)/\1----\2/g' \
 		| sed -E 's/([^0-9a-qs-zA-Z_]|^)[0-9a-fA-F]{4}([^0-9a-zA-Z]|$)/\1----\2/g' \
@@ -37,5 +37,5 @@ if [[ " $* " == *" --noaddr "* ]]; then
 		| sed -E 's/([^0-9a-qs-zA-Z_]|^)[0-9a-fA-F]{2}([^0-9a-zA-Z]|$)/\1--\2/g' \
 		| sed -E 's/0x[0-9a-fA-F]{2,}/0x?/g';
 else
-	"$DECOMPILER" -S "$OUTPUT/"*".ino.elf";
+	"$DECOMPILER" -z -S "$OUTPUT/"*".ino.elf";
 fi;

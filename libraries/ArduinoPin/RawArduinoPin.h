@@ -20,6 +20,39 @@
 
 #include "ext.h"
 
+class TurboRawArduinoPin {
+	volatile uint8_t *outvar;
+	uint8_t vLow;
+	uint8_t vHigh;
+	uint8_t oldSREG;
+
+public:
+	[[gnu::always_inline]]
+	inline void low(void) {
+		*outvar = vLow;
+	}
+
+	[[gnu::always_inline]]
+	inline void high(void) {
+		*outvar = vHigh;
+	}
+
+	[[gnu::always_inline]]
+	inline TurboRawArduinoPin(volatile uint8_t *outvar, uint8_t pinmask)
+		: outvar(outvar)
+		, vLow(*outvar & ~pinmask)
+		, vHigh(vLow | pinmask)
+		, oldSREG(SREG)
+	{
+		cli(); // Block interrupts
+	}
+
+	[[gnu::always_inline]]
+	inline ~TurboRawArduinoPin(void) {
+		SREG = oldSREG; // Restore interrupts
+	}
+};
+
 class RawArduinoPin {
 	volatile uint8_t *outvar;
 	uint8_t p;
@@ -61,6 +94,11 @@ public:
 	[[gnu::pure,nodiscard,gnu::always_inline]]
 	inline bool supports_interrupts(void) const {
 		return digitalPinToInterrupt(p) != NOT_AN_INTERRUPT;
+	}
+
+	[[nodiscard,gnu::always_inline]]
+	inline TurboRawArduinoPin turbo(void) {
+		return TurboRawArduinoPin(outvar, pinmask);
 	}
 
 	[[gnu::always_inline]]
