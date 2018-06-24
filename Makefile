@@ -53,6 +53,10 @@ MY9221 :
 WS2812 :
 	@ ./compile.sh --upload WS2812
 
+.PHONY : WS2812_Remote
+WS2812_Remote :
+	@ ./compile.sh --upload WS2812_Remote
+
 .PHONY : Matrix88
 Matrix88 :
 	@ ./compile.sh --upload Matrix88
@@ -80,6 +84,7 @@ check :
 	@ ./compile.sh --check TM1638
 	@ ./compile.sh --check MY9221
 	@ ./compile.sh --check WS2812
+	@ ./compile.sh --check WS2812_Remote
 	@ ./compile.sh --check Matrix88
 	@ ./compile.sh --check RotaryEncoder
 	@ ./compile.sh --check IR

@@ -18,6 +18,7 @@
 #include "ext.h"
 
 #define MAX_LENGTH 79
+#define MAX_BITS ((MAX_LENGTH - 1) / 2)
 
 class IRCommand {
 	uint8_t n;
@@ -51,7 +52,7 @@ public:
 
 	[[gnu::const,nodiscard,gnu::always_inline]]
 	static constexpr inline uint16_t bit_thresh(void) {
-		// Data is usually encoded as ~600ms vs ~1200ms bands
+		// Data is usually encoded as ~600us vs ~1200us bands
 		// (on either high or low signal)
 		return 900;
 	}
@@ -97,15 +98,25 @@ public:
 		return n;
 	}
 
+	[[gnu::pure,nodiscard,gnu::always_inline]]
+	inline uint8_t bit_length(void) const {
+		return (n - 1) / 2;
+	}
+
+	[[gnu::pure,nodiscard,gnu::always_inline]]
+	inline bool read(uint8_t pos) const {
+		const uint8_t thresh = bit_thresh() / pulse_resolution();
+		bool low1  = values[pos*2+1] > thresh;
+		bool high1 = values[pos*2+2] > thresh;
+		return (low1 ^ high1);
+	}
+
 	template <typename T = uint64_t>
 	[[gnu::pure,nodiscard]]
 	T decode_data(void) const {
 		T result = 1;
-		const uint8_t thresh = bit_thresh() / pulse_resolution();
-		for(uint8_t i = 1; i < n; i += 2) {
-			bool low1  = values[i  ] > thresh;
-			bool high1 = values[i+1] > thresh;
-			result = (result << 1) | (low1 ^ high1);
+		for(uint8_t i = 0, e = bit_length(); i < e; ++ i) {
+			result = (result << 1) | read(i);
 		}
 		return result;
 	}
@@ -128,6 +139,61 @@ public:
 		if(n > 1) {
 			-- n;
 		}
+	}
+
+	class Compressed {
+		uint16_t header;
+		uint8_t n;
+		uint8_t bits[(MAX_BITS + 7) / 8];
+
+	public:
+		[[gnu::pure,nodiscard,gnu::always_inline]]
+		inline uint16_t header_duration(void) const {
+			return header;
+		}
+
+		[[gnu::pure,nodiscard,gnu::always_inline]]
+		inline uint8_t length(void) const {
+			return n * 2 + 1;
+		}
+
+		[[gnu::pure,nodiscard,gnu::always_inline]]
+		inline uint8_t bit_length(void) const {
+			return n;
+		}
+
+		[[gnu::pure,nodiscard,gnu::always_inline]]
+		inline bool read(uint8_t pos) const {
+			return bits[pos >> 3] & (1 << (7 - (pos & 7)));
+		}
+
+		template <typename T = uint64_t>
+		[[gnu::pure,nodiscard]]
+		T decode_data(void) const {
+			T result = 1;
+			for(uint8_t i = 0, e = (bit_length() + 7) / 8; i < e; ++ i) {
+				result = (result << 8) | bits[i];
+			}
+			return result;
+		}
+
+		Compressed(const IRCommand &source)
+			: header(source.header_duration())
+			, n(source.bit_length())
+		{
+			for(uint8_t i = 0; i < n; i += 8) {
+				uint8_t v = 0;
+				for(uint8_t j = 0; j < 8; ++ j) {
+					v = (v << 1) | source.read(i + j);
+				}
+				bits[i / 8] = v;
+			}
+		}
+	};
+
+	[[gnu::pure,nodiscard,gnu::always_inline]]
+	inline Compressed compress(void) const {
+		return Compressed(*this);
 	}
 
 	IRCommand(void) = default;

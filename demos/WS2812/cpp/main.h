@@ -27,6 +27,8 @@
 
 FixedArduinoPin<6> stripPin;
 
+const uint8_t pixelCount = 12;
+
 // Green Red Blue
 const PROGMEM uint8_t values[] = {
 	0, 64, 0,
@@ -45,11 +47,10 @@ const PROGMEM uint8_t values[] = {
 
 void setup(void) {
 	auto strip = MakeWS2812(stripPin);
-	const uint8_t count = 12;
 
-	for(uint16_t n = 0; n < count; ++ n) {
+	for(uint16_t n = 0; n < pixelCount; ++ n) {
 		// Display test pattern (all off except 1 bright blue pixel)
-		strip.send_fn(count * 3, [n] (uint16_t i) {
+		strip.send_fn(pixelCount * 3, [n] (uint16_t i) {
 			if(i == n * 3 + 2) {
 				return 255;
 			} else {
@@ -67,13 +68,13 @@ void setup(void) {
 	const uint16_t period_r = 190;
 	const uint16_t period_g = 220;
 	const uint16_t period_b = 250;
-	const uint8_t step = 256 / count;
+	const uint8_t step = 256 / pixelCount;
 	uint16_t xr = 0;
 	uint16_t xg = 85 * period_g;
 	uint16_t xb = 171 * period_b;
 	while(true) {
 		strip.send_rgb_fn(
-			count,
+			pixelCount,
 			[xr] (uint16_t i, uint8_t *r) {
 				*r = HUMAN_LUMINOSITY_R[
 					uint8_t(sin8(i * step + xr / period_r) + 127) / 2 + 1
