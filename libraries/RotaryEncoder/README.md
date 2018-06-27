@@ -6,10 +6,14 @@ Checks the output of digital rotary encoders.
 
 * Detect directed movement
 * Detects all 4 state transitions in both directions
-* Low instruction overhead (no branching)
+* Low instruction overhead (minimal branching)
 * Can use pin interrupts for better accuracy
+* Optionally enable pullup resistors on input pins
 * Tolerates both channels changing simultaneously
   (always returns delta = 2)
+* Supports a single interrupt-enabled pin, combined with a
+  non-interrupt pin (figures out direction of both channels changing
+  simultaneously based on which pin had interrupt capability)
 
 ## Example
 
@@ -22,6 +26,7 @@ Checks the output of digital rotary encoders.
 auto encoder = MakeRotaryEncoder(
 	ArduinoPin(12),
 	ArduinoPin(13)
+	// to use pullup resisors, add "true" as a third argument
 );
 
 ...
@@ -37,16 +42,21 @@ while(true) {
 }
 ```
 
-### Using Interrupts
+### Using Interrupts (on one or both pins)
 
 ```cpp
 #include <RotaryEncoder.h>
 #include <ArduinoPin.h>
 
+// Pins 2 and 3 both support interrupts
 auto encoder = MakeInterruptRotaryEncoder(
 	ArduinoPin(2),
 	ArduinoPin(3)
+	// to use pullup resisors, add "true" as a third argument
 );
+
+// If only 1 pin supports interrupts, the same call will work:
+// MakeInterruptRotaryEncoder(ArduinoPin(2), ArduinoPin(4));
 
 ...
 

@@ -126,8 +126,8 @@ class MCP23017_impl : public MCP23017 {
 	typename TwiT::Error send_bank(Address address, uint16_t value) {
 		auto t = twiComm.begin_transmission(i2c_addr());
 		t.write(uint8_t(address));
-		t.write((uint8_t) value);
-		t.write((uint8_t) (value >> 8));
+		t.write(uint8_t(value));
+		t.write(uint8_t(value >> 8));
 		return t.stop();
 	}
 
@@ -171,8 +171,8 @@ class MCP23017_impl : public MCP23017 {
 			}
 			// TODO: is this the correct API?
 			owner->state = values;
-			tx.write((uint8_t) values);
-			tx.write((uint8_t) (values >> 8));
+			tx.write(uint8_t(values));
+			tx.write(uint8_t(values >> 8));
 		}
 
 		[[gnu::always_inline]]
@@ -425,9 +425,6 @@ public:
 		, batch(b.batch)
 		, subAddress(b.subAddress)
 	{}
-
-	~MCP23017_impl(void) {
-	}
 };
 
 #undef BATCH_COUNT_MASK

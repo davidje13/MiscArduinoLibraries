@@ -25,12 +25,11 @@ BOOST_AUTO_TEST_CASE(connection_status_checks_id) {
 		uint8_t(ADXL345::ConnectionStatus::CONNECTED)
 	);
 
+	BOOST_CHECK_EQUAL(mockTWI.set_max_clock_last_hz, 400000);
 	BOOST_CHECK_EQUAL(mockTWI.send_last_address, 0x53);
-	BOOST_CHECK_EQUAL(mockTWI.send_last_hz, 400000);
 	BOOST_CHECK_EQUAL(mockTWI.send_last_value, 0x00); // DEVID
 
 	BOOST_CHECK_EQUAL(mockTWI.request_from_last_address, 0x53);
-	BOOST_CHECK_EQUAL(mockTWI.request_from_last_hz, 400000);
 	BOOST_CHECK_EQUAL(mockTWI.request_from_last_count, 1);
 	BOOST_CHECK_EQUAL(mockTWI.request_read_last_maxMicros, 10000);
 }

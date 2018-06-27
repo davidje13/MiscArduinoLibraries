@@ -42,6 +42,11 @@ public:
 		OTHER = 4
 	};
 
+	[[gnu::const,nodiscard,gnu::always_inline]]
+	static constexpr uint8_t max_write_bytes(void) {
+		return BUFFER_LENGTH;
+	}
+
 	class Transmission {
 		Transmission(void) {
 			inc();
@@ -105,7 +110,7 @@ public:
 		}
 
 		[[nodiscard]]
-		bool read(void *buffer, uint8_t count, uint16_t maxMicros) {
+		bool read(void *buffer, uint16_t count, uint16_t maxMicros) {
 			uint16_t t0 = micros();
 			uint8_t *b = static_cast<uint8_t*>(buffer);
 			while(true) {
@@ -182,7 +187,7 @@ public:
 	inline bool request_from(
 		uint8_t address,
 		void *buffer,
-		uint8_t count,
+		uint16_t count,
 		uint16_t maxMicros,
 		bool stop = true
 	) {

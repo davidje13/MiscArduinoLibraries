@@ -15,8 +15,10 @@ public:
 
 	class Mock {
 	public:
-		uint8_t transmission_write_buffer[256] = {};
+		uint8_t transmission_write_buffer[32] = {};
 		uint8_t transmission_write_count = 0;
+		uint32_t set_max_clock_last_hz = 0;
+		bool set_max_clock_last_force = false;
 		uint8_t transmission_stop_call_count = 0;
 		Error transmission_stop_return_value = SUCCESS;
 		uint8_t transmission_restart_call_count = 0;
@@ -30,7 +32,7 @@ public:
 		bool request_from_last_stop = false;
 		bool request_read_return_value = false;
 		uint8_t request_available_return_value = 0;
-		uint8_t request_read_buffer[256] = {};
+		uint8_t request_read_buffer[32] = {};
 		uint8_t request_read_count = 0;
 		uint16_t request_read_last_maxMicros = 0;
 
@@ -44,6 +46,10 @@ private:
 	friend class Mock;
 
 public:
+	static constexpr uint8_t max_write_bytes(void) {
+		return 32;
+	}
+
 	class Transmission {
 		Mock *mock;
 		Transmission(Mock *m) : mock(m) {}
@@ -106,6 +112,11 @@ public:
 			return mock->request_read_return_value;
 		}
 	};
+
+	void set_max_clock(uint32_t hz, bool force = false) {
+		mock->set_max_clock_last_hz = hz;
+		mock->set_max_clock_last_force = force;
+	}
 
 	Transmission begin_transmission(uint8_t address) {
 		mock->begin_transmission_last_address = address;
