@@ -50,6 +50,10 @@ public:
 		return 32;
 	}
 
+	static constexpr uint8_t max_read_bytes(void) {
+		return 32;
+	}
+
 	class Transmission {
 		Mock *mock;
 		Transmission(Mock *m) : mock(m) {}

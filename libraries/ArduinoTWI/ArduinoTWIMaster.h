@@ -47,6 +47,11 @@ public:
 		return BUFFER_LENGTH;
 	}
 
+	[[gnu::const,nodiscard,gnu::always_inline]]
+	static constexpr uint8_t max_read_bytes(void) {
+		return BUFFER_LENGTH;
+	}
+
 	class Transmission {
 		Transmission(void) {
 			inc();
