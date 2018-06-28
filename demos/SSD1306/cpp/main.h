@@ -20,13 +20,13 @@
 /*
  * Hardware connections:
  *
- *   GND -- GND
- *    +V -- 3.3V
- *   DAT -- D11 (MOSI)
- *   CLK -- D13 (SCK)
- *    DC -- D* (any available pin; set below)
- *   RST -- D* (any available pin; set below)
- *    CS -- D* (any available pin; set below)
+ *        GND -- GND
+ *         +V -- 3.3V
+ *   DAT (D1) -- D11 (MOSI)
+ *   CLK (D0) -- D13 (SCK)
+ *         DC -- D* (any available pin; set below)
+ *        RST -- D* (any available pin; set below)
+ *         CS -- D* (any available pin; set below)
  */
 
 #include <SSD1306.h>

@@ -38,8 +38,8 @@ always make them public if you want to play).
 
 ...
 
-// DAT must be connected to MOSI on the Arduino (e.g. D11 on Uno)
-// CLK must be connected to SCK on the Arduino (e.g. D13 on Uno)
+// DAT (D1) must be connected to MOSI on the Arduino (e.g. D11 on Uno)
+// CLK (D0) must be connected to SCK on the Arduino (e.g. D13 on Uno)
 int OLED_PIN_CS  = ?; // Set to any available pin
 int OLED_PIN_RST = ?; // Set to any available pin
 int OLED_PIN_DC  = ?; // Set to any available pin

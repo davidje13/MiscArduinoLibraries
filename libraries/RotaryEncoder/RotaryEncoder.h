@@ -74,6 +74,7 @@ class RotaryEncoder_impl : public RotaryEncoder {
 #define bPin aPin.flattened_value
 #define lastState bPin.flattened_value
 
+	[[nodiscard]]
 	uint8_t get_state(void) const {
 		return (
 			uint8_t(aPin.read_digital() * 3) ^
@@ -82,6 +83,7 @@ class RotaryEncoder_impl : public RotaryEncoder {
 	}
 
 public:
+	[[nodiscard]]
 	int8_t delta(void) {
 		uint8_t state = get_state();
 		int8_t dir = calculate_delta(lastState, state);
@@ -89,7 +91,8 @@ public:
 		return dir;
 	}
 
-	int8_t fraction(void) const {
+	[[gnu::pure,nodiscard,gnu::always_inline]]
+	inline int8_t fraction(void) const {
 		return lastState;
 	}
 
@@ -131,6 +134,7 @@ class InterruptRotaryEncoder_impl : public RotaryEncoder {
 #define bPin aPin.flattened_value
 #define lastState bPin.flattened_value
 
+	[[nodiscard]]
 	uint8_t get_state(void) const {
 		return (
 			uint8_t(aPin.read_digital() * 3) ^
@@ -158,6 +162,7 @@ class InterruptRotaryEncoder_impl : public RotaryEncoder {
 	}
 
 public:
+	[[nodiscard]]
 	AccumT delta(void) {
 		uint8_t oldSREG = SREG;
 		cli();
@@ -170,7 +175,8 @@ public:
 		return dir;
 	}
 
-	int8_t fraction(void) const {
+	[[gnu::pure,nodiscard]]
+	inline int8_t fraction(void) const {
 		return lastState & 0x3;
 	}
 
