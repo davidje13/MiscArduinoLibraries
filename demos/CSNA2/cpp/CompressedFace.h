@@ -134,10 +134,14 @@ static PROGMEM const uint8_t COMPRESSED_FACE_PM[] = {
 
 #define MakeFaceDecompressor() MakeDecompressor<128>(COMPRESSED_FACE)
 
+#define COMPRESSED_FACE_WIDTH 256
+#define COMPRESSED_FACE_HEIGHT 256
+
+#define COMPRESSED_FACE_STEP COMPRESSED_FACE_WIDTH
 #define MakeCompressedFaceBitmask(decompressorPtr) MakeStaticBitmask81( \
 	MakeDecompressorPointer<uint8_t>(decompressorPtr), \
-	256, \
-	256 \
+	COMPRESSED_FACE_WIDTH, \
+	COMPRESSED_FACE_HEIGHT \
 )
 
 #endif

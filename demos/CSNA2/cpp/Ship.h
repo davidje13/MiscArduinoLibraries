@@ -1354,10 +1354,14 @@ static PROGMEM const uint8_t SHIP_PM[] = {
 
 #define SHIP MakeProgMem(SHIP_PM)
 
+#define SHIP_WIDTH 384
+#define SHIP_HEIGHT 224
+
+#define SHIP_STEP SHIP_WIDTH
 #define MakeShipBitmask() MakeStaticBitmask81( \
 	SHIP, \
-	384, \
-	224 \
+	SHIP_WIDTH, \
+	SHIP_HEIGHT \
 )
 
 #endif

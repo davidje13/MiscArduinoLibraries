@@ -138,10 +138,14 @@ static PROGMEM const uint8_t LOGO_PM[] = {
 
 #define LOGO MakeProgMem(LOGO_PM)
 
+#define LOGO_WIDTH 128
+#define LOGO_HEIGHT 64
+
+#define LOGO_STEP LOGO_WIDTH
 #define MakeLogoBitmask() MakeStaticBitmask18( \
 	LOGO, \
-	128, \
-	64 \
+	LOGO_WIDTH, \
+	LOGO_HEIGHT \
 )
 
 #endif

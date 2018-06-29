@@ -11,10 +11,14 @@ $("$TOOLS_DIR/calcbitmap.sh" "Burrumbeet.png" "81")
 
 #define ${UPPER_SNAKE_NAME} MakeProgMem(${UPPER_SNAKE_NAME}_PM)
 
+#define ${UPPER_SNAKE_NAME}_WIDTH 384
+#define ${UPPER_SNAKE_NAME}_HEIGHT 224
+
+#define ${UPPER_SNAKE_NAME}_STEP ${UPPER_SNAKE_NAME}_WIDTH
 #define Make${CAMEL_NAME}Bitmask() MakeStaticBitmask81( \\
 	${UPPER_SNAKE_NAME}, \\
-	384, \\
-	224 \\
+	${UPPER_SNAKE_NAME}_WIDTH, \\
+	${UPPER_SNAKE_NAME}_HEIGHT \\
 )
 
 #endif

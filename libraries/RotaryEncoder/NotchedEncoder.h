@@ -49,7 +49,6 @@ public:
 			// leaning left
 			state |= STATE_LEAN;
 		}
-		state |= STATE_LEAN;
 		return (r - (state & 7)) / 4;
 	}
 

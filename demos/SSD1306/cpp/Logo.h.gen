@@ -11,10 +11,14 @@ $("$TOOLS_DIR/calcbitmap.sh" "../data/logo.png" "18")
 
 #define ${UPPER_SNAKE_NAME} MakeProgMem(${UPPER_SNAKE_NAME}_PM)
 
+#define ${UPPER_SNAKE_NAME}_WIDTH 128
+#define ${UPPER_SNAKE_NAME}_HEIGHT 64
+
+#define ${UPPER_SNAKE_NAME}_STEP ${UPPER_SNAKE_NAME}_WIDTH
 #define Make${CAMEL_NAME}Bitmask() MakeStaticBitmask18( \\
 	${UPPER_SNAKE_NAME}, \\
-	128, \\
-	64 \\
+	${UPPER_SNAKE_NAME}_WIDTH, \\
+	${UPPER_SNAKE_NAME}_HEIGHT \\
 )
 
 #endif
