@@ -5,6 +5,10 @@ install : SSD1306
 SSD1306 :
 	@ ./compile.sh --upload SSD1306
 
+.PHONY : SSD1306_UI
+SSD1306_UI :
+	@ ./compile.sh --upload SSD1306_UI
+
 .PHONY : HMC5883L
 HMC5883L :
 	@ ./compile.sh --upload HMC5883L
@@ -72,6 +76,7 @@ IR :
 .PHONY : check
 check :
 	@ ./compile.sh --check SSD1306
+	@ ./compile.sh --check SSD1306_UI
 	@ ./compile.sh --check HMC5883L
 	@ ./compile.sh --check ITG3200
 	@ ./compile.sh --check ADXL345

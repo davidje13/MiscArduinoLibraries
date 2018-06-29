@@ -1,0 +1,24 @@
+#ifndef ${UPPER_SNAKE_NAME}_H_INCLUDED
+#define ${UPPER_SNAKE_NAME}_H_INCLUDED
+
+// Auto-generated from ${GENERATOR_NAME}
+
+#include <ProgMem.h>
+
+static PROGMEM const uint8_t ${UPPER_SNAKE_NAME}_PM[] = {
+$("$TOOLS_DIR/calcbitmap.sh" "../data/uparrow.png" "18")
+};
+
+#define ${UPPER_SNAKE_NAME} MakeProgMem(${UPPER_SNAKE_NAME}_PM)
+
+#define ${UPPER_SNAKE_NAME}_WIDTH 5
+#define ${UPPER_SNAKE_NAME}_HEIGHT 3
+
+#define ${UPPER_SNAKE_NAME}_STEP ${UPPER_SNAKE_NAME}_WIDTH
+#define Make${CAMEL_NAME}Bitmask() MakeStaticBitmask18( \\
+	${UPPER_SNAKE_NAME}, \\
+	${UPPER_SNAKE_NAME}_WIDTH, \\
+	${UPPER_SNAKE_NAME}_HEIGHT \\
+)
+
+#endif
