@@ -87,7 +87,7 @@ static PROGMEM const uint8_t FONT_VARIABLE_DATA[] = {
 #define FONT_VARIABLE_IMG (FONT_VARIABLE_DATA + 5 + (0x7F - 0x20) + 1)
 #define FONT_VARIABLE_MASK (nullptr)
 
-#define MakeVariableFont(...) Font( \
+#define MakeFontVariable(...) Font( \
 	FONT_VARIABLE_DATA, \
 	FONT_VARIABLE_IMG, \
 	FONT_VARIABLE_MASK \

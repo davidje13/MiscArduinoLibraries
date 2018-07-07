@@ -1,0 +1,10 @@
+#ifndef ${UPPER_SNAKE_NAME}_H_INCLUDED
+#define ${UPPER_SNAKE_NAME}_H_INCLUDED
+
+// Auto-generated from ${GENERATOR_NAME}
+
+#include <ProgMem.h>
+
+$("$TOOLS_DIR/calcstrings.sh" "../data/strings.strings" "${UPPER_SNAKE_NAME}_PM")
+
+#endif

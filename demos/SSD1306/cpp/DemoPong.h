@@ -27,7 +27,7 @@
 #include <Bitmask18.h>
 #include <BlendMode.h>
 #include <Pattern.h>
-#include <SceneRenderer.h>
+#include <Vector.h>
 
 template <typename Display, typename BatLPinT, typename BatRPinT>
 void demoPong(Display &display, BatLPinT batL, BatRPinT batR) {

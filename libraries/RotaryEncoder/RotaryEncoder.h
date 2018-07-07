@@ -83,6 +83,10 @@ class RotaryEncoder_impl : public RotaryEncoder {
 	}
 
 public:
+	void reset(void) {
+		lastState = get_state();
+	}
+
 	[[nodiscard]]
 	int8_t delta(void) {
 		uint8_t state = get_state();
@@ -162,6 +166,13 @@ class InterruptRotaryEncoder_impl : public RotaryEncoder {
 	}
 
 public:
+	void reset(void) {
+		uint8_t oldSREG = SREG;
+		cli();
+		lastState = get_state();
+		SREG = oldSREG;
+	}
+
 	[[nodiscard]]
 	AccumT delta(void) {
 		uint8_t oldSREG = SREG;

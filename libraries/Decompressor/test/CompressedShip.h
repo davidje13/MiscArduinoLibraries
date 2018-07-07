@@ -563,10 +563,14 @@ static PROGMEM const uint8_t COMPRESSED_SHIP_PM[] = {
 
 #define MakeShipDecompressor() MakeDecompressor<128>(COMPRESSED_SHIP)
 
+#define COMPRESSED_SHIP_WIDTH 384
+#define COMPRESSED_SHIP_HEIGHT 224
+
+#define COMPRESSED_SHIP_STEP COMPRESSED_SHIP_WIDTH
 #define MakeCompressedShipBitmask(decompressorPtr) MakeStaticBitmask81( \
 	MakeDecompressorPointer<uint8_t>(decompressorPtr), \
-	384, \
-	224 \
+	COMPRESSED_SHIP_WIDTH, \
+	COMPRESSED_SHIP_HEIGHT \
 )
 
 #endif

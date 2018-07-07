@@ -18,22 +18,22 @@ BOOST_AUTO_TEST_CASE(returns_0_while_unchanging) {
 
 	aPin.read_digital_return_value = false;
 	bPin.read_digital_return_value = false;
-	encoder.delta();
+	encoder.reset();
 	BOOST_CHECK_EQUAL(int(encoder.delta()), 0);
 
 	aPin.read_digital_return_value = true;
 	bPin.read_digital_return_value = false;
-	encoder.delta();
+	encoder.reset();
 	BOOST_CHECK_EQUAL(int(encoder.delta()), 0);
 
 	aPin.read_digital_return_value = false;
 	bPin.read_digital_return_value = true;
-	encoder.delta();
+	encoder.reset();
 	BOOST_CHECK_EQUAL(int(encoder.delta()), 0);
 
 	aPin.read_digital_return_value = true;
 	bPin.read_digital_return_value = true;
-	encoder.delta();
+	encoder.reset();
 	BOOST_CHECK_EQUAL(int(encoder.delta()), 0);
 }
 
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(returns_1_while_incrementing) {
 
 	aPin.read_digital_return_value = false;
 	bPin.read_digital_return_value = false;
-	encoder.delta();
+	encoder.reset();
 
 	aPin.read_digital_return_value = false;
 	bPin.read_digital_return_value = true;
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(returns_minus_1_while_decrementing) {
 
 	aPin.read_digital_return_value = false;
 	bPin.read_digital_return_value = false;
-	encoder.delta();
+	encoder.reset();
 
 	aPin.read_digital_return_value = true;
 	bPin.read_digital_return_value = false;
@@ -127,22 +127,22 @@ BOOST_AUTO_TEST_CASE(returns_0_while_unchanging) {
 
 	aPin.read_digital_return_value = false;
 	bPin.read_digital_return_value = false;
-	encoder.delta();
+	encoder.reset();
 	BOOST_CHECK_EQUAL(int(encoder.delta()), 0);
 
 	aPin.read_digital_return_value = true;
 	bPin.read_digital_return_value = false;
-	encoder.delta();
+	encoder.reset();
 	BOOST_CHECK_EQUAL(int(encoder.delta()), 0);
 
 	aPin.read_digital_return_value = false;
 	bPin.read_digital_return_value = true;
-	encoder.delta();
+	encoder.reset();
 	BOOST_CHECK_EQUAL(int(encoder.delta()), 0);
 
 	aPin.read_digital_return_value = true;
 	bPin.read_digital_return_value = true;
-	encoder.delta();
+	encoder.reset();
 	BOOST_CHECK_EQUAL(int(encoder.delta()), 0);
 }
 
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(returns_1_while_incrementing) {
 
 	aPin.read_digital_return_value = false;
 	bPin.read_digital_return_value = false;
-	encoder.delta();
+	encoder.reset();
 
 	aPin.read_digital_return_value = false;
 	bPin.read_digital_return_value = true;
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(returns_minus_1_while_decrementing) {
 
 	aPin.read_digital_return_value = false;
 	bPin.read_digital_return_value = false;
-	encoder.delta();
+	encoder.reset();
 
 	aPin.read_digital_return_value = true;
 	bPin.read_digital_return_value = false;

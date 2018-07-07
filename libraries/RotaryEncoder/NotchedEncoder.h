@@ -63,7 +63,7 @@ public:
 	}
 
 	void reset(void) {
-		(void) !enc->delta();
+		enc->reset();
 		state = uint8_t(enc->fraction() + 2 - notchPos) & 3;
 	}
 

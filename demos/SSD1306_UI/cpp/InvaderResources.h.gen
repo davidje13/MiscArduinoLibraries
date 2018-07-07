@@ -1,0 +1,55 @@
+#ifndef ${UPPER_SNAKE_NAME}_H_INCLUDED
+#define ${UPPER_SNAKE_NAME}_H_INCLUDED
+
+// Auto-generated from ${GENERATOR_NAME}
+
+#include <ProgMem.h>
+
+#define INVADER_WIDTH 12
+#define INVADER_HEIGHT 8
+#define INVADER_STEP (INVADER_WIDTH * 2)
+
+static PROGMEM const uint8_t INVADERS_PM[] = {
+$("$TOOLS_DIR/calcbitmap.sh" "../data/invaders.png" "18")
+};
+
+#define INVADERS MakeProgMem(INVADERS_PM)
+
+
+static PROGMEM const uint8_t SHIELD_PM[] = {
+$("$TOOLS_DIR/calcbitmap.sh" "../data/shield.png" "18")
+};
+
+#define SHIELD MakeProgMem(SHIELD_PM)
+#define SHIELD_WIDTH 14
+#define SHIELD_HEIGHT 8
+#define SHIELD_STEP SHIELD_WIDTH
+
+static PROGMEM const uint8_t DEFENDER_SHIP_PM[] = {
+$("$TOOLS_DIR/calcbitmap.sh" "../data/defenderShip.png" "18")
+};
+
+#define DEFENDER_SHIP MakeProgMem(DEFENDER_SHIP_PM)
+#define DEFENDER_SHIP_WIDTH 7
+#define DEFENDER_SHIP_HEIGHT 4
+#define DEFENDER_SHIP_STEP DEFENDER_SHIP_WIDTH
+
+static PROGMEM const uint8_t HOLE_PM[] = {
+$("$TOOLS_DIR/calcbitmap.sh" "../data/hole.png" "18")
+};
+
+#define HOLE MakeProgMem(HOLE_PM)
+#define HOLE_WIDTH 5
+#define HOLE_HEIGHT 7
+#define HOLE_STEP HOLE_WIDTH
+
+static PROGMEM const uint8_t EXPLOSION_PM[] = {
+$("$TOOLS_DIR/calcbitmap.sh" "../data/explosion.png" "18")
+};
+
+#define EXPLOSION MakeProgMem(EXPLOSION_PM)
+#define EXPLOSION_WIDTH 9
+#define EXPLOSION_HEIGHT 9
+#define EXPLOSION_STEP EXPLOSION_WIDTH
+
+#endif

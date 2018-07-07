@@ -44,6 +44,12 @@ public:
 	}
 
 	[[nodiscard,gnu::always_inline]]
+	inline bool held(void) {
+		State s = state();
+		return s == State::PRESS || s == State::HOLD;
+	}
+
+	[[nodiscard,gnu::always_inline]]
 	inline bool pressed(void) {
 		return state() == State::PRESS;
 	}
@@ -51,6 +57,11 @@ public:
 	[[nodiscard,gnu::always_inline]]
 	inline bool released(void) {
 		return state() == State::RELEASE;
+	}
+
+	[[gnu::always_inline]]
+	inline void reset(void) {
+		lastState = false;
 	}
 
 	DebouncedButton_impl(PinT pin, bool pullup = false)

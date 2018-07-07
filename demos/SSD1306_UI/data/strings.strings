@@ -1,0 +1,24 @@
+GAME_OVER=Game Over!
+
+MENU_INVADERS=Space Invaders
+MENU_TETRIS=Tetris
+MENU_NAME=Enter Name
+MENU_OPTIONS=Options
+
+NAME_INVADERS=Space Invaders
+NAME_TETRIS=Tetris
+
+OPTION_ORIENTATION=Screen Orientation
+OPTION_SCROLL=Scroll Direction
+OPTION_REMOTE=Remote Buttons
+
+SAVE=Save and Return
+
+REMOTE_UP=Up
+REMOTE_DOWN=Down
+REMOTE_LEFT=Left
+REMOTE_RIGHT=Right
+REMOTE_SELECT=Select
+REMOTE_BACK=Back
+
+LETTER_SELECTION=" abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.,:;-+=0123456789!@#$%^&*(){}[]<>\\/|~'\""

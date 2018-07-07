@@ -24,10 +24,14 @@
 
 #include "Menu.h"
 #include "TextField.h"
+#include "GameTetris.h"
+#include "GameInvaders.h"
+#include "Strings.h"
 
 #include <ArduinoPin.h>
 #include <ArduinoAnalogPin.h>
 #include <ArduinoSPI.h>
+#include <ArduinoTone.h>
 #include <ProgMem.h>
 
 #include <IRReceiver.h>
@@ -49,33 +53,112 @@ FixedArduinoPin<10> oledCsPin;
 FixedArduinoPin<7> oledRstPin;
 FixedArduinoPin<9> oledDcPin;
 
-//FixedArduinoPin<3> irPin;
+FixedArduinoPin<3> irPin;
 
 FixedArduinoPin<2> rotAPin;
 FixedArduinoPin<8> rotBPin;
 FixedArduinoPin<12> btnPin;
 
-//FixedArduinoAnalogPin<0> potL;
-//FixedArduinoAnalogPin<1> potR;
+FixedArduinoAnalogPin<0> potL;
+FixedArduinoAnalogPin<1> potR;
 
-//auto ir = MakeAsynchronousIRReceiver(irPin);
+ArduinoTone<6> bleeper;
+
+auto ir = MakeAsynchronousIRReceiver(irPin);
 auto encoder = MakeInterruptRotaryEncoder(rotAPin, rotBPin, true);
 auto notchedEncoder = MakeNotchedEncoder(&encoder, 2);
 auto btn = MakeDebouncedButton(btnPin, false);
+
+enum class IRAction {
+	UP,
+	DOWN,
+	LEFT,
+	RIGHT,
+	SELECT,
+	BACK,
+
+	COUNT
+};
+
+#define MAX_REMOTE_BTNS 4
+
+template <typename input_t, uint8_t actionCount>
+class ActionHandler {
+	typedef uint8_t action_t;
+
+	input_t triggers[actionCount][MAX_REMOTE_BTNS];
+	input_t continuations[actionCount][MAX_REMOTE_BTNS];
+
+	action_t lastAction;
+	uint32_t lastTm;
+	bool repeatWaiting;
+
+	[[gnu::pure,nodiscard]]
+	static bool matchesAny(const input_t *choices, input_t check) {
+		for(uint8_t j = 0; j < MAX_REMOTE_BTNS; ++ j) {
+			if(choices[j] == check) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+public:
+	static constexpr action_t NO_ACTION = action_t(-1);
+	static constexpr uint16_t repeatDelay = 200;
+
+	action_t handle(input_t input) {
+		uint32_t tm = millis();
+		bool canRepeat = (uint32_t(tm - lastTm) >= repeatDelay);
+		if(input) {
+			if(lastAction != NO_ACTION) {
+				if(matchesAny(continuations[lastAction], input)) {
+					if(canRepeat) {
+						repeatWaiting = false;
+						lastTm = tm;
+						return lastAction;
+					} else {
+						repeatWaiting = true;
+						return NO_ACTION;
+					}
+				}
+			}
+			for(action_t i = 0; i < actionCount; ++ i) {
+				if(matchesAny(triggers[i], input)) {
+					repeatWaiting = false;
+					lastAction = i;
+					lastTm = tm;
+					return i;
+				}
+			}
+		}
+		if(repeatWaiting && canRepeat) {
+			repeatWaiting = false;
+			lastTm = tm;
+			return lastAction;
+		}
+		lastAction = NO_ACTION;
+		return NO_ACTION;
+	}
+
+	void add(input_t input, action_t action) {
+	}
+
+	void remove(input_t input, action_t action) {
+	}
+
+	void clear(action_t action) {
+	}
+};
+
+ActionHandler<uint64_t, uint8_t(IRAction::COUNT)> act;
+
 
 //ArduinoTWIMaster twi;
 //auto eeprom = Make24LC256(twi, 0x0);
 
 template <typename Display>
-int showMainMenu(Display &display) {
-	uint8_t itemCount = 0;
-
-	ProgMem<char> items[16];
-	items[itemCount++] = ProgMemString("Show Demo");
-	items[itemCount++] = ProgMemString("Options");
-	items[itemCount++] = ProgMemString("Enter Name");
-	items[itemCount++] = ProgMemString("Configure Remote");
-
+int showMenu(Display &display, ProgMem<char> *items, uint8_t itemCount) {
 	auto menu = MakeMenu([&items, itemCount] (int16_t index) {
 		if(index < 0 || index >= itemCount) {
 			return ProgMem<char>(nullptr);
@@ -85,9 +168,10 @@ int showMainMenu(Display &display) {
 	});
 
 	notchedEncoder.reset();
+	btn.reset();
 
 	Bitmask18<display.width(),display.height()> bitmask;
-	auto font = MakeVariableFont();
+	auto font = MakeFontVariable();
 	while(true) {
 		if(btn.released()) {
 			return menu.index();
@@ -108,29 +192,86 @@ int showMainMenu(Display &display) {
 }
 
 template <typename Display>
+void showRemoteListener(Display &display, int action, ProgMem<char> name) {
+	// TODO:
+	// - listen for remote signals
+	// - filter out if already known
+	// - check for conflicts with other actions
+	// - store as an init action
+	// - listen for immediate repetition signals
+	// - if different from initial signal, store as a follup action
+
+	// need a UI for clear all actions and return to previous menu
+	// (also show name of current action in UI)
+	(void) display;
+	(void) action;
+	(void) name;
+}
+
+template <typename Display>
+void showRemoteUI(Display &display) {
+	uint8_t itemCount = 0;
+	ProgMem<char> items[16];
+	items[itemCount++] = REMOTE_UP;
+	items[itemCount++] = REMOTE_DOWN;
+	items[itemCount++] = REMOTE_LEFT;
+	items[itemCount++] = REMOTE_RIGHT;
+	items[itemCount++] = REMOTE_SELECT;
+	items[itemCount++] = REMOTE_BACK;
+	items[itemCount++] = SAVE;
+
+	while(true) {
+		int action = showMenu(display, items, itemCount);
+		if(action == 6) {
+			// TODO: save
+			return;
+		}
+		showRemoteListener(display, action, items[action]);
+	}
+}
+
+template <typename Display>
+void showOptions(Display &display) {
+	uint8_t itemCount = 0;
+	ProgMem<char> items[16];
+	items[itemCount++] = OPTION_ORIENTATION;
+	items[itemCount++] = OPTION_SCROLL;
+	items[itemCount++] = OPTION_REMOTE;
+	items[itemCount++] = SAVE;
+
+	while(true) {
+		int action = showMenu(display, items, itemCount);
+		switch(action) {
+		case 0:
+			// TODO
+			break;
+		case 1:
+			// TODO
+			break;
+		case 2:
+			showRemoteUI(display);
+			break;
+		case 3:
+			// TODO: save
+			return;
+		}
+	}
+}
+
+template <typename Display>
 void showNameSelect(Display &display) {
 	constexpr uint8_t maxLen = 8;
 
-	auto chars = ProgMemString(
-		" "
-		"abcdefghijklmnopqrstuvwxyz"
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		"_.,:;-+="
-		"0123456789"
-		"!@#$%^&*"
-		"(){}[]<>"
-		"\\/|~'\""
-	);
-
 	char input[maxLen] = {};
 
-	auto field = MakeTextField(input, maxLen, chars);
+	auto field = MakeTextField(input, maxLen, LETTER_SELECTION);
 
 	notchedEncoder.reset();
+	btn.reset();
 	bool navigating = false;
 
 	Bitmask18<display.width(),display.height()> bitmask;
-	auto font = MakeFixedFont();
+	auto font = MakeFontFixed();
 	while(true) {
 		if(btn.released()) {
 			navigating = !navigating;
@@ -157,11 +298,75 @@ void showNameSelect(Display &display) {
 	}
 }
 
+template <typename Display>
+void addHighscore(
+	Display &display,
+	uint8_t identifier,
+	ProgMem<char> name,
+	uint16_t score
+) {
+	(void) display;
+	(void) identifier;
+	(void) name;
+	(void) score;
+	// TODO
+}
+
+template <typename Display>
+void showMainMenu(Display &display) {
+	uint8_t itemCount = 0;
+
+	ProgMem<char> items[16];
+	items[itemCount++] = MENU_INVADERS;
+	items[itemCount++] = MENU_TETRIS;
+	items[itemCount++] = MENU_NAME;
+	items[itemCount++] = MENU_OPTIONS;
+
+	while(true) {
+		switch(showMenu(display, items, itemCount)) {
+		case 0: // Space Invaders
+			addHighscore(
+				display,
+				0,
+				NAME_INVADERS,
+				playInvaders(display, &notchedEncoder, &btn, &bleeper)
+			);
+			break;
+		case 1: // Tetris
+			addHighscore(
+				display,
+				1,
+				NAME_TETRIS,
+				playTetris(display, &notchedEncoder, &btn)
+			);
+			break;
+		case 2: // Enter Name
+			showNameSelect(display);
+			break;
+		case 3: // Options
+			showOptions(display);
+			break;
+		}
+	}
+}
+
+__attribute__((section(".noinit")))
+static volatile uint16_t randomMemory;
+
 void setup(void) {
+	randomSeed(
+		(analogRead(0) << 0) ^
+		(analogRead(1) << 1) ^
+		(analogRead(2) << 2) ^
+		(analogRead(3) << 3) ^
+		(ADCW << 6) ^ // internal temperature sensor
+		randomMemory
+	);
+	randomMemory = random();
+
 	// To allow easy attachment of an IR receiver,
 	// set pin 4 to GND (allows direct attachment on 3, 4 and VCC)
 	FixedArduinoPin<4>().set_output();
-	btnPin.set_input(true);
 
 	auto oled = MakeSSD1306<128,64>(
 		ArduinoSPI(),
@@ -174,18 +379,5 @@ void setup(void) {
 	oled.set_x_flip(true);
 	oled.set_y_flip(true);
 
-	// TODO: use a state machine to track screens (also use transitions)
-	while(true) {
-		switch(showMainMenu(oled)) {
-		case 0: // Show Demo
-			break;
-		case 1: // Options
-			break;
-		case 2: // Enter Name
-			showNameSelect(oled);
-			break;
-		case 3: // Configure Remote
-			break;
-		}
-	}
+	showMainMenu(oled);
 }

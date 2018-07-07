@@ -79,7 +79,7 @@ void demoText(Display &display) {
 	auto f1 = MakeFont1();
 	auto f2 = MakeFont2();
 	auto f3 = MakeFont3();
-	auto fVar = MakeVariableFont();
+	auto fVar = MakeFontVariable();
 
 	demoCharacters(display, bitmask, f0);
 	demoCharacters(display, bitmask, fVar);

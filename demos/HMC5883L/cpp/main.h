@@ -47,7 +47,7 @@ void message(
 	Message msg1,
 	Message msg2
 ) {
-	auto f = MakeVariableFont();
+	auto f = MakeFontVariable();
 
 	bitmask.clear();
 	auto r = MakeFontRenderer(&bitmask, 0, 0, bitmask.width(), 0);

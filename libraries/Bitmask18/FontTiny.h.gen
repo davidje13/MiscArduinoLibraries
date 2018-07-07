@@ -5,7 +5,7 @@
 
 #include <ProgMem.h>
 
-// Fixed-width (5x8) font
+// Fixed-width (3x5) numeric font
 static PROGMEM const uint8_t ${UPPER_SNAKE_NAME}_DATA[] = {
 	// data section defines:
 	//  FONTHEIGHT
@@ -20,9 +20,9 @@ static PROGMEM const uint8_t ${UPPER_SNAKE_NAME}_DATA[] = {
 	//    layout 0x00: one int per char
 	//    layout 0x01: one int for all chars
 	//    layout 0x02: one int for all chars then one for # chars per line
-	8, 8, 0x20, 0x7E, 0x01,
-	5,
-$("$TOOLS_DIR/calcbitmap.sh" "data/fixedfont.png" "18")
+	5, 6, 0x30, 0x39, 0x01,
+	3,
+$("$TOOLS_DIR/calcbitmap.sh" "data/tinyfont.png" "18")
 };
 
 #define ${UPPER_SNAKE_NAME}_IMG (${UPPER_SNAKE_NAME}_DATA + 5 + 1)

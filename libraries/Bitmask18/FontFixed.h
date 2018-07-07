@@ -87,7 +87,7 @@ static PROGMEM const uint8_t FONT_FIXED_DATA[] = {
 #define FONT_FIXED_IMG (FONT_FIXED_DATA + 5 + 1)
 #define FONT_FIXED_MASK (nullptr)
 
-#define MakeFixedFont(...) Font( \
+#define MakeFontFixed(...) Font( \
 	FONT_FIXED_DATA, \
 	FONT_FIXED_IMG, \
 	FONT_FIXED_MASK \

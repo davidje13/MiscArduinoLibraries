@@ -135,7 +135,6 @@ class Bitmask18 {
 		}
 	}
 
-	// TODO: rendering with BlendMode::OFF seems to set outside mask area white
 	template <typename T> // T = ProgMem<uint8_t> / const uint8_t*
 	void render_bitmap_b(
 		T data,
@@ -269,8 +268,19 @@ public:
 	}
 
 	[[gnu::always_inline]]
+	inline void clear(bool value) {
+		clear(uint8_t(value ? 0xFF : 0x00));
+	}
+
+	[[gnu::always_inline]]
 	inline void clear(BlendMode value) {
-		clear((value == BlendMode::ON) ? 0xFF : 0x00);
+		clear(uint8_t((value == BlendMode::ON) ? 0xFF : 0x00));
+	}
+
+	template <typename T>
+	[[gnu::always_inline]]
+	inline void clear(T value) {
+		clear(uint8_t(value));
 	}
 
 	[[gnu::always_inline]]

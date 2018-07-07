@@ -21,6 +21,7 @@ struct vector2d {
 	T x;
 	T y;
 
+	constexpr vector2d(void) : x(0), y(0) {}
 	constexpr vector2d(T xx, T yy) : x(xx), y(yy) {}
 
 	void normalize(T norm = 1) {
@@ -42,6 +43,7 @@ struct vector3d {
 	T y;
 	T z;
 
+	constexpr vector3d(void) : x(0), y(0), z(0) {}
 	constexpr vector3d(T xx, T yy, T zz) : x(xx), y(yy), z(zz) {}
 
 	void normalize(T norm = 1) {
@@ -59,6 +61,7 @@ struct vector4d {
 	T z;
 	T w;
 
+	constexpr vector4d(void) : x(0), y(0), z(0), w(0) {}
 	constexpr vector4d(T xx, T yy, T zz, T ww) : x(xx), y(yy), z(zz), w(ww) {}
 
 	void normalize(T norm = 1) {
