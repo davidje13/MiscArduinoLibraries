@@ -33,8 +33,6 @@
 // TODO:
 //  Invader missile types (3 types, each with different behaviours)
 //  Flying saucer? (enough space?)
-//  Final alien should have different speeds going left/right
-//  Invader missile speeds increase near endgame
 
 static PROGMEM const uint8_t invaderHitWidths[3] = {
 	INVADER_WIDTH - 2,
@@ -77,12 +75,16 @@ template <
 	int8_t invaderDY = 9,
 	int8_t invaderSpeedX = 2,
 	int8_t invaderSpeedY = 4,
+	int8_t lastInvaderSpeedXR = 3,
+	int8_t lastInvaderSpeedXL = 2,
 	int8_t invaderWinY = shipY - INVADER_HEIGHT + 2,
 
 	uint8_t missileHeight = 4,
 	uint8_t missileDepth = 1,
 	uint8_t missileSpeed = 1,
 	uint8_t missileWidth = 2,
+	uint8_t fastInvaderMissileSpeed = 2,
+	uint8_t fastInvaderMissileCriteria = 4,
 
 	uint8_t explosionDuration = 5,
 	uint8_t fireAnimDelay = 2,
@@ -126,6 +128,7 @@ class GameInvaders {
 
 	pos_t playerMissile;
 	pos_t invaderMissile;
+	uint8_t invaderMissileCooldown;
 
 	pos_t explosion;
 	uint8_t explosionFrame;
@@ -173,6 +176,22 @@ class GameInvaders {
 		return invaderCount;
 	}
 
+	uint8_t invader_cooldown_delay(void) const {
+		if(_score < 20) {
+			return 40;
+		} else if(_score < 60) {
+			return 30;
+		} else if(_score < 100) {
+			return 15;
+		} else if(_score < 200) {
+			return 10;
+		} else if(_score < 300) {
+			return 8;
+		} else {
+			return 7;
+		}
+	}
+
 	template <typename PosCtl>
 	void update_defender_pos(PosCtl *posCtl) {
 		crudeShipX += posCtl->delta() * 2;
@@ -189,7 +208,8 @@ class GameInvaders {
 		ind_t left(invadersX, 0);
 		ind_t right(0, 0);
 		ind_t base(0, 0);
-		visit_invaders([&left, &right, &base] (ind_t index) {
+		uint8_t count = 0;
+		visit_invaders([&left, &right, &base, &count] (ind_t index) {
 			if(index.x < left.x) {
 				left = index;
 			}
@@ -199,23 +219,19 @@ class GameInvaders {
 			if(index.y > base.y) {
 				base = index;
 			}
+			++ count;
 		});
 
-		bool down = false;
-		if(moveRight) {
-			if(invader_position(right).x + invaderSpeedX > w - invaderBufferR) {
-				down = true;
-			} else {
-				invaderOrigin.x += invaderSpeedX;
-			}
+		int8_t velX;
+		if(count == 1) {
+			velX = (moveRight ? lastInvaderSpeedXR : -lastInvaderSpeedXL);
 		} else {
-			if(invader_position(left).x - invaderSpeedX < invaderBufferL) {
-				down = true;
-			} else {
-				invaderOrigin.x -= invaderSpeedX;
-			}
+			velX = (moveRight ? invaderSpeedX : -invaderSpeedX);
 		}
-		if(down) {
+		if(
+			invader_position(left).x + velX < invaderBufferL ||
+			invader_position(right).x + velX > w - invaderBufferR
+		) {
 			invaderOrigin.y += invaderSpeedY;
 			moveRight = !moveRight;
 			if(invader_position(base).y >= invaderWinY) {
@@ -223,6 +239,7 @@ class GameInvaders {
 				state = State::GAMEOVER;
 			}
 		} else {
+			invaderOrigin.x += velX;
 			animFrame = 1 - animFrame;
 		}
 	}
@@ -234,6 +251,7 @@ class GameInvaders {
 	void fire_invader_missile(ind_t index) {
 		invaderMissile = invader_position(index);
 		invaderMissile.y += INVADER_HEIGHT - missileHeight;
+		invaderMissileCooldown = invader_cooldown_delay();
 	}
 
 	template <typename PosCtl, typename FireCtl>
@@ -261,6 +279,7 @@ class GameInvaders {
 	void step_respawn(void) {
 		if(step_delay()) {
 			shipX = crudeShipX = w / 2;
+			invaderMissileCooldown = invader_cooldown_delay();
 			-- lives;
 			if(lives) {
 				state = State::PLAYING;
@@ -301,6 +320,7 @@ class GameInvaders {
 
 		playerMissile.x = 0;
 		invaderMissile.x = 0;
+		invaderMissileCooldown = invader_cooldown_delay();
 
 		nextSound = 0;
 		soundDelay = sound_delay();
@@ -348,7 +368,9 @@ class GameInvaders {
 		if(!invaderCount) {
 			return;
 		}
-		if(!invaderMissile.x) {
+		if(invaderMissileCooldown) {
+			-- invaderMissileCooldown;
+		} else if(!invaderMissile.x) {
 			fire_invader_missile(invader_index(random() % invaderCount));
 		}
 
@@ -444,7 +466,7 @@ class GameInvaders {
 		if(p1.x - missileWidth >= p2.x || p2.x - missileWidth >= p1.x) {
 			return false;
 		}
-		if(p1.y - missileSpeed > p2.y || p2.y - missileSpeed > p1.y) {
+		if(p1.y - missileHeight > p2.y || p2.y - missileHeight > p1.y) {
 			return false;
 		}
 		return true;
@@ -459,10 +481,17 @@ class GameInvaders {
 			}
 		}
 		if(invaderMissile.x) {
-			if(invaderMissile.y >= bottom - missileSpeed - missileHeight) {
+			uint8_t speed;
+			if(count_invaders() <= fastInvaderMissileCriteria) {
+				speed = fastInvaderMissileSpeed;
+			} else {
+				speed = missileSpeed;
+			}
+
+			if(invaderMissile.y > bottom - speed - missileHeight) {
 				invaderMissile.x = 0;
 			} else {
-				invaderMissile.y += missileSpeed;
+				invaderMissile.y += speed;
 			}
 		}
 	}
@@ -738,9 +767,11 @@ public:
 			break;
 
 		case State::SHIP_FIRE:
+			bleeper->stop();
 			bleeper->play(random(200) + 50, 30);
 			while(uint16_t(endTm - millis() - whiteNoiseDelay) < 0x8000) {
 				delay(whiteNoiseDelay);
+				bleeper->stop();
 				bleeper->play(random(200) + 50, 30);
 			}
 			break;
