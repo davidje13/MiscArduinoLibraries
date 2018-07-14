@@ -31,15 +31,14 @@ EOF
 fi;
 
 if [[ ! -x "$EXEC" ]]; then
-	mkdir -p "$SCRIPTDIR/bin";
 	g++ --std=c++11 \
-		-Wall -Wextra --pedantic \
-		-O3 "$EXEC_SRC" \
+		$TOOL_BUILD_FLAGS \
+		"$EXEC_SRC" \
 		-o "$EXEC";
 fi;
 
 echo "static PROGMEM const uint8_t ${DEF_NAME}[] = {";
-"$EXEC" "$WINDOW" --strings "$TEMP_FILE" < "$STRINGS_FILE" | "$SCRIPTDIR/tohex.sh";
+$TOOL_RUNNER "$EXEC" "$WINDOW" --strings "$TEMP_FILE" < "$STRINGS_FILE" | "$SCRIPTDIR/tohex.sh";
 echo "};";
 echo;
 echo "static auto ${DECOMPRESSOR_NAME} = MakeSegmentedDecompressor<$WINDOW>(MakeProgMem($DEF_NAME));";

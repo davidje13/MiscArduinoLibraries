@@ -28,15 +28,11 @@ EOF
 fi;
 
 if [[ ! -x "$EXEC" ]]; then
-	mkdir -p "$SCRIPTDIR/bin";
 	g++ --std=c++11 \
-		-isystem/opt/local/include \
-		-isystem/usr/local/include \
-		-L/opt/local/lib \
+		$TOOL_BUILD_FLAGS \
 		-lpng \
-		-Wall -Wextra --pedantic \
-		-O3 "$EXEC_SRC" \
+		"$EXEC_SRC" \
 		-o "$EXEC";
 fi;
 
-"$EXEC" "$DATA" | "$SCRIPTDIR/tohex.sh" "$RAW";
+$TOOL_RUNNER "$EXEC" "$DATA" | "$SCRIPTDIR/tohex.sh" "$RAW";

@@ -33,7 +33,7 @@ if [[ "$1" == "--local-test" ]]; then
 fi;
 
 # Invoke all generator scripts
-if [[ "$MODE" == "local-test" ]]; then
+if [[ "$MODE" == "local-test" || "$MODE" == "preprocess" ]]; then
 	"$SCRIPTDIR/run_generators.sh" "all" "$LIBDIR" "$SRCDIR";
 else
 	"$SCRIPTDIR/run_generators.sh" "no-test" "$LIBDIR" "$SRCDIR";

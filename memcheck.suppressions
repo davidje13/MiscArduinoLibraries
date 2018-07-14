@@ -1,0 +1,7 @@
+{
+   OSX program start
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   fun:map_images_nolock
+}

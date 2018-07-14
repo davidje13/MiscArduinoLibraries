@@ -399,7 +399,7 @@ codebook<uint16_t> compress(
 
 	std::size_t section = 0;
 	for(std::size_t i = 0; i < values.size(); ++ i) {
-		while(i == zeroPositions[section]) {
+		while(section < zeroPositions.size() && i == zeroPositions[section]) {
 			zeroPositions[section] = writer.size_bits();
 			++ section;
 		}

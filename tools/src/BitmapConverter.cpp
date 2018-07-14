@@ -30,14 +30,17 @@ int main(int argc, const char *const *argv) {
 	boost::gil::gray8_image_t img;
 	boost::gil::png_read_and_convert_image(argv[1], img);
 
-	auto imgView = boost::gil::const_view(img);
+	const auto imgView = boost::gil::const_view(img);
+	const auto w = imgView.width();
+	const auto h = imgView.height();
+
 	std::string format(argv[2]);
 	if(format == "18") {
-		for(int y = 0; y < imgView.height(); y += 8) {
-			for(int x = 0; x < imgView.width(); ++ x) {
+		for(int y = 0; y < h; y += 8) {
+			for(int x = 0; x < w; ++ x) {
 				unsigned char value = 0x00;
 
-				for(int yy = 0; yy < 8; ++ yy) {
+				for(int yy = 0; yy < 8 && y + yy < h; ++ yy) {
 					if(imgView(x, y + yy) > 128) {
 						value |= 1 << yy;
 					}
@@ -47,11 +50,11 @@ int main(int argc, const char *const *argv) {
 			}
 		}
 	} else if(format == "81") {
-		for(int y = 0; y < imgView.height(); ++ y) {
-			for(int x = 0; x < imgView.width(); x += 8) {
+		for(int y = 0; y < h; ++ y) {
+			for(int x = 0; x < w; x += 8) {
 				unsigned char value = 0x00;
 
-				for(int xx = 0; xx < 8; ++ xx) {
+				for(int xx = 0; xx < 8 && x + xx < w; ++ xx) {
 					if(imgView(x + xx, y) > 128) {
 						value |= 1 << xx;
 					}

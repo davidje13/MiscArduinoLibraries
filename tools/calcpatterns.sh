@@ -41,11 +41,13 @@ EOF
 fi;
 
 if [[ ! -x "$EXEC" ]]; then
-	mkdir -p "$SCRIPTDIR/bin";
-	g++ --std=c++11 -Wall -Wextra --pedantic -O3 "$EXEC_SRC" -o "$EXEC";
+	g++ --std=c++11 \
+		$TOOL_BUILD_FLAGS \
+		"$EXEC_SRC" \
+		-o "$EXEC";
 fi;
 
-DAT="$(cut -f1 -d' ' "$DATA" | "$EXEC" 2> /dev/null)";
+DAT="$(cut -f1 -d' ' "$DATA" | $TOOL_RUNNER "$EXEC" 2> /dev/null)";
 
 echo "static PROGMEM const uint8_t RAW_${CONST_PREFIX}_DATA[] = {";
 echo "$DAT" | \

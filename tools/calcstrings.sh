@@ -29,15 +29,14 @@ EOF
 fi;
 
 if [[ ! -x "$EXEC" ]]; then
-	mkdir -p "$SCRIPTDIR/bin";
 	g++ --std=c++11 \
-		-Wall -Wextra --pedantic \
-		-O3 "$EXEC_SRC" \
+		$TOOL_BUILD_FLAGS \
+		"$EXEC_SRC" \
 		-o "$EXEC";
 fi;
 
 echo "static PROGMEM const char ${DEF_NAME}[] = {";
-"$EXEC" "$TEMP_FILE" < "$STRINGS_FILE" | "$SCRIPTDIR/tohex.sh";
+$TOOL_RUNNER "$EXEC" "$TEMP_FILE" < "$STRINGS_FILE" | "$SCRIPTDIR/tohex.sh";
 echo "};";
 echo;
 

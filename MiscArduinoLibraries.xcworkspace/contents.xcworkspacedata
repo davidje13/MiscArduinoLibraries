@@ -32,6 +32,9 @@
       location = "container:Makefile">
    </FileRef>
    <FileRef
+      location = "group:memcheck.suppressions">
+   </FileRef>
+   <FileRef
       location = "container:README.md">
    </FileRef>
    <FileRef

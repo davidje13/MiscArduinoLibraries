@@ -94,9 +94,16 @@ check :
 	@ ./compile.sh --check RotaryEncoder
 	@ ./compile.sh --check IR
 
+.PHONY : test-preprocess
+test-preprocess :
+	@ TOOL_RUNNER="valgrind --leak-check=full --gen-suppressions=all --suppressions=/Users/david/Documents/Projects/Electronics/Arduino/MiscArduinoLibraries/memcheck.suppressions" \
+	CLEAR_TOOLBIN="true" \
+	./compile.sh --preprocess
+
 .PHONY : preprocess
 preprocess :
-	@ ./compile.sh --preprocess
+	@ CLEAR_TOOLBIN="true" \
+	./compile.sh --preprocess
 
 .PHONY : clean
 clean :

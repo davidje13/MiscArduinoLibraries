@@ -6,6 +6,34 @@ TOOLS_DIR="$SCRIPT_ABS_DIR/tools";
 MODE="$1";
 shift;
 
+mkdir -p "$TOOLS_DIR/bin";
+if [[ "$CLEAR_TOOLBIN" == "true" ]]; then
+	rm -rf "$TOOLS_DIR/bin"/*.dSYM >/dev/null || true;
+	rm -f "$TOOLS_DIR/bin"/* >/dev/null || true;
+fi;
+
+TOOL_BUILD_FLAGS="-Wall -Wextra --pedantic";
+
+if [[ -d "/opt/local/include" ]]; then
+	TOOL_BUILD_FLAGS="$TOOL_BUILD_FLAGS -isystem/opt/local/include";
+fi;
+
+if [[ -d "/usr/local/include" ]]; then
+	TOOL_BUILD_FLAGS="$TOOL_BUILD_FLAGS -isystem/usr/local/include";
+fi;
+
+if [[ -d "/opt/local/lib" ]]; then
+	TOOL_BUILD_FLAGS="$TOOL_BUILD_FLAGS -L/opt/local/lib";
+fi;
+
+if [[ -n "$TOOL_RUNNER" ]]; then
+	TOOL_BUILD_FLAGS="$TOOL_BUILD_FLAGS -g -O1";
+else
+	TOOL_BUILD_FLAGS="$TOOL_BUILD_FLAGS -O3";
+fi;
+
+export TOOL_BUILD_FLAGS;
+
 generate() {
 	GENERATOR_FILE="$1";
 	BASE_DIR="$(dirname "$GENERATOR_FILE")";
@@ -18,6 +46,12 @@ generate() {
 	SNAKE_NAME="$(echo "$CAMEL_NAME" | sed -E 's/([a-z0-9])([A-Z])/\1_\2/g')";
 	LOWER_SNAKE_NAME="$(echo "$SNAKE_NAME" | tr '[:upper:]' '[:lower:]')";
 	UPPER_SNAKE_NAME="$(echo "$SNAKE_NAME" | tr '[:lower:]' '[:upper:]')";
+
+	if [[ -n "$TOOL_RUNNER" ]]; then
+		echo;
+		echo;
+		echo "Running $GENERATOR_FILE" >&2;
+	fi;
 
 	cd "$BASE_DIR";
 	if ! eval > "$OUTPUT_NAME" "
