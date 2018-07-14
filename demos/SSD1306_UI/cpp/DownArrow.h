@@ -6,7 +6,7 @@
 #include <ProgMem.h>
 
 static PROGMEM const uint8_t DOWN_ARROW_PM[] = {
-	0x89, 0x83, 0xc7, 0xc3, 0xc1
+	0x01, 0x03, 0x07, 0x03, 0x01
 };
 
 #define DOWN_ARROW MakeProgMem(DOWN_ARROW_PM)
